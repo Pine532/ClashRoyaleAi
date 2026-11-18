@@ -178,10 +178,17 @@ public:
             }
         }
 
+        // Ranked by hp plus shield hp: the October 2025 update (2025-09-25 bug
+        // fixes, docs/LIVE_SYNC.md) made Vines and Lightning "consider shields
+        // when targeting the highest HP troops".
+        auto effectiveHp = [](const Entity& e) {
+            const auto* combat = dynamic_cast<const CombatEntity*>(&e);
+            return e.hp + (combat ? combat->shieldHp : 0);
+        };
         if (targetTopHpCount > 0 && static_cast<int>(candidates.size()) > targetTopHpCount) {
             std::sort(candidates.begin(), candidates.end(),
-                [](const std::shared_ptr<Entity>& a, const std::shared_ptr<Entity>& b) {
-                    return a->hp > b->hp;
+                [&effectiveHp](const std::shared_ptr<Entity>& a, const std::shared_ptr<Entity>& b) {
+                    return effectiveHp(*a) > effectiveHp(*b);
                 });
             candidates.resize(targetTopHpCount);
         }

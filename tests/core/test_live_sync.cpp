@@ -336,3 +336,72 @@ TEST_CASE("The Log deals 268 damage to a troop it sweeps",
     m.step(60);
     CHECK(m.rec->totalTo(target->id) == 268);
 }
+
+// ---------------------------------------------------------------------------
+// Patch 2025-09-25 (October 2025 update, bug fixes)
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Vines top-HP targeting counts shields", "[live_sync][patch-2025-09-25]") {
+    Board board;
+    // B has the lower bare hp, but the higher hp + shield.
+    auto a = firstCombat(spawnBare(board, 0, 9.0f, 10.0f, 1));
+    auto b = firstCombat(spawnBare(board, 0, 11.0f, 10.0f, 1));
+    REQUIRE(a);
+    REQUIRE(b);
+    b->hp = 500;
+    b->shieldHp = 2000;
+    const int aHp = a->hp;
+
+    // targetTopHpCount = 1 (same constructor as the Vines cases in test_area_spell.cpp)
+    AreaSpell spell(4, 10.0f, 10.0f, 0, 5.0f, 100, 0, '*', nullptr, false, 1, 0,
+        false, 1.0f, 0, 0.0f, nullptr, false, 1);
+    spell.update(board);
+
+    REQUIRE(a->hp == aHp);        // full hp, no shield: not the top target
+    REQUIRE(b->shieldHp == 1900); // 500 hp + 2000 shield: hit (the shield absorbs)
+}
+
+TEST_CASE("Prince charge is cleared by a stun", "[live_sync][patch-2025-09-25]") {
+    for (int id : { 14, 46, 87 }) {
+        Match m;
+        auto troop = firstCombat(m.spawnCard(id, 3.0f, 3.0f, 0));
+        REQUIRE(troop);
+        int guard = 0;
+        while (!troop->isCharging() && guard++ < 400) m.step();
+        INFO("card id " << id);
+        REQUIRE(troop->isCharging());
+
+        troop->applyFreeze(3, 0.0f); // a Zap-style stun
+        m.step();
+        REQUIRE_FALSE(troop->isCharging());
+        REQUIRE(troop->chargeProgress < troop->chargeThreshold);
+    }
+}
+
+TEST_CASE("Prince charge is not cleared by a slow", "[live_sync][patch-2025-09-25]") {
+    Match m;
+    auto troop = firstCombat(m.spawnCard(14, 3.0f, 3.0f, 0));
+    REQUIRE(troop);
+    int guard = 0;
+    while (!troop->isCharging() && guard++ < 400) m.step();
+    REQUIRE(troop->isCharging());
+    troop->applyFreeze(3, 0.5f); // a slow, not a stun
+    m.step();
+    REQUIRE(troop->isCharging());
+}
+
+TEST_CASE("Prince charge interruption leaves the Bandit dash alone", "[live_sync][patch-2025-09-25]") {
+    // Bandit and Boss Bandit model a dash (the 2026-09-07 post: not interruptible).
+    for (int id : { 50, 122 }) {
+        Match m;
+        auto troop = firstCombat(m.spawnCard(id, 3.0f, 3.0f, 0));
+        REQUIRE(troop);
+        int guard = 0;
+        while (!troop->isCharging() && guard++ < 400) m.step();
+        INFO("card id " << id);
+        REQUIRE(troop->isCharging());
+        troop->applyFreeze(3, 0.0f);
+        m.step();
+        REQUIRE(troop->isCharging());
+    }
+}

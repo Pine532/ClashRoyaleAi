@@ -584,6 +584,16 @@ public:
         const bool stunned = wasFrozen && slowThisTick <= 0.0f;
         // Published for Troop::moveTowards, which runs after the decrement.
         frozenThisTick = wasFrozen;
+        // A stun interrupts a charge: the troop no longer lands the charged hit
+        // the instant it is released (October 2025 update, 2025-09-25 bug fixes:
+        // "Prince and other charging troops will no longer instantly attack
+        // after their charge is interrupted", docs/LIVE_SYNC.md). Only a hard
+        // stun; a slow does not interrupt. Bandit and Boss Bandit model a dash,
+        // not a charge run-up, and are exempt (chargeGrantsInvulnerability),
+        // as is a charge that has already stuck (Evolved Battle Ram).
+        if (stunned && chargeThreshold > 0.0f && !chargeGrantsInvulnerability && !chargeHasStuck) {
+            chargeProgress = 0.0f;
+        }
         freezeSlowThisTick = slowThisTick;
         moveSlowThisTick = (moveSlowTicks > 0) ? moveSlowFactor : 1.0f;
         if (moveSlowTicks > 0 && --moveSlowTicks == 0) moveSlowFactor = 1.0f;
