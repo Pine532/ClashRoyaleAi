@@ -312,3 +312,27 @@ TEST_CASE("Firecracker sight range is 8.0 tiles on the base and Evolution ids (2
     REQUIRE(evoBase);
     CHECK(evoBase->sightRange == 8.0f);
 }
+
+// --- patch 2025-09-01 ---------------------------------------------------------
+
+TEST_CASE("Goblin Curse deals 35 per second for 6 seconds (210 total)",
+          "[live_sync][patch-2025-09-01]") {
+    // Source: 2025-09-01 September Balance Changes, "Damage/Sec: 30 -> 35".
+    Match m;
+    auto target = firstCombat(m.spawnCard(25, 9.0f, 26.0f, 1));  // Cannon: stationary, survives 210
+    REQUIRE(target);
+    m.spawnCard(102, 9.0f, 26.0f, 0);
+    m.step(120);
+    CHECK(m.rec->totalTo(target->id) == 210);
+}
+
+TEST_CASE("The Log deals 268 damage to a troop it sweeps",
+          "[live_sync][patch-2025-09-01]") {
+    // Source: 2025-09-01 "New Season: Back to Drool", "Damage: 266 -> 268".
+    Match m;
+    auto target = firstCombat(m.spawnCard(25, 9.0f, 26.0f, 1));  // Cannon: stationary
+    REQUIRE(target);
+    m.spawnCard(33, 9.0f, 24.0f, 0);
+    m.step(60);
+    CHECK(m.rec->totalTo(target->id) == 268);
+}

@@ -660,7 +660,8 @@ private:
         // near edge (9.00 away) but not its centre (10.50); test_area_spell.cpp
         // pins this against ArenaLayout. Speed (1.0 tiles/tick, ~1 s for the
         // roll) and knockback (0.8) are not sourced.
-        add(spell(33, "The Log", 2.0f, 3.9f, 269, 8, 'o')
+        // 2025-09-01 "New Season: Back to Drool": damage 266 -> 268 (docs/LIVE_SYNC.md).
+        add(spell(33, "The Log", 2.0f, 3.9f, 268, 8, 'o')
             .withGroundOnly()
             .withRollingSweep(10.1f, 3.9f, 1.0f, 0.8f));
 
@@ -983,7 +984,11 @@ private:
             .withSpellSpawn(std::make_shared<PeriodicSpawnEffect>(barbarianBarrelBarbarianStats())));
         // Goblin Curse: only the damage over time is modelled, not the
         // damage-taken amplification or the Goblin on cursed death.
-        add(spell(102, "Goblin Curse", 2.0f, 3.0f, 43, 8, '$').withRepeats(6, 10));
+        // 2025-09-01 September Balance Changes: damage/sec 30 -> 35 and the 20%
+        // damage amplification removed (docs/LIVE_SYNC.md). One pulse per second
+        // (10 ticks), so 35 per application x 6 = 210. The Crown Tower value
+        // (6 -> 10 per second) is the separate spell-vs-tower item.
+        add(spell(102, "Goblin Curse", 2.0f, 3.0f, 35, 8, '$').withRepeats(6, 10));
         // Earthquake: ground-only damage over time with the 50% movement slow.
         // The real 3.5x damage against buildings is not modelled.
         add(spell(103, "Earthquake", 3.0f, 3.5f, 82, 8, '%').withRepeats(3, 10).withGroundOnly()
