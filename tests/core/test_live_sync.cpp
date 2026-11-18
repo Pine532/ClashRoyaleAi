@@ -139,3 +139,23 @@ TEST_CASE("Witch Evolution (142) splashes 1.5 tiles in both forms", "[live_sync]
     REQUIRE(p04_splash::spawnFirst(142, false)->splashRadius == Catch::Approx(1.5f));
     REQUIRE(p04_splash::spawnFirst(142, true)->splashRadius == Catch::Approx(1.5f));
 }
+
+// --- 2025-02-04 balance update ---
+
+TEST_CASE("Lava Hound's Lava Pups deal 84 damage", "[live_sync][patch-2025-02-04]") {
+    Board board;
+    auto hound = firstCombat(spawnBare(board, 91));
+    REQUIRE(hound != nullptr);
+    hound->takeDamage(hound->hp);
+    board.cleanDeadEntities();
+    board.commitPendingEntities();
+    int pups = 0;
+    for (const auto& e : board.getEntities()) {
+        if (e->name != "Lava Pups") continue;
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        REQUIRE(c != nullptr);
+        CHECK(c->getBaseDamage() == 84);
+        ++pups;
+    }
+    REQUIRE(pups == 6);
+}

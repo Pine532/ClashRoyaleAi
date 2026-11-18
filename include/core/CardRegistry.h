@@ -276,7 +276,8 @@ private:
     // Further death-spawn children, from a later research pass. Ids continue
     // from -29.
     static CardStats lavaHoundPupStats() {
-        return troop(-29, "Lava Pups", 0.0f, Archetype::MeleeSquad, 217, 0.5f, 1.6f, 81, 17, 'y')
+        // 2025-02-04 balance update: Lava Pups damage 90 -> 84 (docs/LIVE_SYNC.md).
+        return troop(-29, "Lava Pups", 0.0f, Archetype::MeleeSquad, 217, 0.5f, 1.6f, 84, 17, 'y')
             .withOffsets({ {-0.8f, 0.0f}, {0.8f, 0.0f}, {-0.5f, 0.7f}, {0.5f, 0.7f}, {-0.5f, -0.7f}, {0.5f, -0.7f} })
             .withFlying().withTargetsAir();
     }
