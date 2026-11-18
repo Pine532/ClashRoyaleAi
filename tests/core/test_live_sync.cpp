@@ -59,3 +59,40 @@ TEST_CASE("Ice Wizard splash hits a unit 1.2 tiles from the target (radius 1.5)"
     REQUIRE(target->hp < 1000);
     REQUIRE(bystander->hp < 1000);
 }
+
+// ---- 2024-10-08 balance update (October balance changes) ----
+
+TEST_CASE("Magic Archer hp is 531 (base and Hero)", "[live_sync][patch-2024-10-08]") {
+    Board board;
+    auto base = mainBody(board, 63);
+    REQUIRE(base != nullptr);
+    CHECK(base->hp == 531);
+    Board board2;
+    auto hero = mainBody(board2, 171);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->hp == 531);
+}
+
+TEST_CASE("Suspicious Bush moves at Medium speed", "[live_sync][patch-2024-10-08]") {
+    Board board;
+    auto bodies = spawnBare(board, 85);
+    std::shared_ptr<Troop> bush;
+    for (auto& e : bodies) if (auto t = std::dynamic_pointer_cast<Troop>(e)) { bush = t; break; }
+    REQUIRE(bush != nullptr);
+    CHECK(bush->getSpeed() == Catch::Approx(SPEED_MEDIUM * MOVEMENT_SPEED_SCALE).epsilon(0.001));
+}
+
+TEST_CASE("Evolved Zap lands two zaps, each at full damage", "[live_sync][patch-2024-10-08]") {
+    Match m;
+    auto giant = firstCombat(m.spawnCard(2, 9.0f, 10.0f, 1));
+    REQUIRE(giant != nullptr);
+    m.rec->damage.clear();
+    m.spawnCard(124, 9.0f, 10.0f, 0, true);
+    m.step(30);
+    int total = m.rec->totalTo(giant->id);
+    int first = 0;
+    for (const auto& e : m.rec->damage)
+        if (e.targetId == giant->id && e.amount > 0) { first = e.amount; break; }
+    REQUIRE(first > 0);
+    CHECK(total == 2 * first);
+}

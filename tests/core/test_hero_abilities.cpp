@@ -405,7 +405,7 @@ TEST_CASE("Hero Magic Archer (171) is registered with base Magic Archer's stats 
 
     auto hero = std::dynamic_pointer_cast<CombatEntity>(board.getEntities()[0]);
     REQUIRE(hero != nullptr);
-    REQUIRE(hero->hp == 529); // base Magic Archer hp (id 63)
+    REQUIRE(hero->hp == 531); // base Magic Archer hp (id 63)
     REQUIRE(hero->abilityElixirCost == Catch::Approx(2.0f));
     REQUIRE(hero->abilityCooldownTicks == 250);
     REQUIRE(hero->maxSplitTargets == 1); // not yet activated

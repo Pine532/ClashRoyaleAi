@@ -761,7 +761,8 @@ private:
             .withSplash(1.5f)
             .withRangeFalloff(0.5f));
         // A piercing line: 11.0 long, half-width 0.25.
-        add(troop(63, "Magic Archer", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 7.0f, 143, 11, '#')
+        // 2024-10-08 balance update: hp 532 -> 531 (docs/LIVE_SYNC.md). Mortar always takes two hits.
+        add(troop(63, "Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 143, 11, '#')
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f));
         add(troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
@@ -877,7 +878,8 @@ private:
         add(troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 163, 18, '|')
             .withSplash(1.5f)
             .withPeriodicEffect(50, std::make_shared<AreaStunEffect>(2.5f, 5)));
-        add(troop(85, "Suspicious Bush", 2.0f, Archetype::MeleeBuildingTargeter, 81, 0.5f, 0.25f, 256, 14, '}')
+        // 2024-10-08 balance update: Bush speed 45 -> 60 = Medium (docs/LIVE_SYNC.md).
+        add(troop(85, "Suspicious Bush", 2.0f, Archetype::MeleeBuildingTargeter, 81, SPEED_MEDIUM, 0.25f, 256, 14, '}')
             .withInvisibility(5)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(suspiciousBushGoblinStats())));
         add(troop(86, "Rune Giant", 4.0f, Archetype::MeleeBuildingTargeter, 2662, 0.5f, 1.2f, 153, 15, '~')
@@ -1127,11 +1129,13 @@ private:
                     })),
             2, 1);
 
-        // Zap ("Triple Shock"): three zaps instead of one. The growing radius
-        // between zaps is not modelled; the 3-tick gap is not sourced.
+        // Zap ("Triple Shock"): since the 2024-10-08 balance update the 3rd zap
+        // is removed, so two zaps, each at full damage (docs/LIVE_SYNC.md). The
+        // growing radius between zaps is not modelled; the 3-tick gap is not
+        // sourced ("the spell takes less time" has no number).
         addEvolution(124,
             spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z'),
-            spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z').withRepeats(3, 3),
+            spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z').withRepeats(2, 3),
             2, 1);
 
         // Skeletons ("Never-ending Horde"): see evolvedSkeletonChildStats.
@@ -1662,7 +1666,8 @@ private:
         // Hero Magic Archer (base: id 63). "Triple Threat" (2 elixir, 25 s
         // cooldown): dashes back 5 tiles, leaves a decoy, and gains a 7 s
         // multi-shot window (HeroMagicArcherTripleThreatEffect).
-        add(troop(171, "Hero Magic Archer", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 7.0f, 143, 11, '#')
+        // hp 531 as the base card (2024-10-08 balance update, docs/LIVE_SYNC.md).
+        add(troop(171, "Hero Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 143, 11, '#')
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f)
             .withHeroAbility(2.0f, 250, std::make_shared<HeroMagicArcherTripleThreatEffect>(
