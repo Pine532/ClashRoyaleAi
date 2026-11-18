@@ -15,9 +15,10 @@ inline CardStats spiritEmpressGroundStats() {
     stats.cost = 3.0f;
     stats.archetype = Archetype::MeleeSquad;
     stats.hp = 926;
-    // Off-tier on purpose: the card has no official speed row. Scaled here
-    // because direct assignment bypasses CardStats::troop().
-    stats.speed = 0.85f * MOVEMENT_SPEED_SCALE;
+    // 2026-03-02 balance update: ground form Medium -> Fast (docs/LIVE_SYNC.md),
+    // replacing the earlier off-tier 0.85 placeholder. Scaled here because
+    // direct assignment bypasses CardStats::troop().
+    stats.speed = SPEED_FAST * MOVEMENT_SPEED_SCALE;
     stats.attackRange = 1.2f;
     stats.damage = 249;
     stats.attackCooldown = 12;

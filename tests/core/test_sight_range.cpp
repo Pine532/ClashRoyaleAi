@@ -202,7 +202,7 @@ const SightRow SIGHT_CATALOG[] = {
         {  17, "Elite Barbarians", 5.5f },
         {  18, "Royal Giant", 7.5f },
         {  19, "Golem", 7.0f },
-        {  20, "Dart Goblin", 7.5f },
+        {  20, "Dart Goblin", 7.0f },
         {  21, "Lumberjack", 5.5f },
         {  22, "Bowler", 4.0f },
         {  23, "Spear Goblins", 5.5f },
@@ -292,7 +292,7 @@ const SightRow SIGHT_CATALOG[] = {
         { 128, "Archers", 5.5f },
         { 129, "Cannon", 5.5f },
         { 130, "Firecracker", 8.0f },   // 2025-08-06 balance update: 8.5 -> 8
-        { 131, "Dart Goblin", 7.5f },
+        { 131, "Dart Goblin", 7.0f },
         { 133, "Skeleton Army", 5.5f },
         { 134, "Skeleton Barrel", 7.7f },
         { 135, "Knight", 5.5f },

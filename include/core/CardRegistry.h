@@ -562,7 +562,7 @@ private:
         add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
             .withTargetsAir().withSplash(1.5f));
         add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
-            .withTargetsAir().withSightRange(7.5f));
+            .withTargetsAir().withSightRange(7.0f)); // 2026-03-02 balance update: 7.5 -> 7.0 tiles (docs/LIVE_SYNC.md).
         // A piercing line: 11.5 total (4.0 range + 7.5), half-width 1.8.
         // Knockback is not modelled on the troop attack path.
         add(troop(22, "Bowler", 5.0f, Archetype::RangedSquad, 2081, SPEED_SLOW, 4.0f, 289, 25, 'w')
@@ -693,7 +693,7 @@ private:
             .withIgnoresRiver());
         // Royal Ghost jumps the river.
         add(troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.2f, 261, 18, 'Q')
-            .withInvisibility(5) // brief reveal after attacking
+            .withInvisibility(20) // 2026-03-02 balance update: invisibility delay 1.8 s -> 2 s (docs/LIVE_SYNC.md); was 5 here, which contradicted the post's old 1.8 s
             .withIgnoresRiver());
         // Mega Knight: the deploy slam is the spawn-effect burst (radius 1.3,
         // 430). The periodic jump closes 3.5-5 tiles instantly with a 2.0x,
@@ -1245,11 +1245,11 @@ private:
         // nothing from the base registration.
         addEvolution(131,
             troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
-                .withTargetsAir().withSightRange(7.5f),
+                .withTargetsAir().withSightRange(7.0f), // 2026-03-02: 7.0 tiles, as the base card.
             troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
                 .withTargetsAir()
                 // 2025-08-06 balance update: poison cloud duration 4 s -> 1 s (40 -> 10 ticks); damage per tick unchanged here (docs/LIVE_SYNC.md).
-                .withOnHit(std::make_shared<PoisonOnHit>(51, 10, 10)).withSightRange(7.5f),
+                .withOnHit(std::make_shared<PoisonOnHit>(51, 10, 10)).withSightRange(7.0f), // 2026-03-02: 7.0 tiles.
             2, 1);
 
         // Goblin Barrel: the real second barrel on the mirrored lane is
@@ -1294,15 +1294,15 @@ private:
                 .withPassiveDamageReduction(0.65f),
             2, 1);
 
-        // Royal Ghost: a longer reveal window (1.8 s vs 0.5 s), and every
+        // Royal Ghost: a longer reveal window (now 2 s on both forms), and every
         // landed hit spawns 2 Souldiers. The real "only while invisible"
         // condition is not checked; she is cloaked for nearly all her attacks
         // anyway.
         addEvolution(136,
             troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.2f, 261, 18, 'Q')
-                .withInvisibility(5).withIgnoresRiver(),
+                .withInvisibility(20).withIgnoresRiver(), // 2026-03-02: 2 s, as the base card.
             troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.2f, 261, 18, 'Q')
-                .withInvisibility(18)
+                .withInvisibility(20) // 2026-03-02 balance update: 1.8 s -> 2 s (docs/LIVE_SYNC.md)
                 .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(royalGhostSouldierStats()
                     .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })))
                 .withIgnoresRiver(),
@@ -1654,7 +1654,7 @@ private:
         // Registered at the ground form's cost (3.0) for the hand display and
         // placement; playCard always spawns from SpiritEmpressForms.h instead.
         // Not a Champion: it has no activated ability.
-        add(troop(165, "Spirit Empress", 3.0f, Archetype::MeleeSquad, 926, 0.85f, 1.2f, 249, 12, '<'));
+        add(troop(165, "Spirit Empress", 3.0f, Archetype::MeleeSquad, 926, SPEED_FAST, 1.2f, 249, 12, '<')); // speed matches the ground form (2026-03-02: Fast)
 
         // === Heroes ===
         // A Hero gives an existing troop a second, ability-carrying form, using

@@ -663,3 +663,56 @@ TEST_CASE("Hero Goblins Banner Brigade window is 5 s",
     }
     CHECK_FALSE(game.isChampionAbilityReady(0, 1));
 }
+
+#include "SpiritEmpressForms.h"
+
+// ---------------------------------------------------------------------------
+// Patch 2026-03-02 (March balance changes): Dart Goblin sight, Royal Ghost
+// invisibility delay, Spirit Empress ground speed.
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Dart Goblin sight range is 7.0 tiles on the base card and its Evolution",
+          "[live_sync][patch-2026-03-02]") {
+    Board board;
+    auto base = mainBody(board, 20);
+    REQUIRE(base != nullptr);
+    CHECK(base->sightRange == Catch::Approx(7.0f));
+    auto evo = mainBody(board, 131, true);
+    REQUIRE(evo != nullptr);
+    CHECK(evo->sightRange == Catch::Approx(7.0f));
+    auto evoUn = mainBody(board, 131, false);
+    REQUIRE(evoUn != nullptr);
+    CHECK(evoUn->sightRange == Catch::Approx(7.0f));
+}
+
+TEST_CASE("Royal Ghost stays visible 20 ticks after a hit, base and Evolution",
+          "[live_sync][patch-2026-03-02]") {
+    for (bool evolved : { false, true }) {
+        for (int id : { 47, 136 }) {
+            if (id == 47 && evolved) continue;
+            Match m;
+            auto ghost = firstCombat(m.spawnCard(id, 9.0f, 10.0f, 0, evolved));
+            REQUIRE(ghost != nullptr);
+            auto bodies = m.spawnCard(19, 9.0f, 10.8f, 1); // a Golem to hit
+            REQUIRE_FALSE(bodies.empty());
+            int seen = 0;
+            for (int i = 0; i < 100 && seen == 0; ++i) {
+                m.step();
+                if (ghost->visibleTicksRemaining > 0) seen = ghost->visibleTicksRemaining;
+            }
+            INFO("card " << id << " evolved " << evolved);
+            REQUIRE(seen > 0);
+            // Observed on the tick of the hit: the window is 20 ticks (2 s).
+            CHECK(seen == 20);
+        }
+    }
+}
+
+TEST_CASE("Spirit Empress ground form moves at Fast speed", "[live_sync][patch-2026-03-02]") {
+    CHECK(spiritEmpressGroundStats().speed == Catch::Approx(SPEED_FAST * MOVEMENT_SPEED_SCALE));
+    Board board;
+    auto reg = mainBody(board, 165);
+    REQUIRE(reg != nullptr);
+    if (auto t = std::dynamic_pointer_cast<Troop>(reg))
+        CHECK(t->getSpeed() == Catch::Approx(SPEED_FAST * MOVEMENT_SPEED_SCALE));
+}
