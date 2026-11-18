@@ -237,3 +237,43 @@ TEST_CASE("Goblin Demolisher kamikaze form expires 10 s after it spawns", "[live
     kamikaze->update(board);
     REQUIRE_FALSE(kamikaze->isAlive()); // 100 ticks = 10 s
 }
+
+// ---------------------------------------------------------------------------
+// 2025-07-07 balance update (ledger item 67): Ice Spirit Freeze Duration
+// 1.2 s -> 1.1 s, i.e. an 11-tick stun, on the base card and the Evolution.
+// ---------------------------------------------------------------------------
+namespace {
+
+// Ticks a freshly stunned Knight stays frozen after one Ice Spirit hit. The Knight
+// is a stationary-enough, high-hp target; a control requires the hit to land.
+int iceSpiritStunTicks(int cardId, bool evolved) {
+    Match m;
+    auto victims = m.spawnCard(0 /* Knight */, 9.0f, 12.0f, 1);
+    auto victim = firstCombat(victims);
+    REQUIRE(victim);
+    m.spawnCard(cardId, 9.0f, 11.0f, 0, evolved);
+    int frozen = 0;
+    bool seen = false;
+    for (int t = 0; t < 120; ++t) {
+        m.step();
+        if (victim->freezeTicks > 0) { seen = true; ++frozen; }
+        else if (seen) break;
+    }
+    REQUIRE(seen);  // control: the hit landed
+    return frozen;
+}
+
+} // namespace
+
+TEST_CASE("Ice Spirit stuns for 1.1 s (11 ticks)", "[live_sync][patch-2025-07-07]") {
+    REQUIRE(iceSpiritStunTicks(72, false) == 11);
+}
+
+TEST_CASE("Ice Spirit Evolution stuns for 1.1 s (11 ticks)", "[live_sync][patch-2025-07-07]") {
+    REQUIRE(iceSpiritStunTicks(144, false) == 11);
+}
+
+TEST_CASE("Ice Spirit Evolution evolved form stuns for 1.1 s (11 ticks)", "[live_sync][patch-2025-07-07]") {
+    // The evolved stat block (spawnEvolvedEntity) restates the stun separately.
+    REQUIRE(iceSpiritStunTicks(144, true) == 11);
+}

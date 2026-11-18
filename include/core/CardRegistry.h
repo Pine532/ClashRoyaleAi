@@ -820,9 +820,11 @@ private:
         // Every Spirit is 215 hp since the official 4 Aug 2026 notes (230 ->
         // 215); Fire Spirit hits for 215 since 16 Sep 2026 (207 -> 215), in a
         // 2.3-tile area (UPSTREAM_REQUESTS.md item 32b).
+        // Ice Spirit's freeze is 11 ticks (1.1 s): official 7 Jul 2025 notes,
+        // "Freeze Duration: 1.2sec -> 1.1sec" (docs/LIVE_SYNC.md).
         add(troop(72, "Ice Spirit", 1.0f, Archetype::RangedSquad, 215, SPEED_VERY_FAST, 2.5f, 110, 10, ';')
             .withTargetsAir()
-            .withOnHit(std::make_shared<FreezeOnHit>(10, 0.0f))
+            .withOnHit(std::make_shared<FreezeOnHit>(11, 0.0f))
             .withDieAfterFirstHit());
         add(troop(73, "Fire Spirit", 1.0f, Archetype::RangedSquad, 215, SPEED_VERY_FAST, 2.5f, 215, 10, '<')
             .withTargetsAir()
@@ -1365,16 +1367,17 @@ private:
 
         // Ice Spirit: +0.5 splash radius, applied as an absolute 1.7 on the
         // evolved form (the base card has no splash here). Both forms carry the
-        // base 10-tick stun; the real delayed second pulse is not modelled.
+        // base 11-tick stun (official 7 Jul 2025 notes, 1.2 s -> 1.1 s, applied
+        // to the Evolution too); the real delayed second pulse is not modelled.
         addEvolution(144,
             troop(72, "Ice Spirit", 1.0f, Archetype::RangedSquad, 215, SPEED_VERY_FAST, 2.5f, 110, 10, ';')
                 .withTargetsAir()
-                .withOnHit(std::make_shared<FreezeOnHit>(10, 0.0f))
+                .withOnHit(std::make_shared<FreezeOnHit>(11, 0.0f))
                 .withDieAfterFirstHit(),
             troop(72, "Ice Spirit", 1.0f, Archetype::RangedSquad, 215, SPEED_VERY_FAST, 2.5f, 110, 10, ';')
                 .withTargetsAir()
                 .withSplash(1.7f)
-                .withOnHit(std::make_shared<FreezeOnHit>(10, 0.0f))
+                .withOnHit(std::make_shared<FreezeOnHit>(11, 0.0f))
                 .withDieAfterFirstHit(),
             2, 1);
 
