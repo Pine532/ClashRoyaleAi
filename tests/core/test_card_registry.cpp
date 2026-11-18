@@ -755,7 +755,7 @@ TEST_CASE("Electro Wizard stuns on hit via the on-hit decorator (freeze with slo
     advancePastDeploy(electroWizardEntity, board);
     electroWizardEntity->update(board);
 
-    REQUIRE(enemy->hp == 882); // 1000 - 118
+    REQUIRE(enemy->hp == 884); // 1000 - 116
     REQUIRE(enemy->freezeTicks == 5);
     REQUIRE(enemy->freezeSlow == Catch::Approx(0.0f));
 }
@@ -781,8 +781,8 @@ TEST_CASE("Electro Wizard splits its attack across the 2 closest enemies at half
     advancePastDeploy(electroWizardEntity, board);
     electroWizardEntity->update(board);
 
-    REQUIRE(near->hp == 941);  // 1000 - 118/2
-    REQUIRE(far->hp == 941);
+    REQUIRE(near->hp == 942);  // 1000 - 116/2
+    REQUIRE(far->hp == 942);
     REQUIRE(near->freezeTicks == 5); // both stunned
     REQUIRE(far->freezeTicks == 5);
 }

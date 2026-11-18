@@ -515,8 +515,11 @@ private:
         // MeleeSquad (archetypes describe how damage lands here, not range).
         // Splits to the 2 closest enemies (each takes damage/2; full damage if
         // only one is in range). Each hit and the deploy zap (radius 3) stun
-        // for 0.5 s.
-        add(troop(35, "Electro Wizard", 4.0f, Archetype::MeleeSquad, 714, SPEED_FAST, 5.0f, 118, 18, 'z')
+        // for 0.5 s. 2025-03-04 balance update: attack damage 110 -> 116
+        // (supercell.com march-balance-changes; the earlier 118 was unsourced).
+        // The deploy zap keeps its own 118: no source states a deploy-zap
+        // damage change.
+        add(troop(35, "Electro Wizard", 4.0f, Archetype::MeleeSquad, 714, SPEED_FAST, 5.0f, 116, 18, 'z')
             .withTargetsAir()
             .withSplitTargets(2)
             .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f))
@@ -751,7 +754,10 @@ private:
             .withSightRange(5.0f));
         add(troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
             .withTargetsAir()
-            .withSplash(1.5f).withSightRange(9.5f));
+            .withSplash(1.5f).withSightRange(9.5f)
+            // 2025-03-04 balance update: Deploy Time 1.0 s -> 1.2 s
+            // (supercell.com march-balance-changes).
+            .withDeployTime(12));
         // Hunter: the real card fires 10 randomly spread pellets and no falloff
         // curve is published. withRangeFalloff is an invented deterministic
         // approximation: linear from full damage point-blank to half at max
@@ -1372,9 +1378,11 @@ private:
         // lingering slow zone on death is not modelled.
         addEvolution(145,
             troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
-                .withTargetsAir().withSplash(1.5f).withSightRange(9.5f),
+                .withTargetsAir().withSplash(1.5f).withSightRange(9.5f)
+                .withDeployTime(12), // 2025-03-04: Deploy Time 1.0 s -> 1.2 s, as the base card
             troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
                 .withTargetsAir().withSplash(1.5f).withSightRange(9.5f)
+                .withDeployTime(12) // 2025-03-04: Deploy Time 1.0 s -> 1.2 s, as the base card
                 .withOnHit(std::make_shared<FreezeOnHit>(70, 0.7f)),
             2, 1);
 

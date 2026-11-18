@@ -159,3 +159,43 @@ TEST_CASE("Lava Hound's Lava Pups deal 84 damage", "[live_sync][patch-2025-02-04
     }
     REQUIRE(pups == 6);
 }
+
+// --- 2025-03-04 balance update (supercell.com march-balance-changes) ---
+
+TEST_CASE("Electro Wizard attack damage is 116 and his deploy zap stays 118",
+          "[live_sync][patch-2025-03-04]") {
+    Board board;
+    auto bodies = spawnBare(board, 35);
+    std::shared_ptr<MeleeTroop> wiz;
+    int zaps = 0;
+    for (const auto& e : bodies) {
+        if (auto t = std::dynamic_pointer_cast<MeleeTroop>(e)) wiz = t;
+        if (std::dynamic_pointer_cast<AreaSpell>(e)) ++zaps;
+    }
+    REQUIRE(wiz != nullptr);
+    CHECK(wiz->getBaseDamage() == 116);
+    // The post names only the attack; the deploy zap's damage is unsourced and unchanged.
+    REQUIRE(zaps == 1);
+    Match m;
+    auto victim = std::make_shared<StationaryCombatant>(9001, 9.0f, 11.0f, 1000, 1, 5.0f, 10, 10);
+    m.board().addEntity(victim);
+    m.board().commitPendingEntities();
+    m.spawnCard(35, 9.0f, 10.0f);
+    m.step(1);
+    CHECK(victim->hp == 1000 - 118);
+}
+
+TEST_CASE("Princess deploys in 1.2 s, as the card and as its Evolution (both halves)",
+          "[live_sync][patch-2025-03-04]") {
+    Board board0;
+    auto base = mainBody(board0, 61);
+    REQUIRE(base != nullptr);
+    CHECK(base->deployTicksRemaining == 12);
+    Board board;
+    auto evoCard = mainBody(board, 145, false);
+    REQUIRE(evoCard != nullptr);
+    CHECK(evoCard->deployTicksRemaining == 12);
+    auto evoForm = mainBody(board, 145, true);
+    REQUIRE(evoForm != nullptr);
+    CHECK(evoForm->deployTicksRemaining == 12);
+}
