@@ -472,3 +472,53 @@ TEST_CASE("Vines deals 306 total (102 x 3 pulses) to a troop", "[live_sync][patc
     while (spell->isAlive()) spell->update(board);
     REQUIRE(enemy->hp == 5000 - 306);
 }
+
+// ---------------------------------------------------------------------------
+// Patch 2025-10-24 (official "October balance changes"): Rage boost 35% -> 30%
+// (Evolved Barbarians, Lumberjack), Distance Needed for Charge 2 -> 2.5 tiles
+// (Prince, Ram Rider; Evolved Royal Recruits was already 2.5).
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Evolved Barbarians Blade Rage is +30% attack speed (cooldown x 1/1.30)",
+          "[live_sync][patch-2025-10-24]") {
+    Board board;
+    auto evo = mainBody(board, 155, true);
+    REQUIRE(evo != nullptr);
+    CHECK(evo->selfHasteDurationTicks == 30);
+    CHECK(evo->selfHasteCooldownMultiplier == Catch::Approx(1.0f / 1.30f).margin(0.005f));
+}
+
+TEST_CASE("Lumberjack death Rage buffs allies by 30%, base and evolved",
+          "[live_sync][patch-2025-10-24]") {
+    for (bool evolved : { false, true }) {
+        CAPTURE(evolved);
+        Board board;
+        auto lj = mainBody(board, evolved ? 156 : 21, evolved);
+        REQUIRE(lj != nullptr);
+        auto ally = firstCombat(spawnBare(board, 24, 9.5f, 10.0f, 0)); // Skeletons, 0.5 tiles away
+        REQUIRE(ally != nullptr);
+        REQUIRE(ally->buffDamageMultiplier == 1.0f);
+        lj->hp = 0;
+        lj->onDeath(board);
+        CHECK(ally->buffTicksRemaining == 55);
+        CHECK(ally->buffDamageMultiplier == Catch::Approx(1.30f));
+    }
+}
+
+TEST_CASE("Prince needs 2.5 tiles of run-up to charge",
+          "[live_sync][patch-2025-10-24]") {
+    Board board;
+    auto prince = mainBody(board, 14);
+    REQUIRE(prince != nullptr);
+    CHECK(prince->chargeThreshold == Catch::Approx(2.5f));
+    CHECK(prince->chargeMultiplier == Catch::Approx(2.0f));
+}
+
+TEST_CASE("Ram Rider's ram needs 2.5 tiles of run-up to charge",
+          "[live_sync][patch-2025-10-24]") {
+    Board board;
+    auto ram = mainBody(board, 87);
+    REQUIRE(ram != nullptr);
+    CHECK(ram->chargeThreshold == Catch::Approx(2.5f));
+    CHECK(ram->chargeMultiplier == Catch::Approx(2.0f));
+}

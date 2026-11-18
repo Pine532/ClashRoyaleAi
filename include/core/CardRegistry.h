@@ -485,19 +485,22 @@ private:
 
         add(troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E').withSightRange(5.0f));
 
-        // Prince jumps the river (withIgnoresRiver). The charge distance and
-        // damage are not sourced; the charge speed is (2x, the game files'
+        // Prince jumps the river (withIgnoresRiver). The charge distance is
+        // 2.5 tiles (official 24 Oct 2025 balance post, 2 -> 2.5; docs/LIVE_SYNC.md);
+        // the damage is not sourced; the charge speed is (2x, the game files'
         // charge_speed_multiplier 200; UPSTREAM_REQUESTS.md item 35).
         add(troop(14, "Prince", 5.0f, Archetype::MeleeSquad, 1920, SPEED_MEDIUM, 1.6f, 391, 14, 'p')
-            .withCharge(3.0f, 2.0f).withChargeSpeed(2.0f)
+            .withCharge(2.5f, 2.0f).withChargeSpeed(2.0f)
             .withIgnoresRiver());
 
         add(troop(17, "Elite Barbarians", 6.0f, Archetype::MeleeSquad, 1341, SPEED_FAST, 1.2f, 384, 14, 'e')
             .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} }));
 
-        // The death-potion radius, multiplier and duration are not sourced.
+        // The death-potion radius and duration are not sourced. The Rage boost
+        // is 30% (official 24 Oct 2025 balance post, 35% -> 30%; docs/LIVE_SYNC.md),
+        // so the damage multiplier is 1.30 (the previous 1.75 matched no source).
         add(troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l')
-            .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.75f, 55)));
+            .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55)));
 
         add(troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} }));
@@ -902,7 +905,7 @@ private:
             .withAllyBuffAura(3.0f, 3, 1.5f, 50, 2));
         // Ram Rider jumps the river.
         add(troop(87, "Ram Rider", 5.0f, Archetype::MeleeBuildingTargeter, 1766, SPEED_MEDIUM, 1.0f, 250, 17, '"')
-            .withCharge(3.0f, 2.0f).withChargeSpeed(2.0f) // the ram charges at 2x (item 35)
+            .withCharge(2.5f, 2.0f).withChargeSpeed(2.0f) // the ram charges at 2x (item 35); 2.5 tiles to charge (official 24 Oct 2025 post, docs/LIVE_SYNC.md)
             .withSecondaryUnit(ramRiderCrossbowStats()) // the rider's independently targeting crossbow (default 5.5 sight)
             .withSightRange(7.5f) // the ram itself
             .withIgnoresRiver());
@@ -1517,26 +1520,27 @@ private:
 
         // Barbarians: the base 716 hp, the Evolution's hp bonus cut to 0% by
         // the official 4 Aug 2026 notes (was +10%, 760). "Blade Rage": +35%
-        // attack speed for 3 s, refreshed on each attack (0.74 ~= 1/1.35); the
-        // same notes lengthened it to 5 s, which is not applied here. The
+        // attack speed for 3 s, refreshed on each attack; the official 24 Oct
+        // 2025 notes cut the boost to +30% (0.77 ~= 1/1.30; docs/LIVE_SYNC.md).
+        // The 4 Aug 2026 notes lengthened it to 5 s, which is not applied here. The
         // movement-speed boost is not modelled.
         addEvolution(155,
             troop(8, "Barbarians", 5.0f, Archetype::MeleeSquad, 716, SPEED_MEDIUM, 0.7f, 192, 14, 'B')
                 .withOffsets({ {0.0f, 0.0f}, {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }),
             troop(8, "Barbarians", 5.0f, Archetype::MeleeSquad, 716, SPEED_MEDIUM, 0.7f, 192, 14, 'B')
                 .withOffsets({ {0.0f, 0.0f}, {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} })
-                .withSelfHasteOnHit(30, 0.74f),
+                .withSelfHasteOnHit(30, 0.77f),
             2, 1);
 
         // Lumberjack: the ghost (lumberjackGhostStats) composed with the Rage
-        // drop.
+        // drop (30% boost, official 24 Oct 2025 balance post; docs/LIVE_SYNC.md).
         addEvolution(156,
             troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l')
-                .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.75f, 55)),
+                .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55)),
             troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l')
                 .withDeathEffect(std::make_shared<CompositeDeathEffect>(
                     std::vector<std::shared_ptr<IDeathEffect>>{
-                        std::make_shared<AreaBuffOnDeath>(2.5f, 1.75f, 55),
+                        std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55),
                         std::make_shared<SpawnOnDeath>(lumberjackGhostStats())
                     })),
             2, 1);
