@@ -109,3 +109,33 @@ TEST_CASE("Musketeer Evolution empowered shot deals 392",
     CHECK(m->getBaseDamage() == 217);
     CHECK(static_cast<int>(m->getBaseDamage() * m->burstDamageMultiplier) == 392);
 }
+
+// ---- patch 2025-01-07: Attack Splash Radius 1.5 tiles (Baby Dragon Evolution, Witch + Evolution)
+namespace p04_splash {
+    inline std::shared_ptr<CombatEntity> spawnFirst(int id, bool evolved) {
+        Board board;
+        const CardDefinition* def = CardRegistry::getInstance().getCard(id);
+        REQUIRE(def != nullptr);
+        if (evolved) def->spawnEvolvedEntity(5.0f, 5.0f, 0, board);
+        else         def->spawnEntity(5.0f, 5.0f, 0, board);
+        board.commitPendingEntities();
+        auto e = std::dynamic_pointer_cast<CombatEntity>(board.getEntities()[0]);
+        REQUIRE(e != nullptr);
+        return e;
+    }
+}
+
+TEST_CASE("Baby Dragon Evolution (137) splashes 1.5 tiles in both forms", "[live_sync][patch-2025-01-07]") {
+    REQUIRE(p04_splash::spawnFirst(137, false)->splashRadius == Catch::Approx(1.5f));
+    REQUIRE(p04_splash::spawnFirst(137, true)->splashRadius == Catch::Approx(1.5f));
+    REQUIRE(p04_splash::spawnFirst(44, false)->splashRadius == Catch::Approx(1.5f));
+}
+
+TEST_CASE("Witch (71) splashes 1.5 tiles", "[live_sync][patch-2025-01-07]") {
+    REQUIRE(p04_splash::spawnFirst(71, false)->splashRadius == Catch::Approx(1.5f));
+}
+
+TEST_CASE("Witch Evolution (142) splashes 1.5 tiles in both forms", "[live_sync][patch-2025-01-07]") {
+    REQUIRE(p04_splash::spawnFirst(142, false)->splashRadius == Catch::Approx(1.5f));
+    REQUIRE(p04_splash::spawnFirst(142, true)->splashRadius == Catch::Approx(1.5f));
+}

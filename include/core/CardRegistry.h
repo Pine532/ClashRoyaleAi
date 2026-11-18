@@ -796,8 +796,9 @@ private:
         add(troop(70, "Furnace", 4.0f, Archetype::RangedSquad, 727, SPEED_MEDIUM, 5.5f, 179, 17, '/')
             .withTargetsAir()
             .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(furnaceFireSpiritStats())));
+        // Witch splash 1 -> 1.5 tiles: 2025-01-07 balance update (docs/LIVE_SYNC.md).
         add(troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
-            .withTargetsAir()
+            .withTargetsAir().withSplash(1.5f)
             .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats())));
 
         // "Spirit" troops detonate on their first hit and vanish
@@ -1270,11 +1271,13 @@ private:
         // Baby Dragon: the real aura (30% enemy slow, 30% ally speed-up) is
         // approximated as an ally damage buff per landed hit; there is no
         // movement-speed buff here.
+        // Splash 1.2 -> 1.5 tiles on both forms (the base id 44 already had it):
+        // 2025-01-07 balance update (docs/LIVE_SYNC.md).
         addEvolution(137,
             troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y')
-                .withFlying().withTargetsAir(),
+                .withFlying().withTargetsAir().withSplash(1.5f),
             troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y')
-                .withFlying().withTargetsAir()
+                .withFlying().withTargetsAir().withSplash(1.5f)
                 .withAllyBuffAura(4.0f, 1, 1.3f, 20, 1000000),
             2, 1);
 
@@ -1328,12 +1331,14 @@ private:
 
         // Witch: the real heal when a spawned Skeleton dies is approximated as
         // healing on her own hits, capped at 124% hp (1040).
+        // Witch splash 1 -> 1.5 tiles on both forms: 2025-01-07 balance update
+        // (docs/LIVE_SYNC.md).
         addEvolution(142,
             troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
-                .withTargetsAir()
+                .withTargetsAir().withSplash(1.5f)
                 .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats())),
             troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
-                .withTargetsAir()
+                .withTargetsAir().withSplash(1.5f)
                 .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats()))
                 .withHealOnHit(20, 1040),
             2, 1);
