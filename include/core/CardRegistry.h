@@ -1674,12 +1674,13 @@ private:
             .withHeroAbility(3.0f, 220, std::make_shared<SpawnOnAbility>(heroMusketeerTurretStats())));
 
         // Hero Goblins (base: id 4). "Banner Brigade" (1 elixir, one use,
-        // within 7 s of the last goblin dying): a fresh squad at the death
+        // within 5 s of the last goblin dying; 7 s before the 2026-02-23
+        // balance update, "Banner Duration: 7s -> 5s", docs/LIVE_SYNC.md): a fresh squad at the death
         // position. withPostDeathAbility, since there is no alive-path ability.
         // The new squad uses plain Goblins stats, so it cannot chain.
         add(troop(172, "Hero Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} })
-            .withPostDeathAbility(1.0f, 70, std::make_shared<PeriodicSpawnEffect>(
+            .withPostDeathAbility(1.0f, 50, std::make_shared<PeriodicSpawnEffect>(
                 troop(-48, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
                     .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }))));
 

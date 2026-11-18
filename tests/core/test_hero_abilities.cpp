@@ -595,7 +595,7 @@ TEST_CASE("Hero Goblins (172) is registered with base Goblins' stats and no aliv
     REQUIRE(def->isHero);
     REQUIRE_FALSE(def->isChampion);
     REQUIRE(def->abilityElixirCost == Catch::Approx(1.0f));
-    REQUIRE(def->abilityUsableAfterDeathTicks == 70);
+    REQUIRE(def->abilityUsableAfterDeathTicks == 50);
     REQUIRE(def->postDeathAbilityEffect != nullptr);
 
     def->spawnEntity(5.0f, 5.0f, 0, board);
@@ -742,7 +742,7 @@ TEST_CASE("Hero Goblins' Banner Brigade is unavailable once the reactivation win
     game.step(); // wipe detected this tick
 
     game.playerAI.elixir = 10.0f;
-    for (int i = 0; i < 71; ++i) { // the window is 70 ticks: this overshoots it
+    for (int i = 0; i < 51; ++i) { // the window is 50 ticks: this overshoots it
         game.step();
         game.playerAI.elixir = 10.0f;
     }

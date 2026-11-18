@@ -637,3 +637,29 @@ TEST_CASE("Three Musketeers hit speed is 1.3 s (13 ticks)", "[live_sync][patch-2
         REQUIRE(c->getAttackCooldown() == 13);
     }
 }
+
+// ---- patch 2026-02-23 (february-balance-changes-26) ----
+
+// Hero Goblins "Banner Duration: 7s -> 5s": the post-death window is 50 ticks.
+TEST_CASE("Hero Goblins Banner Brigade window is 5 s",
+          "[live_sync][patch-2026-02-23]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(172);
+    REQUIRE(def != nullptr);
+    CHECK(def->abilityUsableAfterDeathTicks == 50);
+
+    GameManager game({ 1, 172, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
+    game.playerAI.hand[1] = 172;
+    game.playCard(0, 172, 9.0f, 10.0f);
+    game.step();
+    for (const auto& e : game.getBoard().getEntities()) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->cardId == 172 && ce->team == 0) ce->takeDamage(ce->hp);
+    }
+    game.step(); // wipe detected
+    game.playerAI.elixir = 10.0f;
+    for (int i = 0; i < 55; ++i) { // past 5 s, inside the old 7 s
+        game.step();
+        game.playerAI.elixir = 10.0f;
+    }
+    CHECK_FALSE(game.isChampionAbilityReady(0, 1));
+}
