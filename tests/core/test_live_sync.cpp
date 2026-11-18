@@ -213,3 +213,27 @@ TEST_CASE("Tornado deals 84 damage in total to a troop in its radius", "[live_sy
     m.step(30);
     REQUIRE(m.rec->totalTo(knight->id) == 84);
 }
+
+// ---- 2025-06-02 balance update (June 2025) ---------------------------------
+
+TEST_CASE("Goblin Demolisher kamikaze form expires 10 s after it spawns", "[live_sync][patch-2025-06-02]") {
+    Board board;
+    auto demolisher = mainBody(board, 66);
+    REQUIRE(demolisher != nullptr);
+    demolisher->takeDamage(demolisher->hp / 2 + 1); // past 50%: transforms
+    demolisher->update(board);
+    REQUIRE_FALSE(demolisher->isAlive());
+    board.cleanDeadEntities();
+    board.commitPendingEntities();
+
+    std::shared_ptr<CombatEntity> kamikaze;
+    for (const auto& e : board.getEntities())
+        if (e->name == "Kamikaze Goblin Demolisher") kamikaze = std::dynamic_pointer_cast<CombatEntity>(e);
+    REQUIRE(kamikaze != nullptr);
+
+    // No building anywhere, so only the lifetime cap can end it.
+    for (int i = 0; i < 99; ++i) kamikaze->update(board);
+    REQUIRE(kamikaze->isAlive());
+    kamikaze->update(board);
+    REQUIRE_FALSE(kamikaze->isAlive()); // 100 ticks = 10 s
+}

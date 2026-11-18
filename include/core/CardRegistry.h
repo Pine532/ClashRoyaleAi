@@ -324,12 +324,13 @@ private:
     // Goblin Demolisher's transformed form: a Very Fast, building-only kamikaze
     // with a 2.5-radius, 404-damage burst on its first hit, spawned when the
     // ranged form kills itself at <= 50% hp (CombatEntity::transformKillsSelf).
-    // Reuses the ranged form's 1300 hp (not sourced). The real 10 s lifetime
-    // cap is not modelled; dieAfterFirstHit bounds it in practice.
+    // Reuses the ranged form's 1300 hp (not sourced). 2025-06-02 balance update:
+    // lifetime after 50% HP 8 s -> 10 s (100 ticks), modelled as a fraction-1.0
+    // withHpTransform timer that runs from the kamikaze's spawn (docs/LIVE_SYNC.md).
     static CardStats goblinDemolisherKamikazeStats() {
         return troop(-37, "Kamikaze Goblin Demolisher", 0.0f, Archetype::MeleeBuildingTargeter,
             1300, 1.0f, 0.5f, 404, 10, '&')
-            .withSplash(2.5f).withDieAfterFirstHit();
+            .withSplash(2.5f).withDieAfterFirstHit().withHpTransform(1.0f, 100, false);
     }
     // Skeleton King's summoned skeletons, spawned one at a time in a loop by
     // SkeletonKingSoulSummonEffect.
