@@ -992,7 +992,10 @@ private:
         // ground is not modelled.
         add(spell(105, "Vines", 3.0f, 2.5f, 135, 8, '+').withRepeats(3, 7)
             .withSpellTopHpTargets(3));
-        add(spell(106, "Tornado", 3.0f, 5.5f, 154, 8, '_')
+        // 2025-04-09 balance update: Damage 84x2 -> 84 (-50%), so one 84 hit in
+        // total (supercell.com April balance changes; docs/LIVE_SYNC.md). The old
+        // 154 matched neither the pre-patch 168 nor this value.
+        add(spell(106, "Tornado", 3.0f, 5.5f, 84, 8, '_')
             .withKnockback(-1.5f)); // negative: pulls toward the centre
         // Freeze: the source's damage field is treated as vestigial; the card
         // is a 4 s full stun and no damage.

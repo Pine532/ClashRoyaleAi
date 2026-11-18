@@ -199,3 +199,17 @@ TEST_CASE("Princess deploys in 1.2 s, as the card and as its Evolution (both hal
     REQUIRE(evoForm != nullptr);
     CHECK(evoForm->deployTicksRemaining == 12);
 }
+
+// ---------------- 2025-04-09 (April balance changes) ----------------
+
+// Tornado "Damage: 84x2 -> 84 (-50%)": the whole cast now deals 84 to a troop
+// in its radius (the engine's Tornado is a single hit).
+TEST_CASE("Tornado deals 84 damage in total to a troop in its radius", "[live_sync][patch-2025-04-09]") {
+    Match m;
+    auto bodies = m.spawnCard(0, 9.0f, 20.0f, 1); // enemy Knight, 1766 hp
+    auto knight = firstCombat(bodies);
+    REQUIRE(knight != nullptr);
+    m.spawnCard(106, 9.0f, 20.0f, 0);
+    m.step(30);
+    REQUIRE(m.rec->totalTo(knight->id) == 84);
+}
