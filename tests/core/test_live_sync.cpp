@@ -417,7 +417,7 @@ TEST_CASE("Giant Snowball slows by 30% (speed factor 0.70)", "[live_sync][patch-
     spawnBare(board, 100, 5.0f, 5.0f, 0);
     auto spell = board.getEntities().back();
     while (spell->isAlive()) spell->update(board);
-    REQUIRE(enemy->freezeTicks == 15);
+    // The duration is the 2026-05-04 patch's to pin (3 s); this case owns the factor.
     REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f));
 }
 
@@ -776,4 +776,64 @@ TEST_CASE("Wall Breakers Evolution death explosion deals 192 to troops (2026-04-
     m.board().cleanDeadEntities();
     m.board().commitPendingEntities();
     REQUIRE(bystander->hp == 100000 - 192);
+}
+
+// ===== 2026-05-04 balance update =====
+#include "SpiritEmpressForms.h"
+#include "AreaSpell.h"
+
+
+TEST_CASE("Giant Snowball base slow lasts 3 s (30 ticks) at the 0.5 speed factor",
+          "[live_sync][patch-2026-05-04]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10);
+    board.addEntity(enemy);
+    board.commitPendingEntities();
+    CardRegistry::getInstance().getCard(100)->spawnEntity(5.0f, 5.0f, 0, board);
+    board.commitPendingEntities();
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+    REQUIRE(spell != nullptr);
+    while (spell->isAlive()) spell->update(board);
+    CHECK(enemy->freezeTicks == 30);
+    CHECK(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
+}
+
+TEST_CASE("Giant Snowball Evolution slow lasts 3 s (30 ticks), standardised with the base form",
+          "[live_sync][patch-2026-05-04]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10);
+    board.addEntity(enemy);
+    board.commitPendingEntities();
+    CardRegistry::getInstance().getCard(158)->spawnEvolvedEntity(5.0f, 5.0f, 0, board);
+    board.commitPendingEntities();
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+    REQUIRE(spell != nullptr);
+    while (spell->isAlive()) spell->update(board);
+    CHECK(enemy->freezeTicks == 30);
+    CHECK(enemy->freezeSlow == Catch::Approx(0.7f));
+}
+
+TEST_CASE("Spirit Empress hitpoints are 1121 on the registry entry and both forms",
+          "[live_sync][patch-2026-05-04]") {
+    Board board;
+    auto body = mainBody(board, 165);
+    REQUIRE(body != nullptr);
+    CHECK(body->hp == 1121);
+    CHECK(spiritEmpressGroundStats().hp == 1121);
+    CHECK(spiritEmpressFlyingStats().hp == 1121);
+}
+
+TEST_CASE("Giant Snowball Evolution card's un-evolved half also slows for 3 s (30 ticks)",
+          "[live_sync][patch-2026-05-04]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10);
+    board.addEntity(enemy);
+    board.commitPendingEntities();
+    CardRegistry::getInstance().getCard(158)->spawnEntity(5.0f, 5.0f, 0, board);
+    board.commitPendingEntities();
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+    REQUIRE(spell != nullptr);
+    while (spell->isAlive()) spell->update(board);
+    CHECK(enemy->freezeTicks == 30);
+    CHECK(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }

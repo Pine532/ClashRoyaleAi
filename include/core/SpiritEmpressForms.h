@@ -5,7 +5,8 @@
 // the elixir held at play time (the real switching rule is unsourced). Both
 // share id 165 and the same placement footprint, so only cost and stats differ.
 //
-// Liquipedia, level 9: both 926 hp / 249 damage. Ground: melee 1.2, 1.2 s,
+// 2026-05-04 balance update: both forms 1121 hp (docs/LIVE_SYNC.md); damage is
+// Liquipedia, level 9: 249. Ground: melee 1.2, 1.2 s,
 // fast, ground-only, 3 elixir. Flying: range 5, 1.4 s, medium, air and ground,
 // 6 elixir.
 inline CardStats spiritEmpressGroundStats() {
@@ -14,7 +15,7 @@ inline CardStats spiritEmpressGroundStats() {
     stats.name = "Spirit Empress";
     stats.cost = 3.0f;
     stats.archetype = Archetype::MeleeSquad;
-    stats.hp = 926;
+    stats.hp = 1121; // 2026-05-04 balance update (supercell.com May balance changes 2026)
     // 2026-03-02 balance update: ground form Medium -> Fast (docs/LIVE_SYNC.md),
     // replacing the earlier off-tier 0.85 placeholder. Scaled here because
     // direct assignment bypasses CardStats::troop().
@@ -32,7 +33,7 @@ inline CardStats spiritEmpressFlyingStats() {
     stats.name = "Spirit Empress";
     stats.cost = 6.0f;
     stats.archetype = Archetype::RangedSquad;
-    stats.hp = 926;
+    stats.hp = 1121; // 2026-05-04 balance update (supercell.com May balance changes 2026)
     // Scaled for the same reason as the ground form.
     stats.speed = 0.5f * MOVEMENT_SPEED_SCALE;
     stats.attackRange = 5.0f;

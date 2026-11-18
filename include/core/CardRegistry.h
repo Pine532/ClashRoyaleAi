@@ -985,8 +985,12 @@ private:
         // === Spells (expansion) ===
         // Slow 30% (factor 0.70): 2025-10-06 balance update lists Giant Snowball
         // among the slowing effects cut from 35% to 30% (docs/LIVE_SYNC.md).
+        // Slow lasts 3 s (30 ticks): the 2026-05-04 balance update cut the
+        // Evolution's 4 s "standardizing the slow duration with its unevolved
+        // form" (supercell.com May balance changes 2026; Fandom wiki lists 3 s
+        // for the base). Was 15 ticks, unsourced (docs/LIVE_SYNC.md).
         add(spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
-            .withSpellOnHit(std::make_shared<FreezeOnHit>(15, 0.70f))
+            .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.70f))
             .withKnockback(1.0f));
         // Barbarian Barrel: rolls 4.5 tiles at width 2.6 (published), and its
         // Barbarian spawns where the barrel stops. No knockback: the real
@@ -1574,10 +1578,13 @@ private:
         // not modelled.
         addEvolution(158,
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
-                .withSpellOnHit(std::make_shared<FreezeOnHit>(15, 0.70f)) // 2025-10-06: base slow 30%
+                // Base half: 3 s slow, as the base card above (2026-05-04).
+                .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.70f)) // 2025-10-06: base slow 30%
                 .withKnockback(1.0f),
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
-                .withSpellOnHit(std::make_shared<FreezeOnHit>(40, 0.7f))
+                // 2026-05-04 balance update: slow 4 s -> 3 s (30 ticks) to
+                // match the base form (docs/LIVE_SYNC.md). Factor 0.7 unchanged.
+                .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.7f))
                 .withKnockback(-4.5f),
             2, 1);
 
@@ -1658,7 +1665,9 @@ private:
         // Registered at the ground form's cost (3.0) for the hand display and
         // placement; playCard always spawns from SpiritEmpressForms.h instead.
         // Not a Champion: it has no activated ability.
-        add(troop(165, "Spirit Empress", 3.0f, Archetype::MeleeSquad, 926, SPEED_FAST, 1.2f, 249, 12, '<')); // speed matches the ground form (2026-03-02: Fast)
+        // 2026-05-04 balance update: 1121 hp on both forms (ground 1152 -> 1121,
+        // air 1177 -> 1121; docs/LIVE_SYNC.md). Was 926, a Liquipedia level-9 value.
+        add(troop(165, "Spirit Empress", 3.0f, Archetype::MeleeSquad, 1121, SPEED_FAST, 1.2f, 249, 12, '<')); // speed matches the ground form (2026-03-02: Fast)
 
         // === Heroes ===
         // A Hero gives an existing troop a second, ability-carrying form, using

@@ -856,7 +856,7 @@ TEST_CASE("Giant Snowball deals damage and applies a partial slow via spellOnHit
     while (spell->isAlive()) spell->update(board);
 
     REQUIRE(enemy->hp == 821); // 1000 - 179
-    REQUIRE(enemy->freezeTicks == 15);
+    REQUIRE(enemy->freezeTicks == 30); // 3 s (2026-05-04 balance update)
     REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }
 
