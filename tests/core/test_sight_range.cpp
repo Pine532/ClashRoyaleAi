@@ -239,7 +239,7 @@ const SightRow SIGHT_CATALOG[] = {
         {  61, "Princess", 9.5f },
         {  62, "Hunter", 5.5f },
         {  63, "Magic Archer", 7.5f },
-        {  64, "Firecracker", 8.5f },
+        {  64, "Firecracker", 8.0f },   // 2025-08-06 balance update: 8.5 -> 8
         {  65, "Skeleton Dragons", 5.5f },
         {  66, "Goblin Demolisher", 5.5f },
         {  67, "Flying Machine", 6.0f },
@@ -291,7 +291,7 @@ const SightRow SIGHT_CATALOG[] = {
         { 127, "Bomber", 5.5f },
         { 128, "Archers", 5.5f },
         { 129, "Cannon", 5.5f },
-        { 130, "Firecracker", 8.5f },
+        { 130, "Firecracker", 8.0f },   // 2025-08-06 balance update: 8.5 -> 8
         { 131, "Dart Goblin", 7.5f },
         { 133, "Skeleton Army", 5.5f },
         { 134, "Skeleton Barrel", 7.7f },

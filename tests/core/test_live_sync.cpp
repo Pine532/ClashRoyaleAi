@@ -277,3 +277,38 @@ TEST_CASE("Ice Spirit Evolution evolved form stuns for 1.1 s (11 ticks)", "[live
     // The evolved stat block (spawnEvolvedEntity) restates the stun separately.
     REQUIRE(iceSpiritStunTicks(144, true) == 11);
 }
+
+// ---- patch-2025-08-06 (P11): Dart Goblin Evolution poison cloud, Firecracker sight ----
+
+TEST_CASE("Dart Goblin Evolution poison mark lasts 1 s (2025-08-06 balance update)",
+          "[live_sync][patch-2025-08-06]") {
+    Match m;
+    auto victim = firstCombat(m.spawnCard(19, 9.0f, 12.0f, 1)); // Golem: survives the darts
+    REQUIRE(victim);
+    m.spawnCard(131, 9.0f, 8.0f, 0, true);
+    int markTicks = 0;
+    for (int i = 0; i < 100 && markTicks == 0; ++i) {
+        m.step();
+        markTicks = victim->dotTicksRemaining;
+    }
+    REQUIRE(markTicks > 0);
+    // Official: Poison Cloud Duration 4 s -> 1 s (10 ticks; the mark is applied
+    // before that tick's decrement may already have run, so allow <= 10).
+    CHECK(markTicks <= 10);
+}
+
+TEST_CASE("Firecracker sight range is 8.0 tiles on the base and Evolution ids (2025-08-06)",
+          "[live_sync][patch-2025-08-06]") {
+    Board b1;
+    auto base = mainBody(b1, 64);
+    REQUIRE(base);
+    CHECK(base->sightRange == 8.0f);
+    Board b2;
+    auto evo = mainBody(b2, 130, true);
+    REQUIRE(evo);
+    CHECK(evo->sightRange == 8.0f);
+    Board b3;
+    auto evoBase = mainBody(b3, 130, false);
+    REQUIRE(evoBase);
+    CHECK(evoBase->sightRange == 8.0f);
+}

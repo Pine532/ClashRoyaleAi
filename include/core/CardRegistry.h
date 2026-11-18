@@ -776,7 +776,8 @@ private:
         add(troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
             .withTargetsAir()
             .withSplash(1.5f)
-            .withRecoil(1.0f).withSightRange(8.5f)); // kicks back 1 tile after every attack
+            // 2025-08-06 balance update: sight range 8.5 -> 8 tiles (official post, docs/LIVE_SYNC.md).
+            .withRecoil(1.0f).withSightRange(8.0f)); // kicks back 1 tile after every attack
         add(troop(65, "Skeleton Dragons", 4.0f, Archetype::RangedSquad, 560, SPEED_FAST, 3.5f, 151, 20, '%')
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} }).withFlying().withTargetsAir()
             .withSplash(1.5f));
@@ -1205,15 +1206,16 @@ private:
         // damage-over-time mark on whatever the shot hits. The per-tick damage
         // is not sourced; 3 ticks approximates 0.25 s.
         addEvolution(130,
+            // 2025-08-06 balance update: sight range 8.5 -> 8 tiles on both blocks (docs/LIVE_SYNC.md).
             troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
-                .withTargetsAir().withSplash(1.5f).withRecoil(1.0f).withSightRange(8.5f),
+                .withTargetsAir().withSplash(1.5f).withRecoil(1.0f).withSightRange(8.0f),
             troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
-                .withTargetsAir().withSplash(1.5f).withRecoil(1.0f).withSightRange(8.5f)
+                .withTargetsAir().withSplash(1.5f).withRecoil(1.0f).withSightRange(8.0f)
                 .withOnHit(std::make_shared<PoisonOnHit>(16, 30, 3)),
             2, 1);
 
         // Dart Goblin: the real escalating poison (51 / 115 / 307 per
-        // consecutive dart, 1.25 s delay) is a flat 51 per second for 4 s. The
+        // consecutive dart, 1.25 s delay) is a flat 51 per second for 1 s (4 s until 2025-08-06). The
         // mark lives on the victim, so it outlasts the Goblin as in the real
         // card. withTargetsAir on both stat blocks: addEvolution inherits
         // nothing from the base registration.
@@ -1222,7 +1224,8 @@ private:
                 .withTargetsAir().withSightRange(7.5f),
             troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
                 .withTargetsAir()
-                .withOnHit(std::make_shared<PoisonOnHit>(51, 40, 10)).withSightRange(7.5f),
+                // 2025-08-06 balance update: poison cloud duration 4 s -> 1 s (40 -> 10 ticks); damage per tick unchanged here (docs/LIVE_SYNC.md).
+                .withOnHit(std::make_shared<PoisonOnHit>(51, 10, 10)).withSightRange(7.5f),
             2, 1);
 
         // Goblin Barrel: the real second barrel on the mirrored lane is
