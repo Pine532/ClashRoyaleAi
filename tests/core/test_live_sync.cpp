@@ -903,3 +903,71 @@ TEST_CASE("Mortar Evolution's Goblin change leaves Goblin Drill's Goblins at the
     REQUIRE(deploy >= 0);
     CHECK(deploy > 5); // the Drill's Goblins are untouched by the Mortar Evolution nerf
 }
+
+// The 2026-11 live-game sync (docs/LIVE_SYNC.md): one block of cases per
+// balance patch, oldest first, each tagged [live_sync][patch-YYYY-MM-DD] and
+// written to fail on the engine before that patch's commit. The source for every
+// value is the ledger row it cites.
+#include "live_sync_test_helpers.h"
+
+using namespace live_sync;
+
+// ---------------------------------------------------------------------------
+// patch 2026-07-06 (July 2026 balance changes)
+// ---------------------------------------------------------------------------
+
+namespace {
+// Damage of the Executioner Evolution's first landed hit on an enemy Cannon
+// placed `dist` tiles away (the Cannon is a stationary target).
+int executionerEvoFirstHit(float dist) {
+    Match m;
+    auto evo = firstCombat(m.spawnCard(157, 9.0f, 10.0f, 0, true));
+    auto cannon = firstCombat(m.spawnCard(25, 9.0f, 10.0f + dist, 1));
+    int amount = 0;
+    for (int t = 0; t < 60 && amount == 0; ++t) {
+        m.step();
+        for (const auto& e : m.rec->damage)
+            if (e.attackerId == evo->id && e.targetId == cannon->id && e.amount > 0) { amount = e.amount; break; }
+    }
+    return amount;
+}
+} // namespace
+
+TEST_CASE("Executioner Evolution Close Quarters hits for 240 within 2.5 tiles and 179 beyond",
+          "[live_sync][patch-2026-07-06]") {
+    REQUIRE(executionerEvoFirstHit(2.0f) == 240);
+    REQUIRE(executionerEvoFirstHit(3.0f) == 179); // the old band reached 3.5
+}
+
+TEST_CASE("Hero Knight Triumphant Taunt shield is 512",
+          "[live_sync][patch-2026-07-06]") {
+    Match m;
+    auto bodies = m.spawnCard(166, 9.0f, 10.0f, 0);
+    auto hero = firstCombat(bodies);
+    REQUIRE(hero != nullptr);
+    hero->abilityCooldownRemaining = 0;
+    REQUIRE(hero->activateAbility(m.board()));
+    REQUIRE(hero->shieldHp == 512);
+}
+
+TEST_CASE("Hero Magic Archer Triple Threat teleports 3.5 tiles and leaves a 271 hp decoy",
+          "[live_sync][patch-2026-07-06]") {
+    Match m;
+    auto bodies = m.spawnCard(171, 9.0f, 10.0f, 0);
+    auto hero = firstCombat(bodies);
+    REQUIRE(hero != nullptr);
+    const float y0 = hero->position.y;
+    hero->abilityCooldownRemaining = 0;
+    REQUIRE(hero->activateAbility(m.board()));
+    m.board().commitPendingEntities();
+    REQUIRE(y0 - hero->position.y == Catch::Approx(3.5f));
+    int decoys = 0;
+    for (const auto& e : m.board().getEntities()) {
+        if (e->name != "Decoy") continue;
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        REQUIRE(c != nullptr);
+        REQUIRE(c->hp == 271);
+        ++decoys;
+    }
+    REQUIRE(decoys == 1);
+}

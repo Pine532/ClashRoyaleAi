@@ -356,9 +356,10 @@ private:
             .withHpTransform(1.0f, 100, false);
     }
     // Hero Magic Archer's decoy: soaks hits and draws aggro but deals no
-    // damage; a zero-damage, stationary unit. hp and lifetime are not sourced.
+    // damage; a zero-damage, stationary unit. hp: 2026-07-06 balance update, 627
+    // -> 271 (docs/LIVE_SYNC.md). Lifetime is not sourced.
     static CardStats heroMagicArcherDecoyStats() {
-        return troop(-46, "Decoy", 0.0f, Archetype::MeleeSquad, 100, 0.0f, 1.0f, 0, 100, 'd');
+        return troop(-46, "Decoy", 0.0f, Archetype::MeleeSquad, 271, 0.0f, 1.0f, 0, 100, 'd');
     }
     // Lumberjack Evolution's death-spawn ghost. The real one is invincible
     // while inside its own Rage zone; here it is just invisible.
@@ -1568,15 +1569,18 @@ private:
                     })),
             2, 1);
 
-        // Executioner ("Axe Smash"): unlocks after 1 cycle. +75% damage within
-        // 3.5 tiles (the range-band bonus). The 1.5-tile knockback on the
+        // Executioner ("Axe Smash"): unlocks after 1 cycle. Close Quarters: 240
+        // damage within 2.5 tiles (the range-band bonus), 179 beyond. 2026-07-06
+        // balance update: 268 -> 240 damage, 3.5 -> 2.5 tiles (docs/LIVE_SYNC.md).
+        // 240 is expressed as 1.3414f on the base 179 (static_cast<int> truncation;
+        // 1.34f would give 239). The 1.5-tile knockback on the
         // outgoing hit is not modelled.
         addEvolution(157,
             troop(36, "Executioner", 5.0f, Archetype::RangedSquad, 1280, SPEED_MEDIUM, 4.5f, 179, 24, 'x')
                 .withTargetsAir().withBoomerang(15),
             troop(36, "Executioner", 5.0f, Archetype::RangedSquad, 1280, SPEED_MEDIUM, 4.5f, 179, 24, 'x')
                 .withTargetsAir().withBoomerang(15)
-                .withRangeBandBonus(0.0f, 3.5f, 1.75f),
+                .withRangeBandBonus(0.0f, 2.5f, 1.3414f),
             1, 1);
 
         // Giant Snowball ("Snow Roll"): trades the base push for a 4.5-tile
@@ -1706,10 +1710,10 @@ private:
 
         // Hero Knight (base: id 0). "Triumphant Taunt" (2 elixir, 25 s
         // cooldown): a shield, and enemies within 6.5 tiles must attack him for
-        // 5 s (HeroKnightTauntEffect). The shield amount (~half his hp) is not
-        // sourced.
+        // 5 s (HeroKnightTauntEffect). 2026-07-06 balance update: shield 768 ->
+        // 512 hp (docs/LIVE_SYNC.md).
         add(troop(166, "Hero Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K')
-            .withHeroAbility(2.0f, 250, std::make_shared<HeroKnightTauntEffect>(880, 50, 6.5f)));
+            .withHeroAbility(2.0f, 250, std::make_shared<HeroKnightTauntEffect>(512, 50, 6.5f)));
 
         // Hero Wizard (base: id 11). "Fiery Flight" (1 elixir, 20 s cooldown):
         // flies for 5 s, each landed attack pulsing a damaging, pulling tornado
@@ -1737,14 +1741,15 @@ private:
             .withInitialAbilityCooldown(15));
 
         // Hero Magic Archer (base: id 63). "Triple Threat" (2 elixir, 25 s
-        // cooldown): dashes back 5 tiles, leaves a decoy, and gains a 7 s
-        // multi-shot window (HeroMagicArcherTripleThreatEffect).
+        // cooldown): dashes back 3.5 tiles (2026-07-06 balance update: 5 -> 3.5,
+        // docs/LIVE_SYNC.md), leaves a decoy, and gains a 7 s multi-shot window
+        // (HeroMagicArcherTripleThreatEffect).
         // hp 531 as the base card (2024-10-08 balance update, docs/LIVE_SYNC.md).
         add(troop(171, "Hero Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 143, 11, '#')
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f)
             .withHeroAbility(2.0f, 250, std::make_shared<HeroMagicArcherTripleThreatEffect>(
-                5.0f, heroMagicArcherDecoyStats(), 70)));
+                3.5f, heroMagicArcherDecoyStats(), 70)));
 
         // Hero Ice Golem (base: id 40, including the slow on its death
         // explosion). "Snowstorm" (2 elixir, 17 s cooldown): three staggered
