@@ -238,7 +238,7 @@ TEST_CASE("Hero Wizard (167) is registered with base Wizard's stats and the Fier
 
     auto hero = std::dynamic_pointer_cast<CombatEntity>(board.getEntities()[0]);
     REQUIRE(hero != nullptr);
-    REQUIRE(hero->hp == 755); // base Wizard hp (id 11)
+    REQUIRE(hero->hp == 754); // base Wizard hp (id 11), 2024-08-06 balance update
     REQUIRE(hero->splashRadius == Catch::Approx(1.5f));
     REQUIRE(hero->abilityElixirCost == Catch::Approx(1.0f));
     REQUIRE(hero->abilityCooldownTicks == 200);

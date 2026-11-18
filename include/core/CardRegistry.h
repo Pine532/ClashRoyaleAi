@@ -546,7 +546,8 @@ private:
             .withTargetsAir().withSightRange(6.0f));
         // Bomber is ground-only; so are Bowler, Sparky and Cannon Cart.
         add(troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 225, 18, 'b'));
-        add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 755, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+        // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
+        add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
             .withTargetsAir().withSplash(1.5f));
         add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
             .withTargetsAir().withSightRange(7.5f));
@@ -560,8 +561,9 @@ private:
             .withOffsets({ {0.0f, 0.0f}, {0.7f, 0.0f}, {-0.7f, 0.0f} }));
 
         // Ice Wizard fires a projectile; the slow lands on arrival.
+        // 2024-08-06 balance update: attack splash radius 1 -> 1.5 tiles (Supercell august-balance-changes; docs/LIVE_SYNC.md).
         add(troop(34, "Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i')
-            .withTargetsAir()
+            .withTargetsAir().withSplash(1.5f)
             .withOnHit(std::make_shared<FreezeOnHit>(30, 0.65f)));
 
         // Executioner's axe hits on arrival and again 1.5 s later on the
@@ -753,7 +755,8 @@ private:
         // curve is published. withRangeFalloff is an invented deterministic
         // approximation: linear from full damage point-blank to half at max
         // range.
-        add(troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 885, SPEED_MEDIUM, 4.0f, 84, 22, '!')
+        // 2024-08-06 balance update: Hunter hp 838 -> 884 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
+        add(troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!')
             .withTargetsAir()
             .withSplash(1.5f)
             .withRangeFalloff(0.5f));
@@ -1310,9 +1313,10 @@ private:
         // Wizard ("Fire Shield"): a shield of 25% of his hp (189). The
         // shield-break explosion is not modelled.
         addEvolution(141,
-            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 755, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+            // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
+            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
                 .withTargetsAir().withSplash(1.5f),
-            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 755, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
                 .withTargetsAir().withSplash(1.5f).withShield(189),
             2, 1);
 
@@ -1365,9 +1369,10 @@ private:
         // Hunter ("Netting Trap"): nets the nearest enemy for 3 s every 8 s (3
         // s net + 5 s recharge), via PeriodicFreezeNearestEffect.
         addEvolution(146,
-            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 885, SPEED_MEDIUM, 4.0f, 84, 22, '!')
+            // 2024-08-06 balance update: Hunter hp 838 -> 884 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
+            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!')
                 .withTargetsAir().withSplash(1.5f).withRangeFalloff(0.5f),
-            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 885, SPEED_MEDIUM, 4.0f, 84, 22, '!')
+            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!')
                 .withTargetsAir().withSplash(1.5f).withRangeFalloff(0.5f)
                 .withPeriodicEffect(80, std::make_shared<PeriodicFreezeNearestEffect>(4.0f, 30)),
             2, 1);
@@ -1633,7 +1638,8 @@ private:
         // flies for 5 s, each landed attack pulsing a damaging, pulling tornado
         // on the target (HeroWizardFieryFlightEffect). The 0.5-tile pull
         // approximates the sourced "~50% pull strength".
-        add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 755, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+        // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
+        add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
             .withTargetsAir().withSplash(1.5f)
             .withHeroAbility(1.0f, 200, std::make_shared<HeroWizardFieryFlightEffect>(50, 4.0f, 20, 0.5f)));
 
