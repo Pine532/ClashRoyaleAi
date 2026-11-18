@@ -395,10 +395,11 @@ private:
     static CardStats skeletonArmyShadowStats() {
         return troop(-43, "Skeleton Shadow", 0.0f, Archetype::MeleeSquad, 500, SPEED_MEDIUM, 0.5f, 81, 11, 'k');
     }
-    // Royal Ghost Evolution's on-hit Souldier: 51% of her damage (133) and 6.7%
-    // of her hp (81), per the sourced table.
+    // Royal Ghost Evolution's on-hit Souldier: 81 hp. Damage 81: 2025-12-01
+    // balance update 133 -> 102, then April 2026 balance update (2026-04-06)
+    // 102 -> 81 (-20%) (docs/LIVE_SYNC.md).
     static CardStats royalGhostSouldierStats() {
-        return troop(-42, "Souldier", 0.0f, Archetype::MeleeSquad, 81, 0.7f, 1.2f, 133, 18, 'Q');
+        return troop(-42, "Souldier", 0.0f, Archetype::MeleeSquad, 81, 0.7f, 1.2f, 81, 18, 'Q');
     }
 
     void add(const CardStats& stats) {
@@ -1163,7 +1164,10 @@ private:
                 .withDieAfterFirstHit().withSightRange(7.0f)
                 .withDeathEffect(std::make_shared<CompositeDeathEffect>(
                     std::vector<std::shared_ptr<IDeathEffect>>{
-                        std::make_shared<AreaDamageOnDeath>(1.5f, 150),
+                        // 2026-04-06 balance update: area damage to troops 258 -> 192
+                        // (-26%), radius unchanged (docs/LIVE_SYNC.md). The engine's
+                        // single scalar also hits buildings and towers.
+                        std::make_shared<AreaDamageOnDeath>(1.5f, 192),
                         std::make_shared<SpawnOnDeath>(runnerStats())
                     })),
             2, 1);
@@ -1729,12 +1733,13 @@ private:
         // Hero Ice Golem (base: id 40, including the slow on its death
         // explosion). "Snowstorm" (2 elixir, 17 s cooldown): three staggered
         // blasts in a 4-tile radius, the third a 1.5 s freeze, with reduced
-        // Crown Tower damage (HeroIceGolemSnowstormEffect). Per-blast damage,
-        // knockback and slow are not sourced.
+        // Crown Tower damage (HeroIceGolemSnowstormEffect). Per-blast damage
+        // and slow are not sourced. 2026-04-06 balance update: Snowstorm's
+        // knockback removed (ctor arg 3 = 0, docs/LIVE_SYNC.md).
         add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1315, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
                 2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%
-            .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 80, 1.0f, 20, 0.6f, 15)));
+            .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 80, 0.0f, 20, 0.6f, 15)));
 
         // Hero Barbarian Barrel (base: id 101). The ability lives on the
         // spawned Barbarian (heroBarbarianBarrelBarbarianStats), since the

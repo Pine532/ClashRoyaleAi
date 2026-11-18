@@ -251,7 +251,7 @@ TEST_CASE("Wall Breakers Evolution's death effect both explodes (moderate AoE) a
     game.getBoard().cleanDeadEntities();
     game.getBoard().commitPendingEntities();
 
-    REQUIRE(bystander->hp == 100000 - 150); // AreaDamageOnDeath(1.5, 150)
+    REQUIRE(bystander->hp == 100000 - 192); // AreaDamageOnDeath(1.5, 192), 2026-04-06
 
     int runnerCount = 0;
     for (const auto& e : game.getBoard().getEntities()) {

@@ -716,3 +716,64 @@ TEST_CASE("Spirit Empress ground form moves at Fast speed", "[live_sync][patch-2
     if (auto t = std::dynamic_pointer_cast<Troop>(reg))
         CHECK(t->getSpeed() == Catch::Approx(SPEED_FAST * MOVEMENT_SPEED_SCALE));
 }
+
+TEST_CASE("Hero Ice Golem Snowstorm no longer knocks back (2026-04-06)",
+          "[live_sync][patch-2026-04-06]") {
+    Board board;
+    auto hero = mainBody(board, 175);
+    REQUIRE(hero != nullptr);
+    REQUIRE(hero->abilityEffect != nullptr);
+    auto enemy = std::make_shared<StationaryCombatant>(9001, hero->position.x + 1.0f, hero->position.y,
+                                                       100000, 1, 1.0f, 100, 10);
+    board.addEntity(enemy);
+    board.commitPendingEntities();
+    const float startX = enemy->position.x, startY = enemy->position.y;
+
+    hero->abilityEffect->apply(board, *hero);
+    board.commitPendingEntities();
+    std::vector<std::shared_ptr<AreaSpell>> blasts;
+    for (const auto& e : board.getEntities())
+        if (auto s = std::dynamic_pointer_cast<AreaSpell>(e)) blasts.push_back(s);
+    REQUIRE(blasts.size() == 3);
+    for (int i = 0; i < 20; ++i)
+        for (auto& b : blasts) b->update(board);
+
+    REQUIRE(enemy->hp < 100000); // the blasts did land
+    REQUIRE(enemy->position.x == Catch::Approx(startX).margin(1e-4));
+    REQUIRE(enemy->position.y == Catch::Approx(startY).margin(1e-4));
+}
+
+TEST_CASE("Royal Ghost Evolution Souldiers deal 81 damage (2026-04-06)",
+          "[live_sync][patch-2026-04-06]") {
+    Match m;
+    auto ghost = firstCombat(m.spawnCard(136, 9.0f, 10.0f, 0, true));
+    REQUIRE(ghost != nullptr);
+    m.spawnCard(2, 9.0f, 10.8f, 1); // an enemy in melee reach so every hit lands
+    std::shared_ptr<CombatEntity> souldier;
+    for (int t = 0; t < 120 && !souldier; ++t) {
+        m.step();
+        for (const auto& e : m.board().getEntities())
+            if (e->name == "Souldier") { souldier = std::dynamic_pointer_cast<CombatEntity>(e); break; }
+    }
+    REQUIRE(souldier != nullptr);
+    REQUIRE(souldier->getBaseDamage() == 81);
+}
+
+TEST_CASE("Wall Breakers Evolution death explosion deals 192 to troops (2026-04-06)",
+          "[live_sync][patch-2026-04-06]") {
+    Match m;
+    auto bodies = m.spawnCard(123, 9.0f, 10.0f, 0, true);
+    std::shared_ptr<CombatEntity> wb;
+    for (const auto& e : bodies) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->deathEffect) { wb = ce; break; }
+    }
+    REQUIRE(wb != nullptr);
+    auto bystander = std::make_shared<DummyEntity>(9999, wb->position.x + 0.5f, wb->position.y, 100000, 1);
+    m.board().addEntity(bystander);
+    m.board().commitPendingEntities();
+    wb->takeDamage(wb->hp);
+    m.board().cleanDeadEntities();
+    m.board().commitPendingEntities();
+    REQUIRE(bystander->hp == 100000 - 192);
+}
