@@ -603,3 +603,25 @@ TEST_CASE("Valkyrie Evolution's tornado pulls and damages at 5.0 tiles, not 5.5"
     REQUIRE(inside->hp < 1000); // control: 4.5 tiles is still in the tornado
     REQUIRE(edge->hp == 1000);  // 5.2 tiles is now outside
 }
+
+// ---- patch 2026-01-12 ----
+
+TEST_CASE("Skeleton Army Evolution ghost skeletons move at Medium speed",
+          "[live_sync][patch-2026-01-12]") {
+    // 2026-01-12 balance update: "Ghost Skeletons' Speed: Fast -> Medium".
+    Match m;
+    auto squad = m.spawnCard(133, 9.0f, 10.0f, 0, true);
+    std::shared_ptr<Troop> skel;
+    for (const auto& e : squad)
+        if (e->cardId == 12) { skel = std::dynamic_pointer_cast<Troop>(e); break; }
+    REQUIRE(skel);
+    const float skelSpeed = skel->getSpeed();
+    skel->hp = 0;
+    m.step(2);
+    std::shared_ptr<Troop> ghost;
+    for (const auto& e : m.board().getEntities())
+        if (e->cardId == -43) { ghost = std::dynamic_pointer_cast<Troop>(e); break; }
+    REQUIRE(ghost);
+    // The living skeletons stay Fast; the ghost is Medium (60/90 of Fast).
+    REQUIRE(ghost->getSpeed() == Catch::Approx(skelSpeed * SPEED_MEDIUM / SPEED_FAST).epsilon(1e-4));
+}

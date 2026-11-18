@@ -389,9 +389,11 @@ private:
     }
     // Skeleton Army Evolution's death-spawn shadow. The real shadows have
     // unlimited hp and are targetable only by spells; here a targetable 500-hp
-    // unit.
+    // unit. 2026-01-12 balance update: "Ghost Skeletons' Speed: Fast -> Medium"
+    // (docs/LIVE_SYNC.md); reading "Ghost Skeletons" as these shadows is an
+    // inference, the post does not define the term.
     static CardStats skeletonArmyShadowStats() {
-        return troop(-43, "Skeleton Shadow", 0.0f, Archetype::MeleeSquad, 500, 1.0f, 0.5f, 81, 11, 'k');
+        return troop(-43, "Skeleton Shadow", 0.0f, Archetype::MeleeSquad, 500, SPEED_MEDIUM, 0.5f, 81, 11, 'k');
     }
     // Royal Ghost Evolution's on-hit Souldier: 51% of her damage (133) and 6.7%
     // of her hp (81), per the sourced table.
