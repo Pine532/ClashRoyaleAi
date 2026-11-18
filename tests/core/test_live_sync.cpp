@@ -96,3 +96,16 @@ TEST_CASE("Evolved Zap lands two zaps, each at full damage", "[live_sync][patch-
     REQUIRE(first > 0);
     CHECK(total == 2 * first);
 }
+
+// ---- patch 2024-11-14 (november-balance-changes) ----
+
+// Musketeer Evolution "Sniper Damage 326 -> 392": an empowered shot is
+// base 217 x burst multiplier, truncated, as CombatEntity::getEffectiveDamage does.
+TEST_CASE("Musketeer Evolution empowered shot deals 392",
+          "[live_sync][patch-2024-11-14]") {
+    Board board;
+    auto m = mainBody(board, 140, true);
+    REQUIRE(m != nullptr);
+    CHECK(m->getBaseDamage() == 217);
+    CHECK(static_cast<int>(m->getBaseDamage() * m->burstDamageMultiplier) == 392);
+}

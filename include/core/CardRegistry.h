@@ -1304,14 +1304,16 @@ private:
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinCageBrawlerStats())),
             2, 1);
 
-        // Musketeer ("Sniper Shot"): +80% damage on empowered shots, via
-        // burst-every-3rd, which repeats rather than stopping after three. The
+        // Musketeer ("Sniper Shot"): empowered shots deal 392 (217 x 1.808,
+        // truncated), via burst-every-3rd, which repeats rather than stopping
+        // after three. 2024-11-14 balance update: Sniper Damage 326 -> 392
+        // (supercell.com november-balance-changes; docs/LIVE_SYNC.md). The
         // special range shape is not modelled.
         addEvolution(140,
             troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
                 .withTargetsAir().withSightRange(6.0f),
             troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
-                .withTargetsAir().withBurstAttack(3, 1.8f).withSightRange(6.0f),
+                .withTargetsAir().withBurstAttack(3, 1.808f).withSightRange(6.0f),
             2, 1);
 
         // Wizard ("Fire Shield"): a shield of 25% of his hp (189). The
