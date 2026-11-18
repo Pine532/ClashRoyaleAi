@@ -1247,7 +1247,10 @@ private:
             2, 1);
 
         // Dart Goblin: the real escalating poison (51 / 115 / 307 per
-        // consecutive dart, 1.25 s delay) is a flat 51 per second for 1 s (4 s until 2025-08-06). The
+        // consecutive dart, 1.25 s delay) is a flat stage-1 value per second
+        // for 1 s (4 s until 2025-08-06): 64 since the 2026-06-01 balance update
+        // ("Stage 1: 51 -> 64", supercell.com june-balance-changes-2026; stages 2
+        // and 3 are not modelled, so stage 2's 115 -> 128 has no effect here). The
         // mark lives on the victim, so it outlasts the Goblin as in the real
         // card. withTargetsAir on both stat blocks: addEvolution inherits
         // nothing from the base registration.
@@ -1257,7 +1260,7 @@ private:
             troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
                 .withTargetsAir()
                 // 2025-08-06 balance update: poison cloud duration 4 s -> 1 s (40 -> 10 ticks); damage per tick unchanged here (docs/LIVE_SYNC.md).
-                .withOnHit(std::make_shared<PoisonOnHit>(51, 10, 10)).withSightRange(7.0f), // 2026-03-02: 7.0 tiles.
+                .withOnHit(std::make_shared<PoisonOnHit>(64, 10, 10)).withSightRange(7.0f), // 2026-03-02: 7.0 tiles.
             2, 1);
 
         // Goblin Barrel: the real second barrel on the mirrored lane is
@@ -1502,13 +1505,16 @@ private:
             2, 1);
 
         // Mortar: attack period 5 s -> 4 s. "Green Siege": a Goblin spawns with
-        // every landed shot (onHitSpawnEffect).
+        // every landed shot (onHitSpawnEffect). The launched Goblins deploy in
+        // 0.5 s (5 ticks; official 2026-06-01 balance update, "Deploy Time:
+        // 0.2s -> 0.5s"). A dedicated copy: Goblin Drill's Goblins share
+        // goblinDrillGoblinStats() and are not touched by that post.
         addEvolution(152,
             building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 50)
                 .withMinRange(3.5f).withSightRange(11.5f),
             building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 40)
                 .withMinRange(3.5f).withSightRange(11.5f)
-                .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats())),
+                .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats().withDeployTime(5))),
             2, 1);
 
         // Goblin Drill: the real resurfacing at 66% / 33% hp (leaving a Goblin
@@ -1640,7 +1646,8 @@ private:
             2, 1);
 
         // Inferno Dragon ("Damage Charge-up"): identical stats to id 56. Losing
-        // or having no target holds the ramp stage for a 9 s grace period, so a
+        // or having no target holds the ramp stage for a 7 s grace period (9 s
+        // -> 7 s, "Charge Duration", official 2026-06-01 balance update), so a
         // new target inherits it (a stun still resets at once); and a fourth
         // stage after 20 s of continuous attacking deals double the max. The
         // sources disagree (49 ticks vs 20 s); the seconds figure is used.
@@ -1652,7 +1659,7 @@ private:
                 .withFlying().withTargetsAir()
                 .withDamageRamp(15, 30, 0.083f, 0.284f)
                 .withRampStage4(200, 2.0f)
-                .withRampGracePeriod(90),
+                .withRampGracePeriod(70),
             2, 1);
 
         // === Mirror ===

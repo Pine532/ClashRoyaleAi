@@ -837,3 +837,69 @@ TEST_CASE("Giant Snowball Evolution card's un-evolved half also slows for 3 s (3
     CHECK(enemy->freezeTicks == 30);
     CHECK(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }
+
+// ===== Patch 2026-06-01 (June balance changes) =====
+
+TEST_CASE("Dart Goblin Evolution's first poison stage is 64 per second",
+          "[live_sync][patch-2026-06-01]") {
+    Match m;
+    auto darts = m.spawnCard(131, 9.0f, 8.0f, 0, /*evolved=*/true);
+    auto target = firstCombat(m.spawnCard(19, 9.0f, 12.0f, 1)); // Golem: outlives the test
+    REQUIRE(!darts.empty());
+    REQUIRE(target != nullptr);
+    int seen = 0;
+    for (int i = 0; i < 80 && seen == 0; ++i) {
+        m.step();
+        seen = target->dotDamagePerTick;
+    }
+    REQUIRE(seen > 0); // the dart landed and left a mark
+    CHECK(seen == 64); // official 2026-06-01: Stage 1 51 -> 64
+}
+
+TEST_CASE("Inferno Dragon Evolution holds its ramp for 7 s after losing a target",
+          "[live_sync][patch-2026-06-01]") {
+    Match m;
+    auto dragon = firstCombat(m.spawnCard(163, 9.0f, 10.0f, 0, /*evolved=*/true));
+    REQUIRE(dragon != nullptr);
+    CHECK(dragon->rampGracePeriodTicks == 70); // official 2026-06-01: Charge Duration 9s -> 7s
+    // The un-evolved dragon has no grace period.
+    auto base = firstCombat(m.spawnCard(163, 5.0f, 10.0f, 0, /*evolved=*/false));
+    REQUIRE(base != nullptr);
+    CHECK(base->rampGracePeriodTicks == 0);
+}
+
+TEST_CASE("Mortar Evolution's launched Goblins deploy in 0.5 s",
+          "[live_sync][patch-2026-06-01]") {
+    Match m;
+    auto mortar = m.spawnCard(152, 9.0f, 8.0f, 0, /*evolved=*/true);
+    auto target = firstCombat(m.spawnCard(19, 9.0f, 17.0f, 1)); // Golem 9 tiles away
+    REQUIRE(!mortar.empty());
+    REQUIRE(target != nullptr);
+    int deploy = -1;
+    for (int i = 0; i < 200 && deploy < 0; ++i) {
+        m.step();
+        for (const auto& e : m.board().getEntities()) {
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (c && c->team == 0 && c->name == "Goblins") { deploy = c->deployTicksRemaining; break; }
+        }
+    }
+    REQUIRE(deploy >= 0); // a Goblin was launched
+    // 0.5 s = 5 ticks; the default 10-tick deploy is the old value.
+    CHECK(deploy <= 5);
+}
+
+TEST_CASE("Mortar Evolution's Goblin change leaves Goblin Drill's Goblins at the default deploy",
+          "[live_sync][patch-2026-06-01]") {
+    Match m;
+    m.spawnCard(98, 9.0f, 8.0f, 0);
+    int deploy = -1;
+    for (int i = 0; i < 400 && deploy < 0; ++i) {
+        m.step();
+        for (const auto& e : m.board().getEntities()) {
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (c && c->team == 0 && c->name == "Goblins") { deploy = c->deployTicksRemaining; break; }
+        }
+    }
+    REQUIRE(deploy >= 0);
+    CHECK(deploy > 5); // the Drill's Goblins are untouched by the Mortar Evolution nerf
+}

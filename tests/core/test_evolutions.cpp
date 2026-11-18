@@ -142,7 +142,7 @@ TEST_CASE("Inferno Dragon Evolution's evolved spawn carries the ramp grace perio
     REQUIRE(dragonCount == 3); // 3 plays, 1 Inferno Dragon each
     REQUIRE(evolvedDragon != nullptr); // exactly one of the 3 is the evolved play
 
-    REQUIRE(evolvedDragon->rampGracePeriodTicks == 90); // 9s at this engine's 10-ticks/second rate
+    REQUIRE(evolvedDragon->rampGracePeriodTicks == 70); // 7s (2026-06-01: 9s -> 7s) at 10 ticks/second
     REQUIRE(evolvedDragon->rampStage4Tick == 200); // 20s
     REQUIRE(evolvedDragon->rampStage4Fraction == Catch::Approx(2.0f));
     // The base 3-stage ramp is unchanged; only the charge-up behaviour differs.
