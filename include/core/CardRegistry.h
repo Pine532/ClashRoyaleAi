@@ -872,7 +872,9 @@ private:
             .withOnHit(std::make_shared<FreezeOnHit>(3, 0.0f)).withSightRange(5.0f));
         // withSightRange(6.0f), like the single Musketeer (id 6): three of her,
         // with attackRange 6.0.
-        add(troop(80, "Three Musketeers", 9.0f, Archetype::RangedSquad, 722, SPEED_MEDIUM, 6.0f, 218, 10, ']')
+        // 2026-02-02 balance update: hit speed 1.2 s -> 1.3 s, so 13 ticks (docs/LIVE_SYNC.md;
+        // supercell.com february-balance-changes-26). It carried 10 ticks.
+        add(troop(80, "Three Musketeers", 9.0f, Archetype::RangedSquad, 722, SPEED_MEDIUM, 6.0f, 218, 13, ']')
             .withOffsets({ {-2.0f, 0.0f}, {0.0f, 0.0f}, {2.0f, 0.0f} })
             .withTargetsAir().withSightRange(6.0f));
 

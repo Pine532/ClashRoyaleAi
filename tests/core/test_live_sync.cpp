@@ -625,3 +625,15 @@ TEST_CASE("Skeleton Army Evolution ghost skeletons move at Medium speed",
     // The living skeletons stay Fast; the ghost is Medium (60/90 of Fast).
     REQUIRE(ghost->getSpeed() == Catch::Approx(skelSpeed * SPEED_MEDIUM / SPEED_FAST).epsilon(1e-4));
 }
+
+// ---- 2026-02-02 balance update ----------------------------------------------
+TEST_CASE("Three Musketeers hit speed is 1.3 s (13 ticks)", "[live_sync][patch-2026-02-02]") {
+    Board board;
+    auto bodies = spawnBare(board, 80);
+    REQUIRE(bodies.size() == 3);
+    for (const auto& e : bodies) {
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        REQUIRE(c);
+        REQUIRE(c->getAttackCooldown() == 13);
+    }
+}
