@@ -367,11 +367,12 @@ private:
     }
     static CardStats runnerStats() {
         // Wall Breakers Evolution's Runner. hp scaled to level 11 from level-6
-        // data (103 * 1.1^5 ~= 166); damage 175 is the sourced 50% of Wall
-        // Breakers' 350. Modelled as an ordinary building-targeter that keeps
+        // data (103 * 1.1^5 ~= 166); damage 184 is the official 2025-11-03
+        // balance update ("Damage (Runner): 197 -> 184", docs/LIVE_SYNC.md).
+        // Modelled as an ordinary building-targeter that keeps
         // attacking, not a single detonation, and without the real reduced
         // damage against Crown Towers.
-        return troop(-41, "Runner", 0.0f, Archetype::MeleeBuildingTargeter, 166, 1.2f, 0.6f, 175, 8, 'g');
+        return troop(-41, "Runner", 0.0f, Archetype::MeleeBuildingTargeter, 166, 1.2f, 0.6f, 184, 8, 'g');
     }
     // Battle Ram Evolution's death spawn: a stronger pair of Barbarians.
     static CardStats battleRamEvolvedBarbarianStats() {

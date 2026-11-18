@@ -522,3 +522,31 @@ TEST_CASE("Ram Rider's ram needs 2.5 tiles of run-up to charge",
     CHECK(ram->chargeThreshold == Catch::Approx(2.5f));
     CHECK(ram->chargeMultiplier == Catch::Approx(2.0f));
 }
+
+TEST_CASE("Wall Breakers Evolution Runner damage is 184 after the 2025-11-03 patch",
+          "[live_sync][patch-2025-11-03]") {
+    GameManager game({ 123, 1, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    game.playerAI.elixir = 100.0f;
+    for (int i = 0; i < 3; ++i) {
+        game.playerAI.hand[0] = 123;
+        game.playerAI.handCooldownTicks[0] = 0;
+        game.playCard(0, 123, 9.0f, 10.0f);
+        game.step();
+    }
+    std::shared_ptr<CombatEntity> evolved;
+    for (const auto& e : game.getBoard().getEntities()) {
+        if (e->name != "Wall Breakers") continue;
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->deathEffect) { evolved = ce; break; }
+    }
+    REQUIRE(evolved != nullptr);
+    evolved->takeDamage(evolved->hp);
+    game.getBoard().cleanDeadEntities();
+    game.getBoard().commitPendingEntities();
+    std::shared_ptr<CombatEntity> runner;
+    for (const auto& e : game.getBoard().getEntities()) {
+        if (e->name == "Runner") runner = std::dynamic_pointer_cast<CombatEntity>(e);
+    }
+    REQUIRE(runner != nullptr);
+    REQUIRE(runner->getBaseDamage() == 184);
+}
