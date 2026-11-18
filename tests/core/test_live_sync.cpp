@@ -405,3 +405,70 @@ TEST_CASE("Prince charge interruption leaves the Bandit dash alone", "[live_sync
         REQUIRE(troop->isCharging());
     }
 }
+
+// ---- Patch 2025-10-06 (October balance changes): slows 35% -> 30%, Rage boost
+// 35% -> 30%, Vines total damage 335 -> 306. Source: the official post, see
+// docs/LIVE_SYNC.md. The engine's freezeSlow is a speed multiplier (30% slow = 0.70).
+
+TEST_CASE("Giant Snowball slows by 30% (speed factor 0.70)", "[live_sync][patch-2025-10-06]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10);
+    spawn(board, enemy);
+    spawnBare(board, 100, 5.0f, 5.0f, 0);
+    auto spell = board.getEntities().back();
+    while (spell->isAlive()) spell->update(board);
+    REQUIRE(enemy->freezeTicks == 15);
+    REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f));
+}
+
+TEST_CASE("Ice Golem and Hero Ice Golem death slow is 30% (speed factor 0.70)", "[live_sync][patch-2025-10-06]") {
+    for (int id : { 40, 175 }) {
+        Board board;
+        auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 5.5f, 1000, 1, 5.0f, 10, 10);
+        spawn(board, enemy);
+        auto golem = mainBody(board, id);
+        REQUIRE(golem != nullptr);
+        golem->position = { 5.0f, 5.0f };
+        golem->hp = 0;
+        board.cleanDeadEntities();
+        INFO("card id " << id);
+        REQUIRE(enemy->freezeTicks == 30);
+        REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f));
+    }
+}
+
+TEST_CASE("Ice Wizard slow is 30% (speed factor 0.70)", "[live_sync][patch-2025-10-06]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10);
+    spawn(board, enemy);
+    auto wiz = spawnBare(board, 34, 5.0f, 5.0f, 0).front();
+    advancePastDeploy(wiz, board);
+    wiz->update(board);
+    board.commitPendingEntities();
+    auto projectile = std::dynamic_pointer_cast<Projectile>(board.getEntities().back());
+    REQUIRE(projectile != nullptr);
+    projectile->update(board);
+    REQUIRE(enemy->freezeTicks == 30);
+    REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f));
+}
+
+TEST_CASE("Rage boosts allied damage by 30%", "[live_sync][patch-2025-10-06]") {
+    Board board;
+    auto ally = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 0, 5.0f, 10, 10);
+    spawn(board, ally);
+    spawnBare(board, 108, 5.0f, 5.0f, 0);
+    auto spell = board.getEntities().back();
+    for (int i = 0; i < 50 && ally->buffTicksRemaining == 0; ++i) spell->update(board);
+    REQUIRE(ally->buffTicksRemaining > 0);
+    REQUIRE(ally->buffDamageMultiplier == Catch::Approx(1.30f));
+}
+
+TEST_CASE("Vines deals 306 total (102 x 3 pulses) to a troop", "[live_sync][patch-2025-10-06]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 5000, 1, 5.0f, 10, 10);
+    spawn(board, enemy);
+    spawnBare(board, 105, 5.0f, 5.0f, 0);
+    auto spell = board.getEntities().back();
+    while (spell->isAlive()) spell->update(board);
+    REQUIRE(enemy->hp == 5000 - 306);
+}

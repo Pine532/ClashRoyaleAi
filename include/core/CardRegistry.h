@@ -569,7 +569,9 @@ private:
         // 2024-08-06 balance update: attack splash radius 1 -> 1.5 tiles (Supercell august-balance-changes; docs/LIVE_SYNC.md).
         add(troop(34, "Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i')
             .withTargetsAir().withSplash(1.5f)
-            .withOnHit(std::make_shared<FreezeOnHit>(30, 0.65f)));
+            // 2025-10-06 balance update: slowdown 35% -> 30%, so speed factor 0.70
+            // (docs/LIVE_SYNC.md).
+            .withOnHit(std::make_shared<FreezeOnHit>(30, 0.70f)));
 
         // Executioner's axe hits on arrival and again 1.5 s later on the
         // return. The real axe pierces everything along its path both ways;
@@ -598,10 +600,11 @@ private:
             .withSightRange(7.0f));
 
         // Ice Golem: the slow is on the death explosion, as in the real card;
-        // there is no on-attack slow. The 30 ticks / 0.65 are not sourced.
+        // there is no on-attack slow. The 30 ticks are not sourced; the slow is
+        // 30% (factor 0.70), 2025-10-06 balance update (docs/LIVE_SYNC.md).
         add(troop(40, "Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1315, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
-                2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.65f))).withSightRange(7.0f));
+                2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.70f))).withSightRange(7.0f));
 
         // Balloon: flying and building-only, point-blank range; building
         // targeters never consider air, so no withTargetsAir. The real death
@@ -970,8 +973,10 @@ private:
             .withPeriodicEffect(80, std::make_shared<ElixirGrantEffect>(1.0f)));
 
         // === Spells (expansion) ===
+        // Slow 30% (factor 0.70): 2025-10-06 balance update lists Giant Snowball
+        // among the slowing effects cut from 35% to 30% (docs/LIVE_SYNC.md).
         add(spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
-            .withSpellOnHit(std::make_shared<FreezeOnHit>(15, 0.5f))
+            .withSpellOnHit(std::make_shared<FreezeOnHit>(15, 0.70f))
             .withKnockback(1.0f));
         // Barbarian Barrel: rolls 4.5 tiles at width 2.6 (published), and its
         // Barbarian spawns where the barrel stops. No knockback: the real
@@ -999,7 +1004,10 @@ private:
             .withSpellTieredDamage(340, 160, 76));
         // Vines: only the 3 highest-HP enemies in radius. Pulling flyers to the
         // ground is not modelled.
-        add(spell(105, "Vines", 3.0f, 2.5f, 135, 8, '+').withRepeats(3, 7)
+        // 102 per pulse x 3 = 306 total: 2025-10-06 balance update, total damage
+        // 335 -> 306 (docs/LIVE_SYNC.md). The 2.5 s -> 2 s duration cut is not
+        // modelled (the pulse cadence is unsourced).
+        add(spell(105, "Vines", 3.0f, 2.5f, 102, 8, '+').withRepeats(3, 7)
             .withSpellTopHpTargets(3));
         // 2025-04-09 balance update: Damage 84x2 -> 84 (-50%), so one 84 hit in
         // total (supercell.com April balance changes; docs/LIVE_SYNC.md). The old
@@ -1010,10 +1018,10 @@ private:
         // is a 4 s full stun and no damage.
         add(spell(107, "Freeze", 4.0f, 3.0f, 0, 8, '~')
             .withSpellOnHit(std::make_shared<FreezeOnHit>(40, 0.0f)));
-        // Rage: buffs allied damage in radius. Duration and multiplier are not
-        // sourced.
+        // Rage: buffs allied damage in radius. Boost 30% (2025-10-06 balance
+        // update, 35% -> 30%; docs/LIVE_SYNC.md); the duration is not sourced.
         add(spell(108, "Rage", 2.0f, 3.0f, 0, 8, '(')
-            .withSpellBuff(1.35f, 45));
+            .withSpellBuff(1.30f, 45));
         // Goblin Barrel: drops 3 Goblins; the barrel itself deals no damage.
         add(spell(109, "Goblin Barrel", 3.0f, 0.5f, 0, 8, '[')
             .withSpellSpawn(std::make_shared<PeriodicSpawnEffect>(goblinBarrelGoblinStats())));
@@ -1549,7 +1557,7 @@ private:
         // not modelled.
         addEvolution(158,
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
-                .withSpellOnHit(std::make_shared<FreezeOnHit>(15, 0.5f))
+                .withSpellOnHit(std::make_shared<FreezeOnHit>(15, 0.70f)) // 2025-10-06: base slow 30%
                 .withKnockback(1.0f),
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
                 .withSpellOnHit(std::make_shared<FreezeOnHit>(40, 0.7f))
@@ -1711,7 +1719,7 @@ private:
         // knockback and slow are not sourced.
         add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1315, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
-                2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.65f))).withSightRange(7.0f)
+                2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%
             .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 80, 1.0f, 20, 0.6f, 15)));
 
         // Hero Barbarian Barrel (base: id 101). The ability lives on the

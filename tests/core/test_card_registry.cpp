@@ -698,7 +698,7 @@ TEST_CASE("Ice Wizard is genuinely ranged: freeze lands with the arrow, not when
 
     projectile->update(board); // projectile speed 1.5 >= distance 1.0: lands this tick
     REQUIRE(enemy->freezeTicks == 30);
-    REQUIRE(enemy->freezeSlow == Catch::Approx(0.65f));
+    REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }
 
 TEST_CASE("Ice Golem's slow is on its death explosion, never on its attack",
@@ -729,7 +729,7 @@ TEST_CASE("Ice Golem's slow is on its death explosion, never on its attack",
     golem->hp = 0;
     board.cleanDeadEntities();
     REQUIRE(enemy->freezeTicks == 30);
-    REQUIRE(enemy->freezeSlow == Catch::Approx(0.65f));
+    REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }
 
 TEST_CASE("Electro Wizard stuns on hit via the on-hit decorator (freeze with slowFactor 0)", "[card_registry][on_hit]") {
@@ -857,7 +857,7 @@ TEST_CASE("Giant Snowball deals damage and applies a partial slow via spellOnHit
 
     REQUIRE(enemy->hp == 821); // 1000 - 179
     REQUIRE(enemy->freezeTicks == 15);
-    REQUIRE(enemy->freezeSlow == Catch::Approx(0.5f));
+    REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }
 
 TEST_CASE("Battle Ram releases 2 Barbarians on death, reusing the Barbarians card's own sourced stats", "[card_registry][death]") {
