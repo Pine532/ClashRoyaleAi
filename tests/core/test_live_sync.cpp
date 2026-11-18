@@ -550,3 +550,56 @@ TEST_CASE("Wall Breakers Evolution Runner damage is 184 after the 2025-11-03 pat
     REQUIRE(runner != nullptr);
     REQUIRE(runner->getBaseDamage() == 184);
 }
+
+// ===== Patch 2025-12-01 (December balance changes) =====
+
+TEST_CASE("Freeze deals 148 damage to a troop in radius and still stuns it for 4 s",
+        "[live_sync][patch-2025-12-01]") {
+    Board board;
+    auto giant = firstCombat(spawnBare(board, 25, 9.0f, 10.0f, 1)); // any high-hp enemy troop
+    REQUIRE(giant != nullptr);
+    const int before = giant->hp;
+    auto bodies = spawnBare(board, 107, 9.0f, 10.0f, 0);
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(bodies.front());
+    REQUIRE(spell != nullptr);
+    for (int i = 0; i < 200 && spell->isAlive(); ++i) spell->update(board);
+    REQUIRE(before - giant->hp == 148);
+    REQUIRE(giant->freezeTicks > 0); // control: the stun still lands
+}
+
+TEST_CASE("Lava Hound's Lava Pups spawn with 215 hitpoints",
+        "[live_sync][patch-2025-12-01]") {
+    Board board;
+    auto hound = firstCombat(spawnBare(board, 91, 9.0f, 10.0f, 0));
+    REQUIRE(hound != nullptr);
+    std::set<int> before;
+    for (const auto& e : board.getEntities()) before.insert(e->id);
+    hound->takeDamage(hound->hp);
+    board.cleanDeadEntities(); // fires the death effect
+    board.commitPendingEntities();
+    int pups = 0;
+    for (const auto& e : board.getEntities()) {
+        if (before.count(e->id)) continue;
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (!c) continue;
+        ++pups;
+        REQUIRE(c->hp == 215);
+    }
+    REQUIRE(pups == 6);
+}
+
+TEST_CASE("Valkyrie Evolution's tornado pulls and damages at 5.0 tiles, not 5.5",
+        "[live_sync][patch-2025-12-01]") {
+    Board board;
+    auto valk = firstCombat(spawnBare(board, 147, 9.0f, 10.0f, 0, true));
+    REQUIRE(valk != nullptr);
+    auto near = std::make_shared<DummyEntity>(9001, 9.0f, 11.0f, 1000, 1);   // in attack range
+    auto edge = std::make_shared<DummyEntity>(9002, 9.0f, 15.2f, 1000, 1);   // 5.2 tiles: between 5.0 and 5.5
+    auto inside = std::make_shared<DummyEntity>(9003, 9.0f, 14.5f, 1000, 1); // 4.5 tiles: inside both
+    board.addEntity(near); board.addEntity(edge); board.addEntity(inside);
+    board.commitPendingEntities();
+    for (int i = 0; i < 40; ++i) { valk->update(board); board.commitPendingEntities(); }
+    REQUIRE(near->hp < 1000);   // control: she attacked, so the pull fired
+    REQUIRE(inside->hp < 1000); // control: 4.5 tiles is still in the tornado
+    REQUIRE(edge->hp == 1000);  // 5.2 tiles is now outside
+}

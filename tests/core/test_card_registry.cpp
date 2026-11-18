@@ -826,7 +826,7 @@ TEST_CASE("Ordinary melee troops are unaffected by the on-hit decorator (Knight)
 
 // --- 2026 roster expansion ---
 
-TEST_CASE("Freeze deals no direct damage but fully stuns everyone in radius via the new spellOnHit hook", "[card_registry][spell_on_hit]") {
+TEST_CASE("Freeze deals 148 damage and fully stuns everyone in radius via the new spellOnHit hook", "[card_registry][spell_on_hit]") {
     Board board;
     auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10); // dist 1.0 from (5,5)
     spawn(board, enemy);
@@ -838,7 +838,7 @@ TEST_CASE("Freeze deals no direct damage but fully stuns everyone in radius via 
 
     while (spell->isAlive()) spell->update(board);
 
-    REQUIRE(enemy->hp == 1000); // no damage component
+    REQUIRE(enemy->hp == 1000 - 148); // December 2025: 148 damage
     REQUIRE(enemy->freezeTicks == 40); // 4s full stun
     REQUIRE(enemy->freezeSlow == Catch::Approx(0.0f));
 }

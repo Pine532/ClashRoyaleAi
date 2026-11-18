@@ -277,7 +277,8 @@ private:
     // from -29.
     static CardStats lavaHoundPupStats() {
         // 2025-02-04 balance update: Lava Pups damage 90 -> 84 (docs/LIVE_SYNC.md).
-        return troop(-29, "Lava Pups", 0.0f, Archetype::MeleeSquad, 217, 0.5f, 1.6f, 84, 17, 'y')
+        // 215 hp: official December 2025 balance notes, 217 -> 215 (level 11).
+        return troop(-29, "Lava Pups", 0.0f, Archetype::MeleeSquad, 215, 0.5f, 1.6f, 84, 17, 'y')
             .withOffsets({ {-0.8f, 0.0f}, {0.8f, 0.0f}, {-0.5f, 0.7f}, {0.5f, 0.7f}, {-0.5f, -0.7f}, {0.5f, -0.7f} })
             .withFlying().withTargetsAir();
     }
@@ -1018,9 +1019,11 @@ private:
         // 154 matched neither the pre-patch 168 nor this value.
         add(spell(106, "Tornado", 3.0f, 5.5f, 84, 8, '_')
             .withKnockback(-1.5f)); // negative: pulls toward the centre
-        // Freeze: the source's damage field is treated as vestigial; the card
-        // is a 4 s full stun and no damage.
-        add(spell(107, "Freeze", 4.0f, 3.0f, 0, 8, '~')
+        // Freeze: a 4 s full stun plus one hit of 148 damage (official December
+        // 2025 balance notes, 115 -> 148, level 11: supercell.com
+        // /clashroyale/blog/release-notes/december-balance-changes/). Crown Tower
+        // damage is the separate June 2026 reduction (see withCrownTowerDamage).
+        add(spell(107, "Freeze", 4.0f, 3.0f, 148, 8, '~')
             .withSpellOnHit(std::make_shared<FreezeOnHit>(40, 0.0f)));
         // Rage: buffs allied damage in radius. Boost 30% (2025-10-06 balance
         // update, 35% -> 30%; docs/LIVE_SYNC.md); the duration is not sourced.
@@ -1425,7 +1428,8 @@ private:
             2, 1);
 
         // Valkyrie ("Whirlwind Axe"): identical stats; every landed hit pulls
-        // enemy troops within 5.5 tiles toward her, plus low damage to everyone
+        // enemy troops within 5.0 tiles toward her (official December 2025
+        // notes, Tornado Radius 5.5 -> 5), plus low damage to everyone
         // in that radius, Crown Towers included. Pull distance and damage are
         // not sourced; the lingering zone is not modelled.
         addEvolution(147,
@@ -1433,7 +1437,7 @@ private:
                 .withSplash(1.5f),
             troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V')
                 .withSplash(1.5f)
-                .withOnHitPull(5.5f, 2.0f, 50),
+                .withOnHitPull(5.0f, 2.0f, 50),
             2, 1);
 
         // P.E.K.K.A. ("Butter-Heal"): the real heal on each kill, up to +66% hp
