@@ -37,7 +37,9 @@ size, so the first two items gate any training.
 
 1. **Retrain from scratch, or migrate checkpoints.** IN PROGRESS: a from-scratch run
    started 2026-11-18 on macOS (CPU, 2.6 Hog Cycle, `tools/mac_training.sh`, checkpoint
-   `runs/checkpoints/livesync.pth`). Observation is now 14403 floats (was 13977);
+   `runs/checkpoints/livesync.pth`), paused at episode 3,387. **The floor check did not
+   pass:** the win rate plateaued at 0.06-0.09 at rung 0 after 112 updates (DECISIONS,
+   2026-11-18 evening). Diagnose before a long run. Observation is now 14403 floats (was 13977);
    `python_ai/tools/migrate_checkpoint_card_ids.py` migrates an old-layout checkpoint.
 2. ~~**Re-run the side null**~~ DONE 2026-11-18 on a random-init net: 0.482 over 300
    episodes, z = -0.64, PASS. Repeat on the first trained checkpoint.

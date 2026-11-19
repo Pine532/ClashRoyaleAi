@@ -8143,3 +8143,27 @@ absorbed once.
 **`profile_training.py --mode torch`** called `ClashRoyaleEnv()` with no decks (`4d95722`). The
 review found that its no-engine stub has been broken since 2026-08-27 for unrelated reasons;
 that is recorded as TODO L15, not fixed (outside the approved scope).
+
+**The floor check did not pass (2026-11-18, 22:01).** The from-scratch run (2.6 Hog Cycle, CPU,
+rung 0) was resumed for 25 minutes. That took it to 112 PPO updates and 3,387 episodes,
+past the ~80 updates at which `[FLOOR]` was calibrated on the reference box.
+
+Readings at each 500-episode mark, from 500 to 3,500:
+
+| Metric | Readings |
+|---|---|
+| `Win_Rate_100` | 0.01, 0.01, 0.07, 0.07, 0.09, 0.08, 0.06 |
+| `Avg_Reward_50` | -2.4 -> -1.4 (at 3,000) -> -1.8 |
+| Episode length (decisions) | 164 -> 196 |
+| Card entropy (1.0 = uniform) | 0.92 -> 0.80 |
+| Placement entropy | 0.98 -> 0.78 |
+
+- The run is healthy: no non-finite updates, and `Ratio_Dev_First_Minibatch` stayed at or
+  below 1.1e-5.
+- `[FLOOR]` fired at 1,167, 2,170 and 3,171 episodes.
+- Reading: an early gain, then a plateau at 0.06-0.09 for about 2,000 episodes (about 65
+  updates), far below the 0.65 rung gate.
+- For scale only (older engine and ladder): the 2026-08 from-scratch run of this deck passed
+  its first gate at episode 1,615.
+
+Not diagnosed yet. MPS stays deferred, as the user decided, until this check passes.
