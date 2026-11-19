@@ -619,3 +619,116 @@ TEST_CASE("A deck with Hero Berserker (181) passes validateDeckSlots in slot 1",
     CHECK(validateDeckSlots({ 1, 181, 2, 3, 4, 5, 6, 7 }).empty());
     CHECK(countHeroes({ 181, 1, 2, 3, 4, 5, 6, 7 }) == 1);
 }
+
+// ---------------- Elite Barbarians Evolution (182) ----------------
+
+#include "EliteBarbarianSpearEffect.h"
+
+namespace {
+// A ground CombatEntity at centre distance gap + 0.8 above (9,10): surface gap
+// `gap` for two troop-radius bodies.
+std::shared_ptr<StationaryCombatant> eliteDummy(Board& b, int id, float gap, int team = 1) {
+    auto d = std::make_shared<StationaryCombatant>(id, 9.0f, 10.0f + gap + 0.8f, 100000, team, 0.0f, 0, 10);
+    b.addEntity(d);
+    b.commitPendingEntities();
+    return d;
+}
+int eliteHit(float gap, bool flying = false) {
+    Board b;
+    auto d = eliteDummy(b, 900, gap);
+    d->isFlying = flying;
+    EliteBarbarianSpearEffect(3.0f, 4.5f, 220).apply(b, Vector2D{9.0f, 10.0f}, 0);
+    return 100000 - d->hp;
+}
+} // namespace
+
+TEST_CASE("Elite Barbarians Evolution (182) is registered with the base body and a 5 s spear timer",
+          "[new_card][evo_elite_barbarians]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(182);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Elite Barbarians");
+    CHECK(def->cost == Catch::Approx(6.0f));
+    CHECK(def->isEvolution);
+    CHECK_FALSE(def->isSpell);
+    CHECK(def->evolutionCycleThreshold == 1);
+    CHECK(def->evolvedUsesGranted == 1);
+
+    Board board;
+    auto bodies = live_sync::spawnBare(board, 182, 9.0f, 10.0f, 0, true);
+    int n = 0;
+    for (const auto& e : bodies) {
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (!c) continue;
+        ++n;
+        CHECK(c->hp == 1341);
+        CHECK(c->getBaseDamage() == 384);
+        CHECK(c->getAttackCooldown() == 14);
+        CHECK(c->getAttackRange() == Catch::Approx(1.2f));
+        CHECK(c->sightRange == Catch::Approx(5.5f));
+        CHECK(c->firstHitTicks == 5);
+        CHECK(c->periodicIntervalTicks == 50);
+        CHECK(c->periodicEffect != nullptr);
+        CHECK(c->periodicTicksUntilNext == 50);
+    }
+    CHECK(n == 2);
+}
+
+TEST_CASE("Elite Barbarians Evolution (182): the base card and the un-evolved form have no spear",
+          "[new_card][evo_elite_barbarians]") {
+    // Control that must NOT fire.
+    Board a, b;
+    auto base = live_sync::mainBody(a, 17);
+    auto plain = live_sync::mainBody(b, 182, false);
+    REQUIRE(base != nullptr);
+    REQUIRE(plain != nullptr);
+    CHECK(base->periodicIntervalTicks == 0);
+    CHECK(base->periodicEffect == nullptr);
+    CHECK(plain->periodicIntervalTicks == 0);
+    CHECK(plain->periodicEffect == nullptr);
+}
+
+TEST_CASE("Elite Barbarians Evolution (182) spear band edges are 3 and 4.5 tiles surface-to-surface",
+          "[new_card][evo_elite_barbarians]") {
+    CHECK(eliteHit(3.05f) == 220); // control: must fire
+    CHECK(eliteHit(2.9f) == 0);
+    CHECK(eliteHit(4.45f) == 220);
+    CHECK(eliteHit(4.6f) == 0);
+}
+
+TEST_CASE("Elite Barbarians Evolution (182) spear ignores flying targets",
+          "[new_card][evo_elite_barbarians]") {
+    CHECK(eliteHit(4.0f, false) == 220);
+    CHECK(eliteHit(4.0f, true) == 0);
+}
+
+TEST_CASE("Elite Barbarians Evolution (182) spear hits only the nearest enemy, never a friendly",
+          "[new_card][evo_elite_barbarians]") {
+    Board b;
+    auto far = std::make_shared<StationaryCombatant>(901, 9.0f, 10.0f + 4.0f + 0.8f, 100000, 1, 0.0f, 0, 10);
+    auto near = std::make_shared<StationaryCombatant>(902, 10.0f, 10.0f + 3.5f + 0.8f, 100000, 1, 0.0f, 0, 10);
+    auto ally = std::make_shared<StationaryCombatant>(903, 8.0f, 10.0f + 3.2f + 0.8f, 100000, 0, 0.0f, 0, 10);
+    b.addEntity(far); b.addEntity(near); b.addEntity(ally);
+    b.commitPendingEntities();
+    // near is at a slightly larger centre offset in x; recompute so it is still nearest.
+    EliteBarbarianSpearEffect(3.0f, 4.5f, 220).apply(b, Vector2D{9.0f, 10.0f}, 0);
+    CHECK(near->hp == 100000 - 220);
+    CHECK(far->hp == 100000);
+    CHECK(ally->hp == 100000);
+}
+
+TEST_CASE("Elite Barbarians Evolution (182) throws through update() once per interval",
+          "[new_card][evo_elite_barbarians]") {
+    Board b;
+    auto bodies = live_sync::spawnBare(b, 182, 9.0f, 10.0f, 0, true);
+    std::vector<std::shared_ptr<CombatEntity>> bs;
+    for (const auto& e : bodies)
+        if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) bs.push_back(c);
+    REQUIRE(bs.size() == 2);
+    auto foe = std::make_shared<StationaryCombatant>(950, 9.0f, 14.0f, 100000, 1, 0.0f, 0, 10);
+    b.addEntity(foe);
+    b.commitPendingEntities();
+    for (auto& c : bs) { advancePastDeploy(c, b); c->periodicTicksUntilNext = 1; }
+    for (auto& c : bs) c->update(b);
+    CHECK(foe->hp == 100000 - 2 * 220);
+    for (auto& c : bs) CHECK(c->periodicTicksUntilNext == 50);
+}

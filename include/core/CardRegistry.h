@@ -44,6 +44,7 @@
 #include "HeroBarbarianBarrelRerollEffect.h"
 #include "HeroValkyrieWhirlwindEffect.h"
 #include "HeroBerserkerSavageSurvivalEffect.h"
+#include "EliteBarbarianSpearEffect.h"
 
 // A registered card. spawnEntity is one of the archetype factories in
 // CardFactories.h bound to the card's CardStats.
@@ -1898,6 +1899,29 @@ private:
                 .withRampStage4(200, 2.0f)
                 .withRampGracePeriod(70),
             2, 1);
+
+        // Elite Barbarians Evolution (id 182): body identical to id 17
+        // (single-source: trophycoach.com/guides/elite-barbarians-evolution-guide,
+        // "Identical Stats"). Every 5 s (single-source: same guide; official text
+        // only says "every few seconds") each barbarian hurls a spear at the
+        // nearest enemy GROUND target (single-source: same guide) whose
+        // surface-to-surface distance is 3-4.5 tiles (official 8 Sep 2026:
+        // "Spear Range: 3.5-5 -> 3-4.5 tiles"; the guide says the range has a
+        // minimum as well as a maximum) for 220 (official 26 Aug 2026:
+        // "Spear Damage: 284 -> 220"). Cycles to evolve 1: single-source (same
+        // guide); evolvedUses 1 is the engine convention, unsourced. NOT modelled:
+        // the Rage path (magnitude, radius, geometry unsourced; official duration
+        // 2 s, 8 Sep 2026), spear flight time, the separate 6-tile spear sight
+        // (official 6 Oct 2026; sightRange stays 5.5 because test_sight_range.cpp
+        // pins an Evolution to its base sight), and any Crown Tower damage
+        // difference (unsourced; assumed equal).
+        addEvolution(182,
+            troop(17, "Elite Barbarians", 6.0f, Archetype::MeleeSquad, 1341, SPEED_FAST, 1.2f, 384, 14, 'e').withFirstHit(5)
+                .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} }),
+            troop(17, "Elite Barbarians", 6.0f, Archetype::MeleeSquad, 1341, SPEED_FAST, 1.2f, 384, 14, 'e').withFirstHit(5)
+                .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} })
+                .withPeriodicEffect(50, std::make_shared<EliteBarbarianSpearEffect>(3.0f, 4.5f, 220)),
+            1, 1);
 
         // === Mirror ===
         // Registered so it can occupy a deck slot. GameManager::playCard
