@@ -5,8 +5,8 @@
 // the elixir held at play time (the real switching rule is unsourced). Both
 // share id 165 and the same placement footprint, so only cost and stats differ.
 //
-// 2026-05-04 balance update: both forms 1121 hp (docs/LIVE_SYNC.md); damage is
-// Liquipedia, level 9: 249. Ground: melee 1.2, 1.2 s,
+// 2026-05-04 balance update: both forms 1121 hp; 2026-09-08 balance update:
+// both forms 320 damage (docs/LIVE_SYNC.md). Ground: melee 1.2, 1.2 s,
 // fast, ground-only, 3 elixir. Flying: range 5, 1.4 s, medium, air and ground,
 // 6 elixir.
 inline CardStats spiritEmpressGroundStats() {
@@ -21,7 +21,7 @@ inline CardStats spiritEmpressGroundStats() {
     // direct assignment bypasses CardStats::troop().
     stats.speed = SPEED_FAST * MOVEMENT_SPEED_SCALE;
     stats.attackRange = 1.2f;
-    stats.damage = 249;
+    stats.damage = 320; // 2026-09-08 balance update (docs/LIVE_SYNC.md)
     stats.attackCooldown = 12;
     stats.symbol = '<';
     return stats;
@@ -37,7 +37,7 @@ inline CardStats spiritEmpressFlyingStats() {
     // Scaled for the same reason as the ground form.
     stats.speed = 0.5f * MOVEMENT_SPEED_SCALE;
     stats.attackRange = 5.0f;
-    stats.damage = 249;
+    stats.damage = 320; // 2026-09-08 balance update (docs/LIVE_SYNC.md)
     stats.attackCooldown = 14;
     stats.symbol = '<';
     stats.isFlying = true;

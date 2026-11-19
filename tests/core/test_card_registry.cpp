@@ -728,7 +728,7 @@ TEST_CASE("Ice Golem's slow is on its death explosion, never on its attack",
     // ...and dying does slow: same duration and strength, the right trigger.
     golem->hp = 0;
     board.cleanDeadEntities();
-    REQUIRE(enemy->freezeTicks == 30);
+    REQUIRE(enemy->freezeTicks == 25); // 2.5s since 2026-09-08
     REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
 }
 
@@ -839,7 +839,7 @@ TEST_CASE("Freeze deals 148 damage and fully stuns everyone in radius via the ne
     while (spell->isAlive()) spell->update(board);
 
     REQUIRE(enemy->hp == 1000 - 148); // December 2025: 148 damage
-    REQUIRE(enemy->freezeTicks == 40); // 4s full stun
+    REQUIRE(enemy->freezeTicks == 35); // 3.5s full stun (2026-09-08)
     REQUIRE(enemy->freezeSlow == Catch::Approx(0.0f));
 }
 

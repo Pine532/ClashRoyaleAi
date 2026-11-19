@@ -201,7 +201,7 @@ const SightRow SIGHT_CATALOG[] = {
         {  15, "Hog Rider", 9.5f },
         {  17, "Elite Barbarians", 5.5f },
         {  18, "Royal Giant", 7.5f },
-        {  19, "Golem", 7.0f },
+        {  19, "Golem", 7.5f },
         {  20, "Dart Goblin", 7.0f },
         {  21, "Lumberjack", 5.5f },
         {  22, "Bowler", 4.0f },

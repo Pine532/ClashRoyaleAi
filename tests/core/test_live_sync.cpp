@@ -432,7 +432,7 @@ TEST_CASE("Ice Golem and Hero Ice Golem death slow is 30% (speed factor 0.70)", 
         golem->hp = 0;
         board.cleanDeadEntities();
         INFO("card id " << id);
-        REQUIRE(enemy->freezeTicks == 30);
+        // The duration is the 2026-09-08 patch's to pin (2.5 s); this case owns the factor.
         REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f));
     }
 }
@@ -1440,4 +1440,160 @@ TEST_CASE("Vines breaks an equal-hitpoint tie toward the spell centre",
     REQUIRE(m.rec->totalTo(ids[2]) > 0);
     REQUIRE(m.rec->totalTo(ids[1]) > 0);
     REQUIRE(m.rec->totalTo(ids[0]) == 0); // farthest is spared
+}
+
+// ---------------- Patch 2026-09-08 (P29a) ----------------
+
+TEST_CASE("Bomber damage is 212 on the base card and its Evolution (2026-09-08)",
+          "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto base = mainBody(board, 9);
+    REQUIRE(base != nullptr);
+    REQUIRE(base->getBaseDamage() == 212);
+
+    Board evoBoard;
+    auto evo = mainBody(evoBoard, 127, /*evolved=*/true);
+    REQUIRE(evo != nullptr);
+    REQUIRE(evo->getBaseDamage() == 212);
+
+    Board evoIdBoard;
+    auto evoById = mainBody(evoIdBoard, 127);  // un-evolved half of the Evolution slot
+    REQUIRE(evoById != nullptr);
+    REQUIRE(evoById->getBaseDamage() == 212);
+}
+
+TEST_CASE("Freeze stuns for 3.5 s (35 ticks) (2026-09-08)", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 6.0f, 1000, 1, 5.0f, 10, 10);
+    spawn(board, enemy);
+
+    CardRegistry::getInstance().getCard(107)->spawnEntity(5.0f, 5.0f, 0, board);
+    board.commitPendingEntities();
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+    REQUIRE(spell != nullptr);
+    while (spell->isAlive()) spell->update(board);
+
+    REQUIRE(enemy->freezeTicks == 35);
+}
+
+TEST_CASE("Goblin Cage's Goblin Brawler has 1121 hp, for the base card and its Evolution (2026-09-08)",
+          "[live_sync][patch-2026-09-08]") {
+    for (int id : { 97, 139 }) {
+        Board board;
+        auto bodies = spawnBare(board, id, 9.0f, 10.0f, 0);
+        std::shared_ptr<CombatEntity> cage;
+        for (const auto& e : bodies)
+            if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) cage = c;
+        REQUIRE(cage != nullptr);
+        std::set<int> before;
+        for (const auto& e : board.getEntities()) before.insert(e->id);
+        cage->hp = 0;
+        board.cleanDeadEntities();
+        board.commitPendingEntities();
+        std::shared_ptr<CombatEntity> brawler;
+        for (const auto& e : board.getEntities())
+            if (!before.count(e->id))
+                if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) brawler = c;
+        REQUIRE(brawler != nullptr);
+        REQUIRE(brawler->hp == 1121);
+    }
+}
+
+TEST_CASE("Golem sight range is 7.5 tiles (2026-09-08)", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto golem = mainBody(board, 19);
+    REQUIRE(golem != nullptr);
+    REQUIRE(golem->sightRange == Catch::Approx(7.5f));
+}
+
+TEST_CASE("Ice Golem and Hero Ice Golem: 1228 hp and a 2.5 s death slow (2026-09-08)",
+          "[live_sync][patch-2026-09-08]") {
+    for (int id : { 40, 175 }) {
+        Board board;
+        auto enemy = std::make_shared<StationaryCombatant>(1, 5.0f, 5.5f, 1000, 1, 5.0f, 10, 10);
+        spawn(board, enemy);
+        auto bodies = spawnBare(board, id, 5.0f, 5.0f, 0);
+        auto golem = firstCombat(bodies);
+        REQUIRE(golem != nullptr);
+        REQUIRE(golem->hp == 1228);
+        golem->hp = 0;
+        board.cleanDeadEntities();
+        REQUIRE(enemy->freezeTicks == 25);
+        REQUIRE(enemy->freezeSlow == Catch::Approx(0.70f)); // 2025-10-06: slow 30%
+    }
+}
+
+TEST_CASE("Hero Mega Minion's warp deals 422 damage (2026-09-08)", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto victim = std::make_shared<StationaryCombatant>(1, 30.0f, 30.0f, 5000, 1, 5.0f, 10, 10);
+    spawn(board, victim);
+    auto minion = firstCombat(spawnBare(board, 173, 5.0f, 5.0f, 0));
+    REQUIRE(minion != nullptr);
+    REQUIRE(minion->abilityEffect != nullptr);
+    minion->abilityCooldownRemaining = 0;
+    REQUIRE(minion->activateAbility(board));
+    REQUIRE(victim->hp == 5000 - 422);
+}
+// ---------------------------------------------------------------------------
+// patch 2026-09-08 (September balance changes, 8th)
+// ---------------------------------------------------------------------------
+
+#include "SpiritEmpressForms.h"
+
+TEST_CASE("Ronin hit speed is 13 ticks (1.3 s)", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto ronin = mainBody(board, 54);
+    REQUIRE(ronin != nullptr);
+    REQUIRE(ronin->getAttackCooldown() == 13);
+}
+
+TEST_CASE("Zappies hit speed is 23 ticks (2.3 s)", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto z = mainBody(board, 79);
+    REQUIRE(z != nullptr);
+    REQUIRE(z->getAttackCooldown() == 23);
+}
+
+TEST_CASE("Spirit Empress damage is 320 on the registry entry and on both forms",
+          "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto body = mainBody(board, 165);
+    REQUIRE(body != nullptr);
+    REQUIRE(body->getBaseDamage() == 320);
+    REQUIRE(spiritEmpressGroundStats().damage == 320);
+    REQUIRE(spiritEmpressFlyingStats().damage == 320);
+}
+
+TEST_CASE("Wizard, Wizard Evolution and Hero Wizard deal 304 damage", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto base = mainBody(board, 11);
+    auto evoBase = mainBody(board, 141, false);
+    auto evo = mainBody(board, 141, true);
+    auto hero = mainBody(board, 167);
+    REQUIRE(base != nullptr);
+    REQUIRE(evoBase != nullptr);
+    REQUIRE(evo != nullptr);
+    REQUIRE(hero != nullptr);
+    REQUIRE(base->getBaseDamage() == 304);
+    REQUIRE(evoBase->getBaseDamage() == 304);
+    REQUIRE(evo->getBaseDamage() == 304);
+    REQUIRE(hero->getBaseDamage() == 304);
+}
+
+TEST_CASE("Wizard Evolution Fire Shield holds 176 hitpoints", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto evo = mainBody(board, 141, true);
+    REQUIRE(evo != nullptr);
+    REQUIRE(evo->shieldHp == 176);
+}
+
+TEST_CASE("Hero Wizard Fiery Flight lasts 35 ticks (3.5 s)", "[live_sync][patch-2026-09-08]") {
+    Board board;
+    auto hero = mainBody(board, 167);
+    REQUIRE(hero != nullptr);
+    REQUIRE(hero->abilityEffect != nullptr);
+    hero->abilityEffect->apply(board, *hero);
+    REQUIRE(hero->isFlying);
+    REQUIRE(hero->temporaryFlightTicksRemaining == 35);
+    REQUIRE(hero->flightPulseTicksRemaining == 35);
 }

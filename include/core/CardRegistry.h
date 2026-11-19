@@ -293,7 +293,8 @@ private:
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} });
     }
     static CardStats goblinCageBrawlerStats() {
-        return troop(-31, "Goblin Brawler", 0.0f, Archetype::MeleeSquad, 1080, 0.7f, 0.8f, 337, 11, 'o');
+        // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): hitpoints 1080 -> 1121.
+        return troop(-31, "Goblin Brawler", 0.0f, Archetype::MeleeSquad, 1121, 0.7f, 0.8f, 337, 11, 'o');
     }
     // Elixir Golem's split chain: Golem -> 2 Golemites -> 2 Blobs each. Each
     // tier spawns the next and grants the OPPONENT elixir: 1.0 from the Golem,
@@ -568,9 +569,11 @@ private:
         add(troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
             .withTargetsAir().withSightRange(6.0f));
         // Bomber is ground-only; so are Bowler, Sparky and Cannon Cart.
-        add(troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 225, 18, 'b'));
+        // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): damage 225 -> 212.
+        add(troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b'));
         // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-        add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+        // 2026-09-08 balance update: damage 281 -> 304 (base, Evolution and Hero; docs/LIVE_SYNC.md).
+        add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
             .withTargetsAir().withSplash(1.5f));
         add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
             .withTargetsAir().withSightRange(7.0f)); // 2026-03-02 balance update: 7.5 -> 7.0 tiles (docs/LIVE_SYNC.md).
@@ -617,14 +620,15 @@ private:
                 std::vector<std::shared_ptr<IDeathEffect>>{
                     std::make_shared<SpawnOnDeath>(golemiteStats()),
                     std::make_shared<AreaDamageOnDeath>(2.5f, 200) }))
-            .withSightRange(7.0f));
+            .withSightRange(7.5f)); // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): sight range 7 -> 7.5
 
         // Ice Golem: the slow is on the death explosion, as in the real card;
-        // there is no on-attack slow. The 30 ticks are not sourced; the slow is
-        // 30% (factor 0.70), 2025-10-06 balance update (docs/LIVE_SYNC.md).
-        add(troop(40, "Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1315, SPEED_SLOW, 0.75f, 84, 25, 'c')
+        // there is no on-attack slow. The slow is 30% (factor 0.70), 2025-10-06
+        // balance update; 2026-09-08 balance update: hitpoints 1315 -> 1228 and
+        // slow duration 2.5 s (25 ticks) (docs/LIVE_SYNC.md).
+        add(troop(40, "Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
-                2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.70f))).withSightRange(7.0f));
+                2.0f, 84, std::make_shared<FreezeOnHit>(25, 0.70f))).withSightRange(7.0f));
 
         // Balloon: flying and building-only, point-blank range; building
         // targeters never consider air, so no withTargetsAir. The real death
@@ -746,7 +750,8 @@ private:
         // Parry every 3.5 s. The real parry reflects 200% damage and only
         // against ground melee; neither is modelled (takeDamage carries no
         // attacker, and there is no melee/ranged distinction).
-        add(troop(54, "Ronin", 5.0f, Archetype::MeleeSquad, 1779, 0.7f, 1.2f, 371, 14, '2')
+        // 2026-09-08 balance update: hit speed 1.4 s -> 1.3 s (13 ticks), docs/LIVE_SYNC.md.
+        add(troop(54, "Ronin", 5.0f, Archetype::MeleeSquad, 1779, 0.7f, 1.2f, 371, 13, '2')
             .withParry(35));
         // 2026-08-04 balance update: hp 2150 -> 2265, melee damage 212 -> 232
         // (docs/LIVE_SYNC.md); the rocket turret is goblinMachineTurretStats.
@@ -884,7 +889,8 @@ private:
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f}, {0.3f, 0.5f}, {-0.3f, 0.5f} })
             .withFlying().withTargetsAir());
 
-        add(troop(79, "Zappies", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 4.5f, 117, 21, '[')
+        // 2026-09-08 balance update: hit speed 2.2 s -> 2.3 s (23 ticks), docs/LIVE_SYNC.md.
+        add(troop(79, "Zappies", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 4.5f, 117, 23, '[')
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} })
             .withTargetsAir()
             .withOnHit(std::make_shared<FreezeOnHit>(3, 0.0f)).withSightRange(5.0f));
@@ -1052,12 +1058,13 @@ private:
         // 154 matched neither the pre-patch 168 nor this value.
         add(spell(106, "Tornado", 3.0f, 5.5f, 84, 8, '_')
             .withKnockback(-1.5f)); // negative: pulls toward the centre
-        // Freeze: a 4 s full stun plus one hit of 148 damage (official December
+        // Freeze: a full stun (3.5 s since the 2026-09-08 balance update, was 4 s)
+        // plus one hit of 148 damage (official December
         // 2025 balance notes, 115 -> 148, level 11: supercell.com
         // /clashroyale/blog/release-notes/december-balance-changes/). Crown Tower
         // damage is the separate June 2026 reduction (see withCrownTowerDamage).
         add(spell(107, "Freeze", 4.0f, 3.0f, 148, 8, '~')
-            .withSpellOnHit(std::make_shared<FreezeOnHit>(40, 0.0f)));
+            .withSpellOnHit(std::make_shared<FreezeOnHit>(35, 0.0f)));
         // Rage: buffs allied damage in radius. Boost 30% (2025-10-06 balance
         // update, 35% -> 30%; docs/LIVE_SYNC.md); the duration is not sourced.
         add(spell(108, "Rage", 2.0f, 3.0f, 0, 8, '(')
@@ -1239,8 +1246,8 @@ private:
         // Bomber: +25% hp (380). "Bouncy Bomb" bounces twice at full damage,
         // approximated as a 3-target full-damage split.
         addEvolution(127,
-            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 225, 18, 'b'),
-            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 380, SPEED_MEDIUM, 4.5f, 225, 18, 'b')
+            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b'), // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): damage 212
+            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 380, SPEED_MEDIUM, 4.5f, 212, 18, 'b') // same 212 damage
                 .withSplitTargets(3).withSplitTargetsFullDamage(),
             2, 1);
 
@@ -1400,14 +1407,15 @@ private:
                 .withTargetsAir().withBurstAttack(3, 1.808f).withSightRange(6.0f),
             2, 1);
 
-        // Wizard ("Fire Shield"): a shield of 25% of his hp (189). The
+        // Wizard ("Fire Shield"): a 176 hp shield (2026-09-08 balance update,
+        // down from 192; docs/LIVE_SYNC.md), damage 304 as the base card. The
         // shield-break explosion is not modelled.
         addEvolution(141,
             // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
                 .withTargetsAir().withSplash(1.5f),
-            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
-                .withTargetsAir().withSplash(1.5f).withShield(189),
+            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
+                .withTargetsAir().withSplash(1.5f).withShield(176),
             2, 1);
 
         // Witch: the real heal when a spawned Skeleton dies is approximated as
@@ -1711,7 +1719,9 @@ private:
         // Not a Champion: it has no activated ability.
         // 2026-05-04 balance update: 1121 hp on both forms (ground 1152 -> 1121,
         // air 1177 -> 1121; docs/LIVE_SYNC.md). Was 926, a Liquipedia level-9 value.
-        add(troop(165, "Spirit Empress", 3.0f, Archetype::MeleeSquad, 1121, SPEED_FAST, 1.2f, 249, 12, '<')); // speed matches the ground form (2026-03-02: Fast)
+        // Damage 320 (2026-09-08 balance update, level 11; docs/LIVE_SYNC.md); the
+        // forms in SpiritEmpressForms.h carry the same value.
+        add(troop(165, "Spirit Empress", 3.0f, Archetype::MeleeSquad, 1121, SPEED_FAST, 1.2f, 320, 12, '<')); // speed matches the ground form (2026-03-02: Fast)
 
         // === Heroes ===
         // A Hero gives an existing troop a second, ability-carrying form, using
@@ -1752,13 +1762,14 @@ private:
             .withHeroAbility(2.0f, 250, std::make_shared<HeroKnightTauntEffect>(512, 50, 6.5f)));
 
         // Hero Wizard (base: id 11). "Fiery Flight" (1 elixir, 20 s cooldown):
-        // flies for 5 s, each landed attack pulsing a damaging, pulling tornado
-        // on the target (HeroWizardFieryFlightEffect). The 0.5-tile pull
-        // approximates the sourced "~50% pull strength".
+        // flies for 3.5 s (2026-09-08 balance update, down from 5 s; docs/LIVE_SYNC.md),
+        // each landed attack pulsing a damaging, pulling tornado on the target
+        // (HeroWizardFieryFlightEffect). The 0.5-tile pull approximates the
+        // sourced "~50% pull strength". Damage 304 as the base card.
         // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-        add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 281, 14, 'W')
+        add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
             .withTargetsAir().withSplash(1.5f)
-            .withHeroAbility(1.0f, 200, std::make_shared<HeroWizardFieryFlightEffect>(50, 4.0f, 20, 0.5f)));
+            .withHeroAbility(1.0f, 200, std::make_shared<HeroWizardFieryFlightEffect>(35, 4.0f, 20, 0.5f)));
 
         // Hero Giant (base: id 2). "Heroic Hurl" (2 elixir, 14 s cooldown):
         // throws the highest-HP enemy troop within 3.0 tiles (not sourced) to
@@ -1769,11 +1780,11 @@ private:
 
         // Hero Mega Minion (base: id 43). "Wounding Warp" (2 elixir, one use,
         // locked for the first 1.5 s): teleports to the lowest-HP enemy
-        // anywhere and deals bonus damage (HeroMegaMinionWarpEffect). The bonus
-        // damage is not sourced.
+        // anywhere and deals bonus damage (HeroMegaMinionWarpEffect). Warp
+        // damage 422 per the 2026-09-08 balance update (399 -> 422; docs/LIVE_SYNC.md).
         add(troop(173, "Hero Mega Minion", 3.0f, Archetype::MeleeSquad, 837, SPEED_MEDIUM, 1.6f, 312, 15, 'F')
             .withFlying().withTargetsAir()
-            .withHeroAbility(2.0f, 0, std::make_shared<HeroMegaMinionWarpEffect>(300), 1)
+            .withHeroAbility(2.0f, 0, std::make_shared<HeroMegaMinionWarpEffect>(422), 1)
             .withInitialAbilityCooldown(15));
 
         // Hero Magic Archer (base: id 63). "Triple Threat" (2 elixir, 25 s
@@ -1789,15 +1800,15 @@ private:
                 3.5f, heroMagicArcherDecoyStats(), 70)));
 
         // Hero Ice Golem (base: id 40, including the slow on its death
-        // explosion). "Snowstorm" (2 elixir, 17 s cooldown): three staggered
+        // explosion; 1228 hp and 25-tick slow as of 2026-09-08, docs/LIVE_SYNC.md). "Snowstorm" (2 elixir, 17 s cooldown): three staggered
         // blasts in a 4-tile radius, the third a 1.5 s freeze, with reduced
         // Crown Tower damage (HeroIceGolemSnowstormEffect). Per-blast damage
         // and slow are not sourced. 2026-04-06 balance update: Snowstorm's
         // knockback removed (ctor arg 3 = 0, docs/LIVE_SYNC.md). 2026-08-04
         // balance update: damage per blast 38 -> 69 (the engine's 80 was unsourced).
-        add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1315, SPEED_SLOW, 0.75f, 84, 25, 'c')
+        add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
-                2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%
+                2.0f, 84, std::make_shared<FreezeOnHit>(25, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%; 2026-09-08: 1228 hp, 2.5 s
             .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 69, 0.0f, 20, 0.6f, 15)));
 
         // Hero Barbarian Barrel (base: id 101). The ability lives on the

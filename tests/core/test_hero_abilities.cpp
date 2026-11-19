@@ -478,7 +478,7 @@ TEST_CASE("Hero Ice Golem (175) is registered with base Ice Golem's stats and th
 
     auto hero = std::dynamic_pointer_cast<CombatEntity>(board.getEntities()[0]);
     REQUIRE(hero != nullptr);
-    REQUIRE(hero->hp == 1315); // base Ice Golem hp (id 40)
+    REQUIRE(hero->hp == 1228); // base Ice Golem hp (id 40)
     REQUIRE(hero->abilityElixirCost == Catch::Approx(2.0f));
     REQUIRE(hero->abilityCooldownTicks == 170);
 }
