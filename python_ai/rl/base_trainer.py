@@ -84,6 +84,28 @@ def _trainee_deck():
     return DEFAULT_DECK
 
 
+def resolve_device(environ=None):
+    """The torch device the trainer runs the network on, from CLASH_DEVICE.
+
+    Unset or "auto": CUDA when present, else CPU (the rule before the setting
+    existed). "cpu", "cuda" or "mps" by name. MPS is opt-in: it agreed with CPU
+    on a live batch only once the trunk's input was made contiguous (TODO L11).
+    A named device that is not available is an error, never a silent CPU run.
+    """
+    env = os.environ if environ is None else environ
+    name = env.get("CLASH_DEVICE", "").strip().lower() or "auto"
+    if name == "auto":
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    available = {"cpu": lambda: True,
+                 "cuda": torch.cuda.is_available,
+                 "mps": torch.backends.mps.is_available}
+    if name not in available:
+        raise ValueError(f"CLASH_DEVICE={name!r}: expected auto, cpu, cuda or mps")
+    if not available[name]():
+        raise RuntimeError(f"CLASH_DEVICE={name!r} is not available on this machine")
+    return torch.device(name)
+
+
 class BaseTrainer:
     """Recurrent PPO with truncated BPTT. Subclass and fill in the opponent."""
 
@@ -105,7 +127,7 @@ class BaseTrainer:
 
     def __init__(self, cfg=None, entropy_cfg=None):
         self.cfg = cfg or PPOConfig()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = resolve_device()
         self.entropy = EntropyController(entropy_cfg or self._default_entropy())
         self.episodes_completed = 0
         self.full_resume = False

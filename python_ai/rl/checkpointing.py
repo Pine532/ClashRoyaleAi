@@ -155,7 +155,7 @@ def run_path(name):
 # flagged.
 OPERATIONAL_SETTINGS = frozenset({
     "CLASH_WEIGHTS", "CLASH_LOGDIR", "CLASH_SAVE_EVERY", "CLASH_SEED",
-    "CLASH_NUM_ENVS", "CLASH_KEEP_CHECKPOINTS",
+    "CLASH_NUM_ENVS", "CLASH_KEEP_CHECKPOINTS", "CLASH_DEVICE",
 })
 #: Compared on its resolved value in BaseTrainer.restore_common: names and ids
 #: spell the same deck differently.
