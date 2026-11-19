@@ -55,9 +55,6 @@ MAP_PATH = _PERCEPTION_ROOT / "mapping" / "card_map.json"
 # card named "Heroic Something" is not swept up.
 _UNVERIFIED_ID_MIN = 165
 
-# CardRegistry.h registers Evolutions in this id band (addEvolution).
-_EVOLUTION_ID_MIN = 123
-_EVOLUTION_ID_MAX = 163
 
 
 def slugify(name: str) -> str:
@@ -71,14 +68,17 @@ def build_rows(engine) -> dict[str, dict]:
     """Registry -> map rows, keyed by slug."""
     playable = set(engine.get_all_card_ids())
 
-    # getAllCardIds skips Evolutions, so they are probed directly.
+    # getAllCardIds skips Evolutions, so every id is probed for the engine's
+    # is_evolution flag: since the 2026-11 live sync they are no longer one
+    # contiguous band (123-163, then 182 and 186-188).
     evolutions: dict[str, int] = {}
-    for cid in range(_EVOLUTION_ID_MIN, _EVOLUTION_ID_MAX + 1):
+    for cid in range(engine.ClashRoyaleEnv.NUM_CARD_IDS):
         try:
             info = engine.get_card_info(cid)
         except Exception:
             continue
-        evolutions[slugify(info["name"])] = cid
+        if info.get("is_evolution"):
+            evolutions[slugify(info["name"])] = cid
 
     rows: dict[str, dict] = {}
     for cid in sorted(playable):
