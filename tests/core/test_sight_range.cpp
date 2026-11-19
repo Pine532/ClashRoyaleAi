@@ -343,6 +343,7 @@ const SightRow SIGHT_CATALOG[] = {
         { 183, "Minion Giant", 6.5f },
         { 184, "Hero Ice Wizard", 5.5f },
         { 185, "Hero Electro Wizard", 5.5f },
+        { 186, "Electro Giant", 5.5f },
 };
 } // namespace
 

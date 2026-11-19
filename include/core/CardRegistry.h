@@ -1939,6 +1939,25 @@ private:
                 .withPeriodicEffect(50, std::make_shared<EliteBarbarianSpearEffect>(3.0f, 4.5f, 220)),
             1, 1);
 
+        // Electro Giant Evolution ("Zap Pack 2.0", released 2026-10-05, official:
+        // https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/).
+        // The expanding de-level pulse is NOT modelled: the official post is
+        // qualitative and no sourced interval, radius, first-pulse time or
+        // de-level magnitude exists (third-party figures conflict: 3.5 s vs 5.5 s
+        // first pulse, ~9% vs ~10% per level). Until they are supplied the evolved
+        // form is the live base card (id 84) restated, including its periodic
+        // AreaStun approximation of the base Zap Pack. Cycles to evolve 2 and
+        // evolvedUses 1 are the ENGINE'S evolution defaults, NOT sourced for this
+        // card (the one claim of "cycle 1" was a single unverified page).
+        addEvolution(186,
+            troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 184, 18, '|').withFirstHit(10)
+                .withSplash(1.5f)
+                .withPeriodicEffect(50, std::make_shared<AreaStunEffect>(2.5f, 5)),
+            troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 184, 18, '|').withFirstHit(10)
+                .withSplash(1.5f)
+                .withPeriodicEffect(50, std::make_shared<AreaStunEffect>(2.5f, 5)),
+            2, 1);
+
         // === Mirror ===
         // Registered so it can occupy a deck slot. GameManager::playCard
         // substitutes the last card played (cost + 1), so this entry's own

@@ -1035,3 +1035,55 @@ TEST_CASE("Hero Electro Wizard (185) has no ability effect, so activation fails 
     REQUIRE_FALSE(game.activateChampionAbility(0, 1));
     CHECK(game.getElixirAI() >= before);
 }
+
+// ---------------- Electro Giant Evolution (186) ----------------
+
+TEST_CASE("Electro Giant Evolution (186) is registered as an Evolution of id 84 with the live base stats",
+          "[new_card][evo_electro_giant]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(186);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Electro Giant");
+    CHECK(def->cost == Catch::Approx(7.0f));
+    CHECK_FALSE(def->isSpell);
+    CHECK_FALSE(def->isBuilding);
+
+    Board b;
+    auto evo = live_sync::mainBody(b, 186, true);
+    REQUIRE(evo != nullptr);
+    CHECK(evo->hp == 3952);
+    CHECK(evo->getBaseDamage() == 184);
+    CHECK(evo->getAttackCooldown() == 18);
+    CHECK(evo->firstHitTicks == 10);
+    CHECK(evo->sightRange == Catch::Approx(5.5f));
+}
+
+TEST_CASE("Electro Giant Evolution (186) agrees with base Electro Giant (84) on hp, damage and hit speed",
+          "[new_card][evo_electro_giant]") {
+    Board b1, b2;
+    auto base = live_sync::mainBody(b1, 84, false);
+    auto evo = live_sync::mainBody(b2, 186, true);
+    REQUIRE(base != nullptr);
+    REQUIRE(evo != nullptr);
+    CHECK(evo->hp == base->hp);
+    CHECK(evo->getBaseDamage() == base->getBaseDamage());
+    CHECK(evo->getAttackCooldown() == base->getAttackCooldown());
+    CHECK(evo->firstHitTicks == base->firstHitTicks);
+}
+
+TEST_CASE("Electro Giant Evolution (186) slot cycles 2 un-evolved plays then 1 evolved (placeholder cycle count)",
+          "[new_card][evo_electro_giant][placeholder_cycle]") {
+    PlayerState player;
+    player.initializeDeck({ 186, 1, 2, 3, 4, 5, 6, 7 });
+    player.elixir = 100.0f;
+    bool evolved[3];
+    for (int i = 0; i < 3; ++i) {
+        player.hand[0] = 186;
+        player.handCooldownTicks[0] = 0;
+        auto r = player.playCard(0);
+        REQUIRE(r.cardId == 186);
+        evolved[i] = r.useEvolvedForm;
+    }
+    CHECK_FALSE(evolved[0]);
+    CHECK_FALSE(evolved[1]);
+    CHECK(evolved[2]);
+}
