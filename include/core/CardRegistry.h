@@ -246,12 +246,14 @@ private:
     // Hero Barbarian Barrel makes the spawned Barbarian the Hero (the barrel
     // spell has no persistent entity): barbarianBarrelBarbarianStats plus
     // "Rowdy Reroll" -- a 3-tile reroll (May 2026) down the barrel's own 2.6
-    // corridor, 232 like the barrel, healing half the damage it deals.
+    // corridor, 215 like the barrel (2026-10-06 balance update, 232 -> 215;
+    // the post is silent on the reroll, so it follows the barrel; docs/LIVE_SYNC.md),
+    // healing half the damage it deals.
     // withAbilitySlotCard(174): this body spawns ~17 ticks after the play, as
     // a -47 helper, so the slot must be told whose ability it carries.
     static CardStats heroBarbarianBarrelBarbarianStats() {
         return troop(-47, "Hero Barbarian Barrel", 0.0f, Archetype::MeleeSquad, 716, SPEED_MEDIUM, 0.7f, 192, 14, 'B')
-            .withHeroAbility(1.0f, 0, std::make_shared<HeroBarbarianBarrelRerollEffect>(3.0f, 1.3f, 232, 716), 1)
+            .withHeroAbility(1.0f, 0, std::make_shared<HeroBarbarianBarrelRerollEffect>(3.0f, 1.3f, 215, 716), 1)
             .withAbilitySlotCard(174);
     }
     // Compound-card secondary units (Goblin Machine's turret, Ram Rider's
@@ -709,7 +711,8 @@ private:
             .withChargeSpeed(2.0f)  // and runs at 2x (item 35)
             .withIgnoresRiver());
         // Royal Ghost jumps the river.
-        add(troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.2f, 261, 18, 'Q')
+        // 2026-10-06 balance update: 1152 hp, 263 damage (docs/LIVE_SYNC.md).
+        add(troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q')
             .withInvisibility(20) // 2026-03-02 balance update: invisibility delay 1.8 s -> 2 s (docs/LIVE_SYNC.md); was 5 here, which contradicted the post's old 1.8 s
             .withIgnoresRiver());
         // Mega Knight: the deploy slam is the spawn-effect burst (radius 1.3,
@@ -898,7 +901,8 @@ private:
         // with attackRange 6.0.
         // 2026-02-02 balance update: hit speed 1.2 s -> 1.3 s, so 13 ticks (docs/LIVE_SYNC.md;
         // supercell.com february-balance-changes-26). It carried 10 ticks.
-        add(troop(80, "Three Musketeers", 9.0f, Archetype::RangedSquad, 722, SPEED_MEDIUM, 6.0f, 218, 13, ']')
+        // 2026-10-06 balance update: 906 hp per Musketeer (docs/LIVE_SYNC.md).
+        add(troop(80, "Three Musketeers", 9.0f, Archetype::RangedSquad, 906, SPEED_MEDIUM, 6.0f, 218, 13, ']')
             .withOffsets({ {-2.0f, 0.0f}, {0.0f, 0.0f}, {2.0f, 0.0f} })
             .withTargetsAir().withSightRange(6.0f));
 
@@ -920,7 +924,8 @@ private:
             .withOffsets({ {-1.0f, -0.3f}, {-0.3f, 0.3f}, {0.3f, -0.3f}, {1.0f, 0.3f} })
             .withCharge(3.0f, 2.0f).withSightRange(9.5f)
             .withIgnoresRiver());
-        add(troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 350, 12, '{')
+        // 2026-10-06 balance update: 302 damage per Wall Breaker (docs/LIVE_SYNC.md).
+        add(troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{')
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
             .withSplash(1.5f)
             .withDieAfterFirstHit().withSightRange(7.0f));
@@ -935,7 +940,8 @@ private:
         add(troop(86, "Rune Giant", 4.0f, Archetype::MeleeBuildingTargeter, 2816, 0.5f, 1.2f, 153, 15, '~')
             .withAllyBuffAura(3.0f, 3, 1.5f, 50, 2));
         // Ram Rider jumps the river.
-        add(troop(87, "Ram Rider", 5.0f, Archetype::MeleeBuildingTargeter, 1766, SPEED_MEDIUM, 1.0f, 250, 17, '"')
+        // 2026-10-06 balance update: ram damage 271; the charge hit is 2x (docs/LIVE_SYNC.md).
+        add(troop(87, "Ram Rider", 5.0f, Archetype::MeleeBuildingTargeter, 1766, SPEED_MEDIUM, 1.0f, 271, 17, '"')
             .withCharge(2.5f, 2.0f).withChargeSpeed(2.0f) // the ram charges at 2x (item 35); 2.5 tiles to charge (official 24 Oct 2025 post, docs/LIVE_SYNC.md)
             .withSecondaryUnit(ramRiderCrossbowStats()) // the rider's independently targeting crossbow (default 5.5 sight)
             .withSightRange(7.5f) // the ram itself
@@ -960,7 +966,9 @@ private:
 
         // === Ranged building targeter (expansion) ===
         // Lava Hound releases 6 Lava Pups; their spread is an engine choice.
-        add(troop(91, "Lava Hound", 7.0f, Archetype::RangedBuildingTargeter, 3581, SPEED_SLOW, 3.5f, 53, 13, ')')
+        // 2026-10-06 balance update: damage 53 -> 71, hit speed 1.3 s -> 1.5 s
+        // (docs/LIVE_SYNC.md).
+        add(troop(91, "Lava Hound", 7.0f, Archetype::RangedBuildingTargeter, 3581, SPEED_SLOW, 3.5f, 71, 15, ')')
             .withFlying()
             .withDeathEffect(std::make_shared<SpawnOnDeath>(lavaHoundPupStats())));
 
@@ -968,7 +976,8 @@ private:
         // X-Bow: the default 30 s building lifetime matches the real card;
         // withDeployDelay adds the ~3.5 s lock-on.
         // 2026-08-04 balance update: hit speed 0.3 s -> 0.4 s (4 ticks; docs/LIVE_SYNC.md).
-        add(building(92, "X-Bow", 6.0f, 1600, 'P', 11.5f, 43, 4)
+        // 2026-10-06 balance update (chain 43 -> 58 -> 61): 61 damage (docs/LIVE_SYNC.md).
+        add(building(92, "X-Bow", 6.0f, 1600, 'P', 11.5f, 61, 4)
             .withDeployDelay(35).withSightRange(11.5f));
         // 2026-08-04 balance update (final August changes, supercell.com): hit speed 5 s -> 4.7 s.
         add(building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
@@ -1004,9 +1013,11 @@ private:
             .withSpawnEffect(2.0f, 84)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats())));
         // Elixir Collector: no attack; periodically credits elixir
-        // (ElixirGrantEffect). Interval and amount are not sourced.
+        // (ElixirGrantEffect). 2026-10-06 balance update: production speed
+        // 13 s -> 15 s, i.e. one elixir per 150 ticks (docs/LIVE_SYNC.md). The
+        // 1.0 amount per pulse is an engine assumption, not sourced.
         add(building(99, "Elixir Collector", 6.0f, 1070, '9', 0.0f, 0, 100)
-            .withPeriodicEffect(80, std::make_shared<ElixirGrantEffect>(1.0f)));
+            .withPeriodicEffect(150, std::make_shared<ElixirGrantEffect>(1.0f)));
 
         // === Spells (expansion) ===
         // Slow 30% (factor 0.70): 2025-10-06 balance update lists Giant Snowball
@@ -1022,7 +1033,8 @@ private:
         // Barbarian spawns where the barrel stops. No knockback: the real
         // barrel does not throw what it rolls over. Cast on its own side only,
         // unlike The Log's river allowance (UPSTREAM_REQUESTS.md item 32n).
-        add(spell(101, "Barbarian Barrel", 2.0f, 2.5f, 232, 8, '#')
+        // 2026-10-06 balance update: damage 232 -> 215 (docs/LIVE_SYNC.md).
+        add(spell(101, "Barbarian Barrel", 2.0f, 2.5f, 215, 8, '#')
             .withGroundOnly()
             .withOwnSideOnly()
             .withRollingSweep(4.5f, 2.6f, 0.5f, 0.0f)
@@ -1125,9 +1137,12 @@ private:
             .withChampionAbility(1.0f, 130, std::make_shared<MightyMinerEscapeEffect>(2.5f, 332, 10, 1.8f)));
 
         // Golden Knight's "Dashing Dash": up to 10 dashes to the nearest enemy
-        // within 5.5 tiles, stopping at a Crown Tower (GoldenKnightDashEffect).
-        add(troop(116, "Golden Knight", 4.0f, Archetype::MeleeSquad, 1799, SPEED_MEDIUM, 1.2f, 161, 9, 'k')
-            .withChampionAbility(1.0f, 120, std::make_shared<GoldenKnightDashEffect>(335, 5.5f, 10)));
+        // within 5.0 tiles, stopping at a Crown Tower (GoldenKnightDashEffect).
+        // 2026-10-06 balance update: damage 161 -> 168, dash range 5.5 -> 5
+        // tiles (docs/LIVE_SYNC.md); the live range is measured to the target's
+        // edge, the engine's to its centre.
+        add(troop(116, "Golden Knight", 4.0f, Archetype::MeleeSquad, 1799, SPEED_MEDIUM, 1.2f, 168, 9, 'k')
+            .withChampionAbility(1.0f, 120, std::make_shared<GoldenKnightDashEffect>(335, 5.0f, 10)));
 
         // Skeleton King: collects up to 10 souls from any death within
         // soulCollectionRadius (not sourced); "Soul Summoning" spawns 6 + 1 per
@@ -1195,12 +1210,13 @@ private:
         // modelled), then a Runner rolls on to the nearest building
         // (runnerStats). One Runner per Wall Breaker. Sources disagree on a
         // walking-damage buff, so the stats stay unchanged.
+        // 2026-10-06 balance update: 302 damage per Wall Breaker, both halves (docs/LIVE_SYNC.md).
         addEvolution(123,
-            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 350, 12, '{')
+            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{')
                 .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
                 .withSplash(1.5f)
                 .withDieAfterFirstHit().withSightRange(7.0f),
-            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 350, 12, '{')
+            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{')
                 .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
                 .withSplash(1.5f)
                 .withDieAfterFirstHit().withSightRange(7.0f)
@@ -1348,10 +1364,11 @@ private:
         // landed hit spawns 2 Souldiers. The real "only while invisible"
         // condition is not checked; she is cloaked for nearly all her attacks
         // anyway.
+        // 2026-10-06 balance update: Royal Ghost 1152 hp, 263 damage, both halves (docs/LIVE_SYNC.md).
         addEvolution(136,
-            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.2f, 261, 18, 'Q')
+            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q')
                 .withInvisibility(20).withIgnoresRiver(), // 2026-03-02: 2 s, as the base card.
-            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.2f, 261, 18, 'Q')
+            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q')
                 .withInvisibility(20) // 2026-03-02 balance update: 1.8 s -> 2 s (docs/LIVE_SYNC.md)
                 .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(royalGhostSouldierStats()
                     .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })))
@@ -1821,7 +1838,7 @@ private:
         // on the spell. "Rowdy Reroll" (1 elixir, one use): see
         // HeroBarbarianBarrelRerollEffect.
         {
-            CardStats heroBarbarianBarrelSpellStats = spell(174, "Hero Barbarian Barrel", 2.0f, 2.5f, 232, 8, '#')
+            CardStats heroBarbarianBarrelSpellStats = spell(174, "Hero Barbarian Barrel", 2.0f, 2.5f, 215, 8, '#') // 2026-10-06: 232 -> 215
                 .withGroundOnly()
                 .withOwnSideOnly()
                 .withRollingSweep(4.5f, 2.6f, 0.5f, 0.0f)

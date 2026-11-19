@@ -1623,3 +1623,160 @@ TEST_CASE("Goblinstein Lightning Link lasts 3.5 s: 7 shocks, not 8", "[live_sync
     for (int i = 0; i < 80 && shock->isAlive(); ++i) shock->update(board);
     REQUIRE(100000 - enemy->hp == 7 * 94); // 94 a pulse since 2026-08-04
 }
+
+// ---------------- patch 2026-10-06 (P31a): Barbarian Barrel, Cannon Evolution, Elixir Collector, Golden Knight, Lava Hound ----------------
+
+namespace p31a {
+
+// A harmless, immobile, targetable body.
+inline std::shared_ptr<StationaryCombatant> dummy(Match& m, float x, float y, int team, int hp) {
+    auto d = std::make_shared<StationaryCombatant>(m.board().allocateId(), x, y, hp, team, 0.5f, 0, 1000);
+    spawn(m.board(), d);
+    return d;
+}
+
+// The first positive damage amount any attacker dealt to `targetId`, or -1.
+inline int firstHitOn(const Match& m, int targetId) {
+    for (const auto& e : m.rec->damage)
+        if (e.targetId == targetId && e.amount > 0) return e.amount;
+    return -1;
+}
+
+// Elixir gained by team 0 over `ticks` ticks after a collector is played, minus
+// the same window's plain regeneration (a Match with no collector).
+inline float collectorBonus(int ticks) {
+    Match with, without;
+    with.game.setElixir(0, 0.0f);
+    without.game.setElixir(0, 0.0f);
+    with.spawnCard(99, 9.0f, 10.0f, 0);
+    with.step(ticks);
+    without.step(ticks);
+    return with.game.getElixir(0) - without.game.getElixir(0);
+}
+
+} // namespace p31a
+
+TEST_CASE("Barbarian Barrel (101) rolls for 215 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Match m;
+    auto target = p31a::dummy(m, 8.5f, 8.0f, 1, 10000);
+    m.spawnCard(101, 8.5f, 6.0f, 0);
+    m.step(40);
+    REQUIRE(p31a::firstHitOn(m, target->id) == 215);
+}
+
+TEST_CASE("Hero Barbarian Barrel (174) rolls for 215 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Match m;
+    auto target = p31a::dummy(m, 8.5f, 8.0f, 1, 10000);
+    m.spawnCard(174, 8.5f, 6.0f, 0);
+    m.step(40);
+    REQUIRE(p31a::firstHitOn(m, target->id) == 215);
+}
+
+TEST_CASE("Hero Barbarian Barrel's Rowdy Reroll deals the barrel's 215 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Match m;
+    m.spawnCard(174, 8.5f, 6.0f, 0);
+    std::shared_ptr<CombatEntity> hero;
+    for (int i = 0; i < 60 && !hero; ++i) {
+        for (const auto& e : m.board().getEntities())
+            if (e->isAlive() && e->team == 0 && e->name == "Hero Barbarian Barrel")
+                if (auto c = std::dynamic_pointer_cast<CombatEntity>(e))
+                    if (c->abilityEffect) { hero = c; break; }
+        if (!hero) m.step();
+    }
+    REQUIRE(hero);
+    // Park a target in the reroll corridor and fire the ability directly.
+    auto target = p31a::dummy(m, hero->position.x, hero->position.y + 2.0f, 1, 10000);
+    hero->abilityEffect->apply(m.board(), *hero);
+    REQUIRE(10000 - target->hp == 215);
+}
+
+TEST_CASE("Elixir Collector produces 1 elixir every 15 s, 150 ticks (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    // 10 ticks of deploy, then one interval. Nothing is credited before then.
+    REQUIRE(p31a::collectorBonus(120) == Catch::Approx(0.0f).margin(0.01f));
+    // A control that must fire: one pulse has landed by tick 200.
+    REQUIRE(p31a::collectorBonus(200) == Catch::Approx(1.0f).margin(0.01f));
+}
+
+TEST_CASE("Golden Knight (116) deals 168 per hit (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Board board;
+    auto knight = mainBody(board, 116);
+    REQUIRE(knight);
+    REQUIRE(knight->getBaseDamage() == 168);
+}
+
+TEST_CASE("Golden Knight's dash reaches 5.0 tiles, not 5.5 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    auto dashHp = [](float distance) {
+        Board board;
+        auto knight = mainBody(board, 116);
+        auto enemy = std::make_shared<DummyEntity>(board.allocateId(), knight->position.x,
+                                                   knight->position.y + distance, 10000, 1);
+        spawn(board, enemy);
+        knight->abilityEffect->apply(board, *knight);
+        return enemy->hp;
+    };
+    REQUIRE(dashHp(4.8f) < 10000);   // control: in range, the dash fires
+    REQUIRE(dashHp(5.2f) == 10000);  // between the old 5.5 and the new 5.0: no dash
+}
+
+TEST_CASE("Lava Hound (91) hits for 71 every 15 ticks (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Board board;
+    auto hound = mainBody(board, 91);
+    REQUIRE(hound);
+    REQUIRE(hound->getBaseDamage() == 71);
+    REQUIRE(hound->getAttackCooldown() == 15);
+}
+// ---- 2026-10-06 balance update (P31b): Ram Rider, Royal Ghost, Three Musketeers,
+// Wall Breakers, X-Bow ----
+
+namespace {
+// Largest base damage among a card's spawned bodies (the ram, not its crossbow).
+int p31bMaxBodyDamage(const std::vector<std::shared_ptr<Entity>>& bodies) {
+    int best = 0;
+    for (const auto& e : bodies)
+        if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) best = std::max(best, c->getBaseDamage());
+    return best;
+}
+} // namespace
+
+TEST_CASE("Ram Rider ram damage is 271 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Board board;
+    auto bodies = spawnBare(board, 87);
+    REQUIRE(p31bMaxBodyDamage(bodies) == 271);
+}
+
+TEST_CASE("Royal Ghost hp 1152 and damage 263 on the base and the Evolution (2026-10-06)",
+          "[live_sync][patch-2026-10-06]") {
+    for (int pass = 0; pass < 3; ++pass) {
+        Board board;
+        auto g = mainBody(board, pass == 0 ? 47 : 136, pass == 1);
+        REQUIRE(g);
+        CHECK(g->hp == 1152);
+        CHECK(g->getBaseDamage() == 263);
+    }
+}
+
+TEST_CASE("Three Musketeers hp per Musketeer is 906 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Board board;
+    auto bodies = spawnBare(board, 80);
+    int n = 0;
+    for (const auto& e : bodies)
+        if (std::dynamic_pointer_cast<CombatEntity>(e)) { CHECK(e->hp == 906); ++n; }
+    REQUIRE(n == 3);
+}
+
+TEST_CASE("Wall Breakers damage is 302 on the base and the Evolution (2026-10-06)",
+          "[live_sync][patch-2026-10-06]") {
+    for (int pass = 0; pass < 3; ++pass) {
+        Board board;
+        auto g = mainBody(board, pass == 0 ? 83 : 123, pass == 2);
+        REQUIRE(g);
+        CHECK(g->getBaseDamage() == 302);
+    }
+}
+
+TEST_CASE("X-Bow damage is 61 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
+    Board board;
+    auto x = mainBody(board, 92);
+    REQUIRE(x);
+    CHECK(x->getBaseDamage() == 61);
+}
