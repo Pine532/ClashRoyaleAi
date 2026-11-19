@@ -63,7 +63,15 @@ def test_the_scenario_window_truncates_rather_than_terminating():
     V(final_obs) on `truncated` and 0 on `terminated`, so reporting it as
     terminated would teach the critic that surviving a defence is worth zero.
     """
-    env = gym_wrapper.MicroRoyaleEnv({"defensive_scenario_prob": 1.0})
+    # The scenario draw is pinned (scenario_seed). Unpinned, it followed test
+    # order, and about 1 draw in 15-30 is a push that really kills the King
+    # inside the window under a no-op defence (measured 2026-11-19: 13/200 on
+    # the engine before the values-lookup commits, 7/200 after). Then
+    # `terminated` is correct, and the test failed by chance. Seed 2 draws a
+    # bridge_push_supported that the towers survive, so the full 25-step
+    # window runs out.
+    env = gym_wrapper.MicroRoyaleEnv({"defensive_scenario_prob": 1.0,
+                                      "scenario_seed": 2})
     # Engine seed too: the opening hand comes from the engine's own generator,
     # which every earlier env in the session advances.
     env.game.seed(3)
@@ -71,9 +79,12 @@ def test_the_scenario_window_truncates_rather_than_terminating():
     assert env.scenario_max_steps is not None
 
     noop = {"card_index": CE.HAND_SIZE, "target_x": 0.0, "target_y": 0.0}
+    steps = 0
     for _ in range(env.scenario_max_steps):
         _, _, terminated, truncated, _ = env.step(noop)
+        steps += 1
         if terminated or truncated:
             break
 
     assert truncated and not terminated
+    assert steps == env.scenario_max_steps  # the window, not the match, ended it
