@@ -192,7 +192,8 @@ private:
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} });
     }
     static CardStats skeletonBarrelSkeletonStats() {
-        return troop(-11, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
+        // First hit 0.5 s (5 ticks): Skeletons, official Nov 2023 post implying base 0.5 (Evolution 0.5 -> 0.4): https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023 ; Skeleton Army skeletons 0.5 s: https://liquipedia.net/clashroyale/Skeleton_Army ; Tombstone skeletons 0.5 s: https://theriagames.com/guide/clash-royale-tombstone-guide/
+        return troop(-11, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5)
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} });
     }
     // The death spawn is one Bat, not three.
@@ -206,7 +207,8 @@ private:
     // Goblin Hut, Goblin Drill). Goblin Hut's count and the intervals are not
     // sourced.
     static CardStats witchSkeletonStats() {
-        return troop(-13, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
+        // First hit 0.5 s (5 ticks): Skeletons, official Nov 2023 post implying base 0.5 (Evolution 0.5 -> 0.4): https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023 ; Skeleton Army skeletons 0.5 s: https://liquipedia.net/clashroyale/Skeleton_Army ; Tombstone skeletons 0.5 s: https://theriagames.com/guide/clash-royale-tombstone-guide/
+        return troop(-13, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5)
             .withOffsets({ {-0.4f, -0.4f}, {0.4f, -0.4f}, {-0.4f, 0.4f}, {0.4f, 0.4f} });
     }
     static CardStats nightWitchPeriodicBatStats() {
@@ -262,7 +264,8 @@ private:
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f}, {0.0f, 0.4f} });
     }
     static CardStats graveyardSkeletonStats() {
-        return troop(-21, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k');
+        // First hit 0.5 s (5 ticks): Skeletons, official Nov 2023 post implying base 0.5 (Evolution 0.5 -> 0.4): https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023 ; Skeleton Army skeletons 0.5 s: https://liquipedia.net/clashroyale/Skeleton_Army ; Tombstone skeletons 0.5 s: https://theriagames.com/guide/clash-royale-tombstone-guide/
+        return troop(-21, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5);
     }
     static CardStats royalDeliveryRecruitStats() {
         // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 800 ms (docs/LIVE_SYNC.md).
@@ -384,7 +387,8 @@ private:
     // Skeleton King's summoned skeletons, spawned one at a time in a loop by
     // SkeletonKingSoulSummonEffect.
     static CardStats skeletonKingSummonedSkeletonStats() {
-        return troop(-38, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k');
+        // First hit 0.5 s (5 ticks): Skeletons, official Nov 2023 post implying base 0.5 (Evolution 0.5 -> 0.4): https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023 ; Skeleton Army skeletons 0.5 s: https://liquipedia.net/clashroyale/Skeleton_Army ; Tombstone skeletons 0.5 s: https://theriagames.com/guide/clash-royale-tombstone-guide/
+        return troop(-38, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5);
     }
     // Little Prince's Royal Rescue: the Guardienne. Her spawn-in dash and
     // knockback are not modelled. 2026-08-04 balance update (final August changes, supercell.com): damage 217 -> 232
@@ -435,7 +439,8 @@ private:
     // child form one population capped at the sourced 8. Children carry no
     // spawn-on-hit of their own, so growth has at most three sources.
     static CardStats evolvedSkeletonChildStats() {
-        return troop(24, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k');
+        // First hit 0.4 s (4 ticks), official: https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023
+        return troop(24, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(4);
     }
     // Skeleton Army Evolution's death-spawn shadow. The real shadows have
     // unlimited hp and are targetable only by spells; here a targetable 500-hp
@@ -575,7 +580,8 @@ private:
         add(troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l').withFirstHit(4)
             .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55)));
 
-        add(troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
+        // First hit 0.5 s (5 ticks): Skeletons, official Nov 2023 post implying base 0.5 (Evolution 0.5 -> 0.4): https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023 ; Skeleton Army skeletons 0.5 s: https://liquipedia.net/clashroyale/Skeleton_Army ; Tombstone skeletons 0.5 s: https://theriagames.com/guide/clash-royale-tombstone-guide/
+        add(troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5)
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} }));
 
         // Giant Skeleton, after the 2026-05-04 rework: hp -7% (3361 x 0.93),
@@ -584,7 +590,8 @@ private:
         // 688 x 1.29 ~= 886, the same against a Crown Tower since the rework
         // removed its 2x. The bomb's knockback (1.0, Fireball's) is not sourced.
         // UPSTREAM_REQUESTS.md item 32c.
-        add(troop(39, "Giant Skeleton", 6.0f, Archetype::MeleeSquad, 3126, SPEED_MEDIUM, 0.8f, 276, 13, 'J')
+        // First hit 0.3 s (3 ticks): https://liquipedia.net/clashroyale/Giant_Skeleton ; https://clashroyale.fandom.com/wiki/Giant_Skeleton
+        add(troop(39, "Giant Skeleton", 6.0f, Archetype::MeleeSquad, 3126, SPEED_MEDIUM, 0.8f, 276, 13, 'J').withFirstHit(3)
             .withDeathEffect(std::make_shared<DelayedAreaDamageOnDeath>(3.0f, 886, 29, 1.0f, 39, "Giant Skeleton Bomb"))
             .withSightRange(5.0f));
 
@@ -714,7 +721,8 @@ private:
         add(troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y').withSightRange(7.5f));
 
         // === Defensive structures ===
-        add(building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10));
+        // First hit 1.0 s (10 ticks), the same as its hit speed: https://liquipedia.net/clashroyale/Cannon ; https://clashroyale.fandom.com/wiki/Cannon
+        add(building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10).withFirstHit(10));
         // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
         add(building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withFirstHit(4).withTargetsAir());
         // withSightRange(6.0f) is not redundant with the 5.5 default: with
@@ -1402,9 +1410,11 @@ private:
 
         // Skeletons ("Never-ending Horde"): see evolvedSkeletonChildStats.
         addEvolution(125,
-            troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
+            // Un-evolved half follows base Skeletons: first hit 0.5 s (5 ticks), as above.
+            troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5)
                 .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} }),
-            troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
+            // Evolved half: first hit 0.4 s (4 ticks), official: https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023
+            troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(4)
                 .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} })
                 .withOnHitSpawn(std::make_shared<CappedSpawnOnHitEffect>(evolvedSkeletonChildStats(), 8)),
             2, 1);
@@ -1448,8 +1458,9 @@ private:
         // (2025-05-05 balance update, 2.5 -> 2), damage 261 (2026-10-06 balance
         // update, 281 -> 261; docs/LIVE_SYNC.md). Knockback is not modelled.
         addEvolution(129,
-            building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10),
-            building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10)
+            // First hit 1.0 s (10 ticks), the same as its hit speed: https://liquipedia.net/clashroyale/Cannon ; https://clashroyale.fandom.com/wiki/Cannon
+            building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10).withFirstHit(10),
+            building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10).withFirstHit(10)
                 .withSpawnEffect(2.0f, 261),
             2, 1);
 

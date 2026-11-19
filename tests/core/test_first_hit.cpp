@@ -360,3 +360,139 @@ TEST_CASE("inject with deploy_ticks 0: a unit still walking winds up on arrival"
     REQUIRE(deployed > 0);
     REQUIRE(fresh - deployed == DEPLOY_TIME_TICKS);
 }
+
+// ---------------------------------------------------------------------------
+// 2026-11 live sync: first-hit values read off what the registry actually
+// builds (docs/live_sync/values-lookup-results.md). Tagged live_sync_values.
+// ---------------------------------------------------------------------------
+#include "live_sync_test_helpers.h"
+
+namespace {
+
+using live_sync::spawnBare;
+
+std::vector<std::shared_ptr<CombatEntity>> combatOnly(const std::vector<std::shared_ptr<Entity>>& v) {
+    std::vector<std::shared_ptr<CombatEntity>> out;
+    for (const auto& e : v)
+        if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) out.push_back(c);
+    return out;
+}
+
+// Every body a registered card (or its evolved form) puts down: its firstHitTicks.
+std::vector<int> bodyFirstHits(int cardId, bool evolved = false) {
+    Board board;
+    std::vector<int> out;
+    for (const auto& c : combatOnly(spawnBare(board, cardId, 9.0f, 10.0f, 0, evolved)))
+        out.push_back(c->firstHitTicks);
+    return out;
+}
+
+void checkAll(const std::vector<int>& v, int expected) {
+    REQUIRE_FALSE(v.empty());
+    for (int x : v) CHECK(x == expected);
+}
+
+enum class Fire { Death, Periodic };
+
+// firstHitTicks of every unit that a spawned card's death / periodic effect puts down.
+std::vector<int> effectChildFirstHits(int cardId, Fire which, bool evolved = false) {
+    Board board;
+    auto bodies = combatOnly(spawnBare(board, cardId, 9.0f, 10.0f, 0, evolved));
+    REQUIRE_FALSE(bodies.empty());
+    auto host = bodies.front();
+    std::set<int> before;
+    for (const auto& e : board.getEntities()) before.insert(e->id);
+    if (which == Fire::Death) {
+        REQUIRE(host->deathEffect != nullptr);
+        host->deathEffect->apply(board, host->position, host->team);
+    } else {
+        REQUIRE(host->periodicEffect != nullptr);
+        host->periodicEffect->apply(board, host->position, host->team);
+    }
+    board.commitPendingEntities();
+    std::vector<int> out;
+    for (const auto& e : board.getEntities())
+        if (!before.count(e->id))
+            if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) out.push_back(c->firstHitTicks);
+    return out;
+}
+
+} // namespace
+
+TEST_CASE("Cannon (25) and Cannon Evolution (129), both halves, wind up 1.0 s",
+          "[first_hit][live_sync_values][live_sync_first_hit_a]") {
+    // https://liquipedia.net/clashroyale/Cannon ; https://clashroyale.fandom.com/wiki/Cannon
+    checkAll(bodyFirstHits(25), 10);
+    checkAll(bodyFirstHits(129, false), 10);
+    checkAll(bodyFirstHits(129, true), 10);
+}
+
+TEST_CASE("Giant Skeleton (39) winds up 0.3 s", "[first_hit][live_sync_values][live_sync_first_hit_a]") {
+    checkAll(bodyFirstHits(39), 3);
+}
+
+TEST_CASE("Skeletons (24) and every spawned plain Skeleton helper wind up 0.5 s",
+          "[first_hit][live_sync_values][live_sync_first_hit_a]") {
+    checkAll(bodyFirstHits(24), 5);
+    checkAll(bodyFirstHits(125, false), 5);                                // un-evolved half follows base Skeletons
+    checkAll(effectChildFirstHits(89, Fire::Death), 5);                    // -11 (Skeleton Barrel)
+    checkAll(effectChildFirstHits(96, Fire::Periodic), 5);                 // -11 (Tombstone periodic)
+    checkAll(effectChildFirstHits(96, Fire::Death), 5);                    // -13 (Tombstone death)
+    checkAll(effectChildFirstHits(71, Fire::Periodic), 5);                 // -13 (Witch)
+}
+
+TEST_CASE("Graveyard (-21) and Skeleton King (-38) Skeletons wind up 0.5 s",
+          "[first_hit][live_sync_values][live_sync_first_hit_a]") {
+    {
+        Board board;
+        CardRegistry::getInstance().getCard(110)->spawnEntity(9.0f, 9.0f, 0, board);
+        board.commitPendingEntities();
+        auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+        REQUIRE(spell != nullptr);
+        while (spell->isAlive()) spell->update(board);
+        board.commitPendingEntities();
+        int n = 0;
+        for (const auto& e : board.getEntities())
+            if (e->cardId == -21) {
+                ++n;
+                CHECK(std::dynamic_pointer_cast<CombatEntity>(e)->firstHitTicks == 5);
+            }
+        REQUIRE(n == 12);
+    }
+    {
+        Board board;
+        auto king = combatOnly(spawnBare(board, 117)).front();
+        std::set<int> before;
+        for (const auto& e : board.getEntities()) before.insert(e->id);
+        REQUIRE(king->activateAbility(board));
+        board.commitPendingEntities();
+        int n = 0;
+        for (const auto& e : board.getEntities())
+            if (!before.count(e->id) && e->cardId == -38) {
+                ++n;
+                CHECK(std::dynamic_pointer_cast<CombatEntity>(e)->firstHitTicks == 5);
+            }
+        REQUIRE(n >= 6);
+    }
+}
+
+TEST_CASE("Skeletons Evolution (125): the evolved half and its child wind up 0.4 s",
+          "[first_hit][live_sync_values][live_sync_first_hit_a]") {
+    // Official: https://supercell.com/en/games/clashroyale/blog/release-notes/balance-changes-nov-2023
+    checkAll(bodyFirstHits(125, true), 4);
+    Board board;
+    auto bodies = combatOnly(spawnBare(board, 125, 9.0f, 10.0f, 0, true));
+    REQUIRE_FALSE(bodies.empty());
+    REQUIRE(bodies.front()->onHitSpawnEffect != nullptr);
+    std::set<int> before;
+    for (const auto& e : board.getEntities()) before.insert(e->id);
+    bodies.front()->onHitSpawnEffect->apply(board, bodies.front()->position, 0);
+    board.commitPendingEntities();
+    int n = 0;
+    for (const auto& e : board.getEntities())
+        if (!before.count(e->id)) {
+            ++n;
+            CHECK(std::dynamic_pointer_cast<CombatEntity>(e)->firstHitTicks == 4);
+        }
+    REQUIRE(n >= 1);
+}

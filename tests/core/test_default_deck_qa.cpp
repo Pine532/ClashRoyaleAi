@@ -289,9 +289,11 @@ TEST_CASE("the Cannon fully answers a lone Hog Rider", "[deck_qa][defence]") {
 
     INFO("unanswered " << unanswered << " hp lost, with a Cannon " << withCannon);
     REQUIRE(withCannon < unanswered);
-    // The Cannon absorbs the overwhelming majority of the push: the Hog, Very
-    // Fast in the real game, reaches the tower for one hit before it dies.
-    REQUIRE(withCannon * 5 < unanswered);
+    // The Cannon absorbs the bulk of the push: the Hog, Very Fast in the real
+    // game, reaches the tower for a hit or two before it dies. 2026-11 live
+    // sync: the Cannon's 1.0 s first-hit wind-up (withFirstHit(10)) lets the
+    // Hog land a second swing (634 = 2 x 317), so the margin is 3x, not 5x.
+    REQUIRE(withCannon * 3 < unanswered);
 }
 
 TEST_CASE("Skeletons and a Musketeer both blunt a Hog, a Hog does not",
