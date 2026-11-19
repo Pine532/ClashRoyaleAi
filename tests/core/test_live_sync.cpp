@@ -1374,3 +1374,70 @@ TEST_CASE("Goblinstein Monster has 2240 hp (2026-08-26 nerf)", "[live_sync][patc
     REQUIRE(monster != nullptr);
     REQUIRE(monster->hp == 2240);
 }
+
+// ---------------------------------------------------------------------------
+// Patch 2026-09-01 (Minion Academy season notes, ledger items 4, 16, 129).
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Bandit and Boss Bandit shrug off Zap-style stuns while dashing, not while walking",
+          "[live_sync][patch-2026-09-01]") {
+    for (int cardId : { 50, 122 }) {
+        Board board;
+        auto walking = mainBody(board, cardId);
+        REQUIRE(walking != nullptr);
+        walking->applyFreeze(10, 0.0f);
+        INFO("card " << cardId << " walking is still stunned");
+        REQUIRE(walking->freezeTicks > 0);
+
+        auto dashing = mainBody(board, cardId);
+        REQUIRE(dashing != nullptr);
+        dashing->chargeProgress = dashing->chargeThreshold; // mid-dash
+        dashing->applyFreeze(10, 0.0f);
+        INFO("card " << cardId << " dashing ignores the stun");
+        REQUIRE(dashing->freezeTicks == 0);
+    }
+}
+
+TEST_CASE("Clone does not duplicate a unit that is itself a clone",
+          "[live_sync][patch-2026-09-01]") {
+    auto countKnights = [](Match& m) {
+        int n = 0;
+        for (const auto& e : m.board().getEntities())
+            if (e->isAlive() && e->cardId == 0 && e->team == 0) ++n;
+        return n;
+    };
+    Match m;
+    auto original = firstCombat(m.spawnCard(0, 9.0f, 8.0f, 0));
+    REQUIRE(original != nullptr);
+    REQUIRE(countKnights(m) == 1);
+
+    // Cast on the original's current position each time: it keeps walking.
+    m.spawnCard(114, original->position.x, original->position.y, 0);
+    m.step(40);
+    REQUIRE(countKnights(m) == 2);
+
+    m.spawnCard(114, original->position.x, original->position.y, 0);
+    m.step(40);
+    // Only the original was eligible the second time: the clone is skipped.
+    REQUIRE(countKnights(m) == 3);
+}
+
+TEST_CASE("Vines breaks an equal-hitpoint tie toward the spell centre",
+          "[live_sync][patch-2026-09-01]") {
+    Match m;
+    // Same hp, offsets from the cast point (9, 20). The nearest is spawned last,
+    // so a hp-only sort (stable on a tie) would drop exactly that one.
+    const float offsets[4] = { 2.1f, 1.5f, 0.9f, 0.3f };
+    std::vector<int> ids;
+    for (float dx : offsets) {
+        auto b = firstCombat(m.spawnCard(0, 9.0f + dx, 20.0f, 1));
+        REQUIRE(b != nullptr);
+        ids.push_back(b->id);
+    }
+    m.spawnCard(105, 9.0f, 20.0f, 0);
+    m.step(60);
+    REQUIRE(m.rec->totalTo(ids[3]) > 0); // closest is hit
+    REQUIRE(m.rec->totalTo(ids[2]) > 0);
+    REQUIRE(m.rec->totalTo(ids[1]) > 0);
+    REQUIRE(m.rec->totalTo(ids[0]) == 0); // farthest is spared
+}

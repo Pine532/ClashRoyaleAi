@@ -106,6 +106,12 @@ public:
     int getTickInterval() const { return tickInterval; }
     bool isAllyBuff() const { return buffsAllies; }
     bool isAllyClone() const { return clonesAllies; }
+
+    // 2026-09-01 balance update: clones can no longer be cloned.
+    static bool isCloneCopyEntity(const Entity& e) {
+        auto c = dynamic_cast<const CombatEntity*>(&e);
+        return c && c->isCloneCopy;
+    }
     bool hasOnHit() const { return onHit != nullptr; }
     bool hasTieredDamage() const { return tieredDamage; }
     int getTierSingleDamage() const { return tierSingleDamage; }
@@ -174,6 +180,7 @@ public:
             bool teamMatches = alliesOnly ? (entity->team == this->team) : (entity->team != this->team);
             if (entity->isAlive() && entity->isTargetable() && teamMatches && entity->id != this->id
                 && (!groundOnly || !entity->isFlying)
+                && !(clonesAllies && isCloneCopyEntity(*entity))
                 && position.distanceTo(entity->position) <= radius + CombatEntity::effectiveRadiusOf(*entity)) {
                 candidates.push_back(entity);
             }
@@ -188,8 +195,12 @@ public:
         };
         if (targetTopHpCount > 0 && static_cast<int>(candidates.size()) > targetTopHpCount) {
             std::sort(candidates.begin(), candidates.end(),
-                [&effectiveHp](const std::shared_ptr<Entity>& a, const std::shared_ptr<Entity>& b) {
-                    return effectiveHp(*a) > effectiveHp(*b);
+                [&effectiveHp, this](const std::shared_ptr<Entity>& a, const std::shared_ptr<Entity>& b) {
+                    const int ha = effectiveHp(*a), hb = effectiveHp(*b);
+                    if (ha != hb) return ha > hb;
+                    // 2026-09-01 balance update: equal hitpoints go to the
+                    // enemy closest to the spell centre (docs/LIVE_SYNC.md).
+                    return position.distanceTo(a->position) < position.distanceTo(b->position);
                 });
             candidates.resize(targetTopHpCount);
         }

@@ -452,9 +452,13 @@ public:
     // What every Clone copy shares (the leaf classes' clone()): a fresh id, 1
     // hp, and no claim on a Champion/Hero slot, so a cloned Champion or Hero
     // never gets its ability (GameManager::trackSlotEntities).
+    // 2026-09-01 balance update: clones can no longer be cloned
+    // (isCloneCopy, read by AreaSpell's Clone targeting; docs/LIVE_SYNC.md).
+    bool isCloneCopy = false;
     void becomeCloneCopy(int newId) {
         id = newId;
         hp = 1;
+        isCloneCopy = true;
         abilitySlotCardId = 0;
     }
 
@@ -504,6 +508,13 @@ public:
     // dropped (three concurrent strengths are enough for every card).
     void applyFreeze(int ticks, float slowFactor) {
         if (ticks <= 0) return;
+        // 2026-09-01 balance update: Bandit and Boss Bandit can no longer be
+        // interrupted by Zap, Freeze and similar effects while dashing
+        // (docs/LIVE_SYNC.md). Same mid-dash window as takeDamage's immunity.
+        if (chargeGrantsInvulnerability && chargeThreshold > 0.0f
+            && chargeProgress >= chargeThreshold * 0.5f) {
+            return;
+        }
         FreezeSlot* slot = nullptr;
         for (auto& s : freezeSlots) {
             if (s.ticks > 0 && s.factor == slowFactor) { slot = &s; break; }
