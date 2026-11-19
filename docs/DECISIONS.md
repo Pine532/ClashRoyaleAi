@@ -8163,7 +8163,14 @@ Readings at each 500-episode mark, from 500 to 3,500:
 - `[FLOOR]` fired at 1,167, 2,170 and 3,171 episodes.
 - Reading: an early gain, then a plateau at 0.06-0.09 for about 2,000 episodes (about 65
   updates), far below the 0.65 rung gate.
-- For scale only (older engine and ladder): the 2026-08 from-scratch run of this deck passed
-  its first gate at episode 1,615.
+- ~~For scale only (older engine and ladder): the 2026-08 from-scratch run of this deck passed
+  its first gate at episode 1,615.~~ **Corrected the same evening: that comparison was wrong.**
+  The August run (DECISIONS, "RUN 1 PROGRESS") played the *mirror*, its own deck, on the old
+  6-rung ladder, whose gates raised the opponent's elixir (1.0 -> 1.4). This run plays the
+  16-deck meta pool on the 11-rung teacher ladder. Those are different opponents and a
+  different curriculum, so the August numbers say nothing about this run. The fair comparison
+  is the same-seed A/B against `main`, below.
 
-Not diagnosed yet. MPS stays deferred, as the user decided, until this check passes.
+Diagnosed the same evening: `docs/live_sync/rung0_stall_diagnosis.md`. The live sync did not
+cause it; it is the documented cold start of a fresh net against the meta-deck pool. MPS stays
+deferred, as the user decided, until the floor check passes.

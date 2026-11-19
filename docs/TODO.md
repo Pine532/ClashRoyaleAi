@@ -37,9 +37,12 @@ size, so the first two items gate any training.
 
 1. **Retrain from scratch, or migrate checkpoints.** IN PROGRESS: a from-scratch run
    started 2026-11-18 on macOS (CPU, 2.6 Hog Cycle, `tools/mac_training.sh`, checkpoint
-   `runs/checkpoints/livesync.pth`), paused at episode 3,387. **The floor check did not
-   pass:** the win rate plateaued at 0.06-0.09 at rung 0 after 112 updates (DECISIONS,
-   2026-11-18 evening). Diagnose before a long run. Observation is now 14403 floats (was 13977);
+   `runs/checkpoints/livesync.pth`), paused at episode 3,387. The floor check failed (rung-0
+   plateau at 0.06-0.09). **Diagnosed** (`docs/live_sync/rung0_stall_diagnosis.md`): the
+   documented cold start against the 16-deck pool, not the live sync, since `main` stalls
+   identically. In the mirror (`CLASH_PHASE1_DECK_POOL=0`) the same net climbed 0.05 -> 0.48 in
+   78 updates. Plan: run long in mirror mode, then switch the pool on with a resume.
+   Observation is now 14403 floats (was 13977);
    `python_ai/tools/migrate_checkpoint_card_ids.py` migrates an old-layout checkpoint.
 2. ~~**Re-run the side null**~~ DONE 2026-11-18 on a random-init net: 0.482 over 300
    episodes, z = -0.64, PASS. Repeat on the first trained checkpoint.
@@ -92,6 +95,11 @@ size, so the first two items gate any training.
     KeyboardInterrupt re-raised by gymnasium, past `except Exception`. Lost in 2 of 4
     real-process trials before the fix; saved in all trials after.
 14. ~~**`profile_training.py --mode torch` crashes**~~ FIXED 2026-11-18 (`4d95722`).
+16. ~~**The card mask allowed hand slots the engine had locked**~~ FIXED 2026-11-18 (`393c497`).
+    Found by the rung-0 diagnosis. The 20-tick post-cycle lock was not in the observation, so
+    10-16% of card attempts were refused (on `main` too). The mask now follows
+    `get_hand_cooldown_ticks`, stored for the update. Upstream draft:
+    `docs/upstream_drafts/bug_hand_slot_lock_mask.md`.
 15. **`profile_training.py`'s no-engine stub is broken** (pre-existing, since 2026-08-27
     `3d698d0`; found in review). `_engine_constants_from_header` cannot parse
     `NUM_CARD_IDS = CARD_ID_COUNT`. The stub's `observation_size()` and boundary mode's
