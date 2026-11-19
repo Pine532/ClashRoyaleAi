@@ -134,3 +134,22 @@ The same network that sat at 0.06 against the pool reaches 0.48 against its own 
 
 The hand-slot lock fix was made afterwards (`393c497`). On this checkpoint's policy, engine-refused
 card attempts fell from 22.6% to 3.0%.
+
+## After the mask fix and the values lookup: the 10-minute check does not climb (2026-11-19)
+
+Setup:
+- The same start as the mirror test: a scratch copy of the episode-3,387 checkpoint, mirror mode.
+- Code at `a26a041`: the hand-slot mask fix plus the values-lookup changes.
+- Criteria fixed beforehand: a final `Win_Rate_100` of at least 0.15, and the last third at
+  least 0.05 above the first third.
+
+Result after 36 updates (episodes 3,410 to 4,315):
+- First third 0.091, last third 0.106, final 0.100.
+- The run was healthy: ratio deviation at most 7.6e-6, no non-finite updates.
+- The mirror test had reached 0.170 at the same update count.
+- Verdict: **does not climb**, so the long run was not started.
+
+Not yet separated: both changes touch this deck. The Cannon and the Skeletons gained first-hit
+wind-ups, and the mask removes about 20% of this policy's card attempts, which it was trained
+with. Either could account for it, and so could noise: with 100 games per reading the standard
+error is about 0.03-0.04.
