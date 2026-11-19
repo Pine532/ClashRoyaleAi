@@ -199,7 +199,8 @@ private:
     // The death spawn is one Bat, not three.
     static CardStats nightWitchBatStats() {
         // SPEED_VERY_FAST, matching playable card 78 (the same unit).
-        return troop(-12, "Bats", 0.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 0.5f, 81, 12, 't')
+        // First hit 0.6 s (6 ticks): single-source (https://liquipedia.net/clashroyale/Bats).
+        return troop(-12, "Bats", 0.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 0.5f, 81, 12, 't').withFirstHit(6)
             .withFlying().withTargetsAir();
     }
 
@@ -213,7 +214,8 @@ private:
     }
     static CardStats nightWitchPeriodicBatStats() {
         // SPEED_VERY_FAST, as the -12 Bats.
-        return troop(-14, "Bats", 0.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 0.5f, 81, 12, 't')
+        // First hit 0.6 s (6 ticks): single-source (https://liquipedia.net/clashroyale/Bats).
+        return troop(-14, "Bats", 0.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 0.5f, 81, 12, 't').withFirstHit(6)
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
             .withFlying().withTargetsAir();
     }
@@ -554,7 +556,8 @@ private:
         add(troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V').withFirstHit(1)
             .withSplash(1.5f)); // 360-degree swing
 
-        add(troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's')
+        // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Skeleton_Army).
+        add(troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's').withFirstHit(5)
             .withOffsets(skeletonArmyOffsets()));
 
         // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1300 ms (docs/LIVE_SYNC.md).
@@ -612,11 +615,13 @@ private:
 
         // Flying troops. Minions and Minion Horde are one unit at two squad
         // sizes; Mega Minion is a single heavier flier. All hit air and ground.
-        add(troop(41, "Minions", 3.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'm')
+        // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Minions).
+        add(troop(41, "Minions", 3.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'm').withFirstHit(5)
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} })
             .withFlying().withTargetsAir());
 
-        add(troop(42, "Minion Horde", 5.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'h')
+        // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Minions); inferred from Minions, the Horde page was unreadable.
+        add(troop(42, "Minion Horde", 5.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'h').withFirstHit(5)
             .withOffsets({ {-0.6f, -0.3f}, {0.0f, -0.3f}, {0.6f, -0.3f},
                            {-0.6f, 0.3f}, {0.0f, 0.3f}, {0.6f, 0.3f} })
             .withFlying().withTargetsAir());
@@ -646,7 +651,8 @@ private:
         add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W').withFirstHit(5)
             .withTargetsAir().withSplash(1.5f));
         // 2026-10-19 balance update: damage 151 -> 143 (docs/LIVE_SYNC.md).
-        add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
+        // First hit 0.35 s -> 4 ticks: single-source (https://liquipedia.net/clashroyale/Dart_Goblin); 0.35 s is between ticks 3 and 4, rounded to the nearest tick, ties up.
+        add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd').withFirstHit(4)
             .withTargetsAir().withSightRange(7.0f)); // 2026-03-02 balance update: 7.5 -> 7.0 tiles (docs/LIVE_SYNC.md).
         // A piercing line: 11.0 total (4.0 range + 7.0), half-width 1.8. The
         // 7.5 -> 7 tile projectile range is from the 2026-08-04 balance update
@@ -718,7 +724,8 @@ private:
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(1.5f, 240)).withSightRange(7.7f));
 
         // === Ranged building targeter ===
-        add(troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y').withSightRange(7.5f));
+        // First hit 0.9 s (9 ticks): single-source (https://liquipedia.net/clashroyale/Royal_Giant).
+        add(troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y').withFirstHit(9).withSightRange(7.5f));
 
         // === Defensive structures ===
         // First hit 1.0 s (10 ticks), the same as its hit speed: https://liquipedia.net/clashroyale/Cannon ; https://clashroyale.fandom.com/wiki/Cannon
@@ -846,7 +853,8 @@ private:
         // no rage: the self-heal and hit-speed bonuses the wiki lists are event
         // Modifiers, not the card (UPSTREAM_REQUESTS.md item 32d).
         add(troop(51, "Berserker", 2.0f, Archetype::MeleeSquad, 896, SPEED_FAST, 0.8f, 102, 6, 'v'));
-        add(troop(52, "Miner", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.0f, 194, 13, '0')
+        // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Miner).
+        add(troop(52, "Miner", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.0f, 194, 13, '0').withFirstHit(5)
             .withDeployAnywhere());
         // First hit 0.1 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 1200 ms (docs/LIVE_SYNC.md).
         add(troop(53, "Fisherman", 3.0f, Archetype::MeleeSquad, 870, SPEED_MEDIUM, 1.0f, 194, 13, '1').withFirstHit(1)
@@ -942,7 +950,8 @@ private:
         // Cannon Cart: a single 1809 hp pool; at 50% it grounds itself for 15
         // s, then self-destructs, keeping its damage, range and hit speed
         // (CombatEntity::transformBecomesStationary).
-        add(troop(69, "Cannon Cart", 5.0f, Archetype::RangedSquad, 1809, SPEED_MEDIUM, 5.5f, 202, 9, '?')
+        // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Cannon_Cart).
+        add(troop(69, "Cannon Cart", 5.0f, Archetype::RangedSquad, 1809, SPEED_MEDIUM, 5.5f, 202, 9, '?').withFirstHit(5)
             // 2026-10-19 balance update: damage 212 -> 202 (docs/LIVE_SYNC.md).
             .withHpTransform(0.5f, 150, true)
             // The sourced sight is 6.0 mobile and 5.5 once grounded; one entity
@@ -1002,7 +1011,8 @@ private:
         add(troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@').withFirstHit(5)
             .withOffsets({ {-2.5f, 0.0f}, {-1.5f, 0.0f}, {-0.5f, 0.0f}, {0.5f, 0.0f}, {1.5f, 0.0f}, {2.5f, 0.0f} })
             .withShield(240));
-        add(troop(78, "Bats", 2.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 1.0f, 81, 12, 't')
+        // First hit 0.6 s (6 ticks): single-source (https://liquipedia.net/clashroyale/Bats).
+        add(troop(78, "Bats", 2.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 1.0f, 81, 12, 't').withFirstHit(6)
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f}, {0.3f, 0.5f}, {-0.3f, 0.5f} })
             .withFlying().withTargetsAir());
 
@@ -1423,7 +1433,8 @@ private:
         // apart, overhealing up to 244 (wiki, level 11; UPSTREAM_REQUESTS.md
         // item 32g).
         addEvolution(126,
-            troop(78, "Bats", 2.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 1.0f, 81, 12, 't')
+            // First hit 0.6 s (6 ticks): single-source (https://liquipedia.net/clashroyale/Bats); un-evolved half only, the evolved half is not changed because its hit speed changed 2026-03-02, after the Nov 2023 official first hit.
+            troop(78, "Bats", 2.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 1.0f, 81, 12, 't').withFirstHit(6)
                 .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f}, {0.3f, 0.5f}, {-0.3f, 0.5f} })
                 .withFlying().withTargetsAir(),
             troop(78, "Bats", 2.0f, Archetype::MeleeSquad, 122, SPEED_VERY_FAST, 1.0f, 81, 12, 't')
@@ -1488,9 +1499,10 @@ private:
         // card. withTargetsAir on both stat blocks: addEvolution inherits
         // nothing from the base registration.
         addEvolution(131,
-            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
+            // First hit 0.35 s -> 4 ticks: single-source (https://liquipedia.net/clashroyale/Dart_Goblin); nearest tick, ties up.
+            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd').withFirstHit(4)
                 .withTargetsAir().withSightRange(7.0f), // 2026-03-02: 7.0 tiles, as the base card.
-            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
+            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd').withFirstHit(4)
                 .withTargetsAir()
                 // 2025-08-06 balance update: poison cloud duration 4 s -> 1 s (40 -> 10 ticks); damage per tick unchanged here (docs/LIVE_SYNC.md).
                 .withOnHit(std::make_shared<PoisonOnHit>(64, 10, 10)).withSightRange(7.0f), // 2026-03-02: 7.0 tiles.
@@ -1510,9 +1522,10 @@ private:
         // on death. The General's own shield is not modelled (a squad shares
         // one CardStats).
         addEvolution(133,
-            troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's')
+            // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Skeleton_Army).
+            troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's').withFirstHit(5)
                 .withOffsets(skeletonArmyOffsets()),
-            troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's')
+            troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's').withFirstHit(5)
                 .withOffsets(skeletonArmyEvolvedOffsets())
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonArmyShadowStats())),
             2, 1);
@@ -1645,9 +1658,10 @@ private:
         // Royal Giant: every attack also splashes 2.5 tiles. The knockback is
         // not modelled.
         addEvolution(143,
-            troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y')
+            // First hit 0.9 s (9 ticks): single-source (https://liquipedia.net/clashroyale/Royal_Giant).
+            troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y').withFirstHit(9)
                 .withSightRange(7.5f),
-            troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y')
+            troop(18, "Royal Giant", 6.0f, Archetype::RangedBuildingTargeter, 3164, SPEED_SLOW, 5.0f, 307, 18, 'Y').withFirstHit(9)
                 .withSplash(2.5f).withSightRange(7.5f),
             2, 1);
 
@@ -1726,11 +1740,12 @@ private:
         // invisible for 3 s (DarkGuardOnDamageEffect). The real card triggers
         // on the first hit only; this refreshes on every hit.
         addEvolution(149,
-            troop(42, "Minion Horde", 5.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'h')
+            // First hit 0.5 s (5 ticks): single-source (https://liquipedia.net/clashroyale/Minions); inferred from Minions.
+            troop(42, "Minion Horde", 5.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'h').withFirstHit(5)
                 .withOffsets({ {-0.6f, -0.3f}, {0.0f, -0.3f}, {0.6f, -0.3f},
                                {-0.6f, 0.3f}, {0.0f, 0.3f}, {0.6f, 0.3f} })
                 .withFlying().withTargetsAir(),
-            troop(42, "Minion Horde", 5.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'h')
+            troop(42, "Minion Horde", 5.0f, Archetype::MeleeSquad, 230, SPEED_FAST, 2.5f, 107, 12, 'h').withFirstHit(5)
                 .withOffsets({ {-0.6f, -0.3f}, {0.0f, -0.3f}, {0.6f, -0.3f},
                                {-0.6f, 0.3f}, {0.0f, 0.3f}, {0.6f, 0.3f} })
                 .withFlying().withTargetsAir()

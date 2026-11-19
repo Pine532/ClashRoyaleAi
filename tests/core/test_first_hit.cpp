@@ -496,3 +496,35 @@ TEST_CASE("Skeletons Evolution (125): the evolved half and its child wind up 0.4
         }
     REQUIRE(n >= 1);
 }
+
+// Section B of values-lookup-results.md: single-source values.
+TEST_CASE("Single-source first hits (Liquipedia): Minions family 0.5 s, Bats family 0.6 s",
+          "[first_hit][live_sync_values][live_sync_first_hit_b]") {
+    checkAll(bodyFirstHits(41), 5);
+    checkAll(bodyFirstHits(42), 5);                 // inferred from Minions
+    checkAll(bodyFirstHits(149, false), 5);
+    checkAll(bodyFirstHits(149, true), 5);
+    checkAll(bodyFirstHits(78), 6);
+    checkAll(bodyFirstHits(126, false), 6);         // un-evolved half only; the evolved half is not applied
+    checkAll(effectChildFirstHits(58, Fire::Death), 6);      // -12 Night Witch death Bat
+    checkAll(effectChildFirstHits(58, Fire::Periodic), 6);   // -14 Night Witch periodic Bat
+}
+
+TEST_CASE("Single-source first hits (Liquipedia): Skeleton Army, Royal Giant, Miner, Cannon Cart",
+          "[first_hit][live_sync_values][live_sync_first_hit_b]") {
+    checkAll(bodyFirstHits(12), 5);
+    checkAll(bodyFirstHits(133, false), 5);
+    checkAll(bodyFirstHits(133, true), 5);
+    checkAll(bodyFirstHits(18), 9);
+    checkAll(bodyFirstHits(143, false), 9);
+    checkAll(bodyFirstHits(143, true), 9);
+    checkAll(bodyFirstHits(52), 5);
+    checkAll(bodyFirstHits(69), 5);
+}
+
+TEST_CASE("Dart Goblin (20, 131) first hit 0.35 s rounds to 4 ticks (nearest, ties up)",
+          "[first_hit][live_sync_values][live_sync_first_hit_b]") {
+    checkAll(bodyFirstHits(20), 4);
+    checkAll(bodyFirstHits(131, false), 4);
+    checkAll(bodyFirstHits(131, true), 4);
+}
