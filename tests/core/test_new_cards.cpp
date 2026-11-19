@@ -977,3 +977,61 @@ TEST_CASE("Hero Ice Wizard (184) freeze lasts exactly 50 ticks",
     a->update(r.board);
     CHECK(a->freezeTicks == 0);
 }
+
+// ---------------- Hero Electro Wizard (185) ----------------
+
+TEST_CASE("Hero Electro Wizard (185) is registered as a 4-elixir Hero with base Electro Wizard's body",
+          "[new_card][hero_electro_wizard]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(185);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Hero Electro Wizard");
+    CHECK(def->cost == Catch::Approx(4.0f));
+    CHECK(def->isHero);
+    CHECK_FALSE(def->isChampion);
+    CHECK_FALSE(def->isSpell);
+
+    Board a, b;
+    auto base = live_sync::mainBody(a, 35);
+    auto hero = live_sync::mainBody(b, 185);
+    REQUIRE(base != nullptr);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->isHero);
+    CHECK(hero->hp == 714);
+    CHECK(hero->hp == base->hp);
+    CHECK(hero->getBaseDamage() == 116);
+    CHECK(hero->getAttackCooldown() == base->getAttackCooldown());
+    CHECK(hero->firstHitTicks == base->firstHitTicks);
+    CHECK(hero->getAttackRange() == Catch::Approx(base->getAttackRange()));
+    CHECK(hero->sightRange == Catch::Approx(5.5f));
+}
+
+TEST_CASE("Hero Electro Wizard (185) is flagged ability-pending and is never dealt in random decks",
+          "[new_card][hero_electro_wizard]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(185);
+    REQUIRE(def != nullptr);
+    CHECK(def->abilityPending);
+    CHECK_FALSE(CardRegistry::getInstance().getCard(175)->abilityPending);
+
+    std::mt19937 rng(4242);
+    int withHero = 0, withIceGolem = 0;
+    for (int i = 0; i < 4000; ++i) {
+        for (int id : sampleRandomDeck(rng)) {
+            if (id == 185) ++withHero;
+            if (id == 175) ++withIceGolem;
+        }
+    }
+    CHECK(withIceGolem > 0);
+    CHECK(withHero == 0);
+}
+
+TEST_CASE("Hero Electro Wizard (185) has no ability effect, so activation fails and spends nothing",
+          "[new_card][hero_electro_wizard]") {
+    GameManager game({ 1, 185, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    game.playerAI.hand[1] = 185;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, 185, 9.0f, 10.0f);
+    for (int i = 0; i < 12; ++i) game.step();
+    const float before = game.getElixirAI();
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+    CHECK(game.getElixirAI() >= before);
+}

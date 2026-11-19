@@ -2218,6 +2218,33 @@ private:
             .withOnHit(std::make_shared<FreezeOnHit>(30, 0.70f))
             .withHeroAbility(2.0f, 0, std::make_shared<HeroIceWizardFrostyFellaEffect>(2.5f, 46, 50), 1));
 
+        // Hero Electro Wizard (base: id 35), released 2026-10-05
+        // (https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/).
+        // The body restates the base card's live values: hp 714, damage 116
+        // (official 2025-03-04), 1.8 s, range 5.0, Fast, first hit 0.6 s, split
+        // to 2 targets, 0.5 s stun per hit, deploy zap radius 3.0 / 118. Hero
+        // stats are unpublished, so the base is used (Supercell: base changes
+        // also affect Hero forms). Cost 4: DeckShop + TrophyCoach agree.
+        // "Surging Strikes" (official: stuns two nearby enemies at once for "a
+        // few seconds"; third parties say 2 elixir, one use) is NOT modelled:
+        // the stun duration has no unconflicted source (a ~3 s claim conflicts
+        // with "while he is alive"), and the engine has no timed stun-on-hit
+        // window. Not invented; abilityPending keeps random decks from dealing
+        // it, and isHero is set by hand since withHeroAbility needs an effect.
+        // The official 2026-10-19 "removed attack delay after ability" needs
+        // nothing here: the engine adds no such delay to any ability.
+        {
+            CardStats heroElectroWizard = troop(185, "Hero Electro Wizard", 4.0f, Archetype::MeleeSquad, 714, SPEED_FAST, 5.0f, 116, 18, 'z').withFirstHit(6)
+                .withTargetsAir()
+                .withSplitTargets(2)
+                .withSightRange(5.5f)
+                .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f))
+                .withSpawnEffect(3.0f, 118, std::make_shared<FreezeOnHit>(5, 0.0f));
+            heroElectroWizard.isHero = true;
+            add(heroElectroWizard);
+            markAbilityPending(185);
+        }
+
     }
 
 public:
