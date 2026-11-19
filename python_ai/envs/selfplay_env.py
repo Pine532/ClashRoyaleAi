@@ -21,6 +21,7 @@ from torch.distributions import Categorical
 
 import clash_royale_env
 from python_ai.envs import scenarios, scripted_opponents
+from python_ai.rl import hand_slots
 from python_ai.advisors import card_probes
 from python_ai.envs.gym_wrapper import (
     DEFAULT_DECK, DEFAULT_DECK_ABILITY_SLOTS, WIN_CONDITION_ID, _to_scalar,
@@ -315,7 +316,11 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             # The same affordability mask as the trainee; without it the frozen
             # opponent would waste most turns on refused plays and not
             # reproduce its checkpoint.
-            card_mask1 = self.opponent_net.affordability_mask(obs1_t)
+            # Team 1's own hand lock, read from the engine like its
+            # ability readiness below (rl/hand_slots.py).
+            card_mask1 = self.opponent_net.affordability_mask(
+                obs1_t, hand_slots.ready_from_engine(
+                    self.game, 1, self.opponent_net.hand_size).to(self.device))
             # Thread the hi-res map into placement_given_card so the trunk's
             # first conv runs once per decision.
             (features1, card_embeds1, spatial_map1,
@@ -450,6 +455,9 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             "opp_elixir": self.game.get_elixir_for_team(1),
             "champion_ability_slot1_ready": self.game.is_champion_ability_ready(0, 1),
             "champion_ability_slot2_ready": self.game.is_champion_ability_ready(0, 2),
+            # The engine's post-cycle hand lock (rl/hand_slots.py).
+            **hand_slots.info_entries(self.game, 0,
+                                      clash_royale_env.ClashRoyaleEnv.HAND_SIZE),
             # 1.0 while the episode started from an injected scenario, so the
             # trainer scores scenario defences separately.
             "is_scenario": 1.0 if self.scenario_active is not None else 0.0,

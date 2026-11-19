@@ -164,6 +164,9 @@ class PPOUpdater:
         n_ability = int(getattr(net, "num_ability_slots", 0) or 0)
         ability_actions_seq = batch.get("ability_actions") if n_ability else None
         ability_ready_seq = batch.get("ability_ready") if n_ability else None
+        # The engine's hand-slot lock as the rollout saw it (rl/hand_slots.py);
+        # absent from batches built without it, which keep the old mask.
+        hand_ready_seq = batch.get("hand_ready")
         ratio_dev_first = None
         ent_ability_log = []
         coverage_target_seq = batch.get("coverage_target")
@@ -215,8 +218,10 @@ class PPOUpdater:
                 # Recomputed from the stored observations rather than stored,
                 # so it matches the sampling-time mask by construction; a
                 # drifting mask would corrupt the ratio.
-                card_mask_seq = net.affordability_mask(mb_obs_flat).view(
-                    L, B, net.hand_size + 1)
+                mb_hand_ready = (None if hand_ready_seq is None else
+                                 hand_ready_seq[tt, ee].reshape(L * B, -1))
+                card_mask_seq = net.affordability_mask(
+                    mb_obs_flat, mb_hand_ready).view(L, B, net.hand_size + 1)
 
                 mb_card_actions = card_actions_seq[tt, ee]
                 mb_place_actions = placement_actions_seq[tt, ee]

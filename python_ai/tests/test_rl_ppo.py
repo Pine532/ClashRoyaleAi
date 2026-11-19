@@ -170,13 +170,18 @@ def test_the_actor_uses_decision_steps_and_the_critic_uses_all_valid_steps(rollo
 
 def test_the_affordability_mask_is_RECOMPUTED_not_read_from_the_buffer(rollout):
     """Recomputed from the stored observation, the mask is bit-identical to the
-    sampling-time one; a stored mask could drift and corrupt the ratio.
+    sampling-time one; a stored mask could drift and corrupt the ratio. The only
+    stored input is the engine's hand-slot lock (rl/hand_slots.py), which the
+    observation does not carry; the mask itself is still recomputed.
     """
     import inspect
+    import re
 
     from python_ai.rl import ppo
     src = inspect.getsource(ppo.PPOUpdater.update)
-    assert "card_mask_seq = net.affordability_mask(mb_obs_flat)" in src
+    assert re.search(
+        r"card_mask_seq = net\.affordability_mask\(\s*mb_obs_flat, mb_hand_ready\)", src)
+    assert "card_mask\"]" not in src  # no stored mask is read back
 
 
 def test_per_card_entropy_is_collected_for_the_cards_actually_played(rollout):

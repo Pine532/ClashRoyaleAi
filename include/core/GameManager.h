@@ -282,6 +282,12 @@ public:
         return (team == 0) ? playerAI.hand : playerOpponent.hand;
     }
 
+    // Per hand slot: ticks until the card that cycled into it is playable
+    // (0 = ready). PlayerState::playCard refuses the slot while this is > 0.
+    const std::vector<int>& getHandCooldownTicks(int team) const {
+        return (team == 0) ? playerAI.handCooldownTicks : playerOpponent.handCooldownTicks;
+    }
+
     // Records an observed play without simulating one (see
     // ClashEnv::notePlayedCard for why this is separate from inject()).
     // getLastPlayedTick returns the tick of `team`'s last play of `cardId`, or

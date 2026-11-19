@@ -49,6 +49,11 @@ ADVISOR_FIELDS = ("coverage_target", "coverage_has")
 #: observation.
 ABILITY_FIELDS = ("ability_actions", "ability_ready")
 
+#: Per hand slot, whether the engine's post-cycle lock has cleared
+#: (rl/hand_slots.py). Buffered because it is not in the observation, so the
+#: update masks the card head exactly as the rollout did.
+HAND_FIELDS = ("hand_ready",)
+
 
 class RolloutBuffer:
     """Append-only per-step storage, stacked to (T, N, ...) for the update."""

@@ -6,6 +6,7 @@ import numpy as np
 
 import clash_royale_env
 from python_ai.advisors import card_probes
+from python_ai.rl import hand_slots
 from python_ai.envs import scenario_offense, scenarios
 from python_ai.opponents import deck_pool
 
@@ -394,6 +395,11 @@ class MicroRoyaleEnv(gym.Env):
             # layout is fixed; the trainer masks the ability heads with it.
             "champion_ability_slot1_ready": self.game.is_champion_ability_ready(0, 1),
             "champion_ability_slot2_ready": self.game.is_champion_ability_ready(0, 2),
+            # The engine's post-cycle hand lock, likewise kept out of the
+            # observation; the trainer masks the card head with it
+            # (rl/hand_slots.py).
+            **hand_slots.info_entries(self.game, 0,
+                                      clash_royale_env.ClashRoyaleEnv.HAND_SIZE),
         }
 
         # A finished match updates this worker's deck estimate. Not on

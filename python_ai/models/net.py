@@ -616,7 +616,7 @@ class MicroRoyaleNet(nn.Module):
             -1, self.channels, self.board_height, self.board_width)
         return self.cnn_trunk[:2](spatial_obs)
 
-    def affordability_mask(self, obs):
+    def affordability_mask(self, obs, hand_ready=None):
         """Which hand slots are playable now, from the elixir and costs in the
         observation. (Batch, hand_size+1) bool; the no-op column is always
         True.
@@ -625,6 +625,11 @@ class MicroRoyaleNet(nn.Module):
         this most sampled actions changed nothing and their advantages were
         pure noise. Computed from the stored observation, so rollout and update
         produce the same mask.
+
+        `hand_ready` (Batch, hand_size) bool, optional: the engine's post-cycle
+        lock (rl/hand_slots.py), which the observation does not carry. The
+        trainer supplies it and stores it with the rollout so the update applies
+        the same mask; None keeps the observation-only mask.
         """
         scalar_obs = obs[:, self.spatial_size:]
         # Elixir and costs are both /10 in the observation, so no rescaling is
@@ -633,6 +638,8 @@ class MicroRoyaleNet(nn.Module):
         costs = scalar_obs[:, 1:1 + self.hand_size]
         # cost <= 0 marks an empty slot, never a free card.
         playable = (costs > 0.0) & (costs <= elixir + 1e-6)
+        if hand_ready is not None:
+            playable = playable & hand_ready.to(device=obs.device, dtype=torch.bool)
         noop = torch.ones(obs.shape[0], 1, dtype=torch.bool, device=obs.device)
         return torch.cat([playable, noop], dim=1)
 

@@ -37,9 +37,11 @@ from python_ai.rewards.shaping import (
 from python_ai.rewards.weights import DRAW_PENALTY
 from python_ai.rl import gae as gae_mod
 from python_ai.rl import abilities as ability_mod
+from python_ai.rl import hand_slots
 from python_ai.rl.engine_stats import reseat_prev_stats
 from python_ai.rl.buffer import (
-    ABILITY_FIELDS, ADVISOR_FIELDS, CORE_FIELDS, TRUNCATION_FIELDS, RolloutBuffer,
+    ABILITY_FIELDS, ADVISOR_FIELDS, CORE_FIELDS, HAND_FIELDS, TRUNCATION_FIELDS,
+    RolloutBuffer,
 )
 from python_ai.rl.config import aux_warmup_scale
 from python_ai.rl.checkpointing import (
@@ -207,6 +209,9 @@ class BaseTrainer:
         self._ability_slots = self.ability_engine_slots()
         self._ability_ready = torch.zeros(
             (cfg.num_envs, len(self._ability_slots)), dtype=torch.bool)
+        # Every slot of a freshly dealt hand is ready (rl/hand_slots.py).
+        self._hand_ready = torch.ones((cfg.num_envs, self.net.hand_size),
+                                      dtype=torch.bool)
 
         # Built before the resume, which refills its outcome window, the
         # curriculum gate's input.
@@ -221,7 +226,7 @@ class BaseTrainer:
             shutil.rmtree(self.log_dir)
         self.writer = SummaryWriter(log_dir=self.log_dir)
 
-        fields = list(CORE_FIELDS)
+        fields = list(CORE_FIELDS) + list(HAND_FIELDS)
         if self.uses_truncation_bootstrap:
             fields += list(TRUNCATION_FIELDS)
         if advisor_target.enabled():
@@ -283,9 +288,11 @@ class BaseTrainer:
         for step in range(cfg.update_timestep):
             obs_tensor = torch.tensor(self._obs, dtype=torch.float32).to(self.device)
 
-            # Derived from obs_tensor, which the buffer stores, so the update
-            # recomputes it bit-identically.
-            card_mask = net.affordability_mask(obs_tensor)
+            # Derived from obs_tensor and the engine-reported hand readiness,
+            # both of which the buffer stores, so the update recomputes it
+            # bit-identically.
+            hand_ready = self._hand_ready.to(self.device)
+            card_mask = net.affordability_mask(obs_tensor, hand_ready)
             cov = self._draw_coverage(obs_tensor, card_mask)
 
             # Captured before step_lstm_and_card advances (hx, cx): a BPTT
@@ -338,6 +345,8 @@ class BaseTrainer:
             # reads not-ready.
             next_ability_ready = ability_mod.ready_from_infos(
                 infos, cfg.num_envs, self._ability_slots)
+            next_hand_ready = hand_slots.ready_from_infos(
+                infos, cfg.num_envs, net.hand_size)
 
             boot = self._truncation_bootstrap(dones, raw_rewards, next_obs,
                                               truncateds)
@@ -392,6 +401,7 @@ class BaseTrainer:
                 "aux_opp_played": torch.tensor(
                     opponent_played_card(infos, cfg.num_envs)).to(self.device),
                 "coverage_slot": cov["slot"],
+                "hand_ready": hand_ready,
             }
             if self.uses_truncation_bootstrap:
                 row["boot_nonterminal"] = boot["nonterminal"] * valid
@@ -426,6 +436,7 @@ class BaseTrainer:
             self._obs = next_obs
             self._prev_stats = stats
             self._ability_ready = next_ability_ready
+            self._hand_ready = next_hand_ready
             self._prev2_dones = self._prev_dones
             self._prev_dones = dones
 

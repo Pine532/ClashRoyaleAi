@@ -415,6 +415,14 @@ public:
         return game.getHand(0);
     }
 
+    // Per hand slot, ticks until the slot can be played again (0 = ready). An
+    // action is applied before the step's first tick, so a slot reading 0 here
+    // is one playCard accepts at the next decision. Nothing in the observation
+    // carries it, so the trainer's card mask reads it from here.
+    std::vector<int> getHandCooldownTicks(int team) const {
+        return game.getHandCooldownTicks(team);
+    }
+
     float getElixir() const {
         return game.getElixir(0);
     }

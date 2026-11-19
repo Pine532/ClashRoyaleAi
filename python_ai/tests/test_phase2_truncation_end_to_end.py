@@ -10,7 +10,7 @@ import pytest
 import torch
 
 from python_ai.rl.buffer import (
-    ADVISOR_FIELDS, CORE_FIELDS, TRUNCATION_FIELDS,
+    ADVISOR_FIELDS, CORE_FIELDS, HAND_FIELDS, TRUNCATION_FIELDS,
 )
 from python_ai.rl.config import PPOConfig
 
@@ -107,7 +107,9 @@ def test_a_phase2_rollout_stacks_with_consistent_shapes(phase2):
     phase2.collect_rollout()
     batch = phase2.buffer.stack()
 
-    expected = set(CORE_FIELDS) | set(TRUNCATION_FIELDS)
+    # HAND_FIELDS: the engine's hand-slot lock, stored for the update's mask
+    # (rl/hand_slots.py).
+    expected = set(CORE_FIELDS) | set(TRUNCATION_FIELDS) | set(HAND_FIELDS)
     from python_ai.advisors import advisor_target
     if advisor_target.enabled():
         expected |= set(ADVISOR_FIELDS)

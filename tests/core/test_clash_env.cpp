@@ -162,3 +162,37 @@ TEST_CASE("CONTROL: a tower hit is still booked as tower damage",
     REQUIRE(towerHpTotal(env, 1) < team1Before);
     CHECK(env.getTowerDamageDealt(0) > 0);
 }
+
+TEST_CASE("getHandCooldownTicks reports the post-cycle lock, and playCard follows it exactly",
+          "[clash_env][hand_cooldown]") {
+    const std::vector<int> deck = { 15, 6, 25, 40, 24, 72, 33, 7 };
+    ClashEnv env(deck, deck, 3600);
+    REQUIRE(env.setHandForTeam(0, { 24, 72, 6, 15 }));  // Skeletons in slot 0
+    for (int t : env.getHandCooldownTicks(0)) CHECK(t == 0);  // nothing has cycled yet
+    const float x = 9.0f, y = env.getOwnHalfMaxY() - 3.0f;
+
+    // The play lands before the step's first tick, which then counts down once.
+    env.setElixirForTeam(0, 10.0f);
+    env.step(0, x, y, 1);
+    REQUIRE(env.getElixirSpent(0) == Catch::Approx(1.0f));
+    std::vector<int> cd = env.getHandCooldownTicks(0);
+    CHECK(cd[0] == 19);
+    CHECK(cd[1] == 0);
+
+    // While the slot reads > 0 the engine refuses it, like an unaffordable card.
+    int ticks = 1;
+    while (env.getHandCooldownTicks(0)[0] > 0) {
+        env.setElixirForTeam(0, 10.0f);
+        env.step(0, x, y, 1);
+        CHECK(env.getElixirSpent(0) == Catch::Approx(1.0f));
+        ++ticks;
+        REQUIRE(ticks <= 40);
+    }
+    CHECK(ticks == 20);  // PlayerState::playCard's 20-tick lock, to the tick
+
+    // At 0 it is accepted again.
+    env.setElixirForTeam(0, 10.0f);
+    const float spentBefore = env.getElixirSpent(0);
+    env.step(0, x, y, 1);
+    CHECK(env.getElixirSpent(0) > spentBefore);
+}

@@ -85,6 +85,7 @@ PYBIND11_MODULE(clash_royale_env, m) {
         .def("is_champion_ability_ready", &ClashEnv::isChampionAbilityReady, py::arg("team"), py::arg("slot") = 1)
         .def("activate_champion_ability", &ClashEnv::activateChampionAbility, py::arg("team"), py::arg("slot") = 1)
         .def("get_hand", &ClashEnv::getHand)
+        .def("get_hand_cooldown_ticks", &ClashEnv::getHandCooldownTicks, py::arg("team"))
         .def("get_hand_for_team", &ClashEnv::getHandForTeam, py::arg("team"))
         .def("get_elixir", &ClashEnv::getElixir)
         .def("get_elixir_for_team", &ClashEnv::getElixirForTeam, py::arg("team"))
