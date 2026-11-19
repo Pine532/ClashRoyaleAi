@@ -1830,3 +1830,36 @@ TEST_CASE("Void deals 307 per target to 2-4 targets", "[live_sync][patch-2026-10
         if (e.targetId == id1 && e.amount > 0) { firstHit = e.amount; break; }
     CHECK(firstHit == 307);
 }
+
+// ---------------- undated cr-api-data / DeckShop drift (patch P33) ----------------
+
+// Lightning: "damage and stun up to three enemy troops or buildings with the
+// most hitpoints in the target area" (cr-api-data description). Cast clear of
+// the enemy towers, which would otherwise count as candidates.
+TEST_CASE("Lightning strikes only the three highest-HP enemies in the area",
+          "[live_sync][patch-undated]") {
+    Match m;
+    // Four enemy bodies inside the 3.5 radius, hp ascending:
+    // Skeletons (81 each) < Musketeer < Ice Golem < Hog Rider.
+    std::vector<std::shared_ptr<CombatEntity>> victims;
+    const int ids[4] = { 24, 6, 40, 15 };
+    for (int i = 0; i < 4; ++i) {
+        auto c = firstCombat(m.spawnCard(ids[i], 9.0f + 0.5f * i, 21.0f, 1));
+        REQUIRE(c != nullptr);
+        victims.push_back(c);
+    }
+    for (size_t i = 1; i < victims.size(); ++i) REQUIRE(victims[i]->hp > victims[i - 1]->hp);
+
+    m.spawnCard(31, 10.0f, 21.0f, 0);
+    m.step(30);
+
+    REQUIRE(m.rec->totalTo(victims[0]->id) == 0);
+    for (size_t i = 1; i < victims.size(); ++i) REQUIRE(m.rec->totalTo(victims[i]->id) > 0);
+}
+
+// Monk is a 5-elixir Champion (DeckShop).
+TEST_CASE("Monk costs 5 elixir", "[live_sync][patch-undated]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(119);
+    REQUIRE(def != nullptr);
+    REQUIRE(def->cost == Catch::Approx(5.0f));
+}

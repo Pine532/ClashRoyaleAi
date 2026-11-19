@@ -675,7 +675,12 @@ private:
         add(spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z'));
         add(spell(30, "Rocket", 6.0f, 2.0f, 1485, 15, 'r')
             .withKnockback(1.0f));
-        add(spell(31, "Lightning", 6.0f, 3.5f, 1057, 5, 'j'));
+        // Lightning: strikes only the 3 enemies with the most hitpoints in the
+        // radius (cr-api-data card description: "up to three enemy troops or
+        // buildings with the most hitpoints in the target area"; the official
+        // Sep 2025 / Sep 2026 notes presuppose it). Same mechanism as Vines.
+        add(spell(31, "Lightning", 6.0f, 3.5f, 1057, 5, 'j')
+            .withSpellTopHpTargets(3));
         // Poison: 92 damage every second for 8 s; whoever stands in it takes
         // each pulse. A Crown Tower takes 21 per pulse (168 in all: official
         // June 2026 notes, fixed in game on 26 Aug), and enemy troops inside
@@ -1165,7 +1170,8 @@ private:
 
         // Monk: his 3-hit combo is flat damage here. "Pensive Protection" (65%
         // damage reduction for 4 s): see MonkDeflectEffect.
-        add(troop(119, "Monk", 4.0f, Archetype::MeleeSquad, 2214, SPEED_MEDIUM, 1.2f, 140, 8, 'M')
+        // Cost 5 elixir (DeckShop; cr-api-data's 4 predates the live value).
+        add(troop(119, "Monk", 5.0f, Archetype::MeleeSquad, 2214, SPEED_MEDIUM, 1.2f, 140, 8, 'M')
             .withChampionAbility(1.0f, 170, std::make_shared<MonkDeflectEffect>(0.35f, 40)));
 
         // Little Prince: hit speed ramps 1.2 s -> 0.8 s -> 0.4 s on one target
