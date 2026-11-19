@@ -1162,9 +1162,11 @@ private:
         // Goblinstein: the Monster (front, building-only tank, carries the
         // ability) plus the Doctor (secondary, 3 tiles behind at a fixed
         // offset, a brief stun on hit). "Lightning Link": see
-        // GoblinsteinLightningLinkEffect.
+        // GoblinsteinLightningLinkEffect. Duration 5 s -> 4 s (2024-10-17), then
+        // 4 s -> 3.5 s (2026-09-16 balance update, Supercell release notes;
+        // docs/LIVE_SYNC.md): 35 ticks = 7 hits at the 5-tick interval.
         add(troop(121, "Goblinstein", 5.0f, Archetype::MeleeBuildingTargeter, 2240, 0.5f, 1.2f, 128, 15, 'G') // 2026-08-26 final August balance update: Monster hp 2385 -> 2240 (docs/LIVE_SYNC.md)
-            .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 94, 5, 40)) // 2026-08-04: 214 -> 188 damage per second = 94 per 5-tick pulse (docs/LIVE_SYNC.md)
+            .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 94, 5, 35)) // 2026-08-04: 214 -> 188 damage per second = 94 per 5-tick pulse (docs/LIVE_SYNC.md)
             .withSecondaryUnit(
                 // 2026-08-04 balance update: Doctor damage 92 -> 135 (docs/LIVE_SYNC.md).
                 troop(-40, "Goblinstein", 0.0f, Archetype::RangedSquad, 721, 0.5f, 5.5f, 135, 18, 'D')

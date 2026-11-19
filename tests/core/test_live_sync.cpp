@@ -1597,3 +1597,29 @@ TEST_CASE("Hero Wizard Fiery Flight lasts 35 ticks (3.5 s)", "[live_sync][patch-
     REQUIRE(hero->temporaryFlightTicksRemaining == 35);
     REQUIRE(hero->flightPulseTicksRemaining == 35);
 }
+
+// ---------------- patch 2026-09-16 ----------------
+
+TEST_CASE("Goblinstein Lightning Link lasts 3.5 s: 7 shocks, not 8", "[live_sync][patch-2026-09-16]") {
+    Board board;
+    auto bodies = spawnBare(board, 121, 9.0f, 10.0f, 0);
+    std::shared_ptr<CombatEntity> monster;
+    for (const auto& e : bodies) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->isChampion) monster = ce;
+    }
+    REQUIRE(monster != nullptr);
+    auto enemy = std::make_shared<DummyEntity>(board.allocateId(), 9.0f, 11.0f, 100000, 1);
+    board.addEntity(enemy);
+    board.commitPendingEntities();
+
+    REQUIRE(monster->activateAbility(board));
+    board.commitPendingEntities();
+    std::shared_ptr<AreaSpell> shock;
+    for (const auto& e : board.getEntities())
+        if (auto a = std::dynamic_pointer_cast<AreaSpell>(e)) shock = a;
+    REQUIRE(shock != nullptr);
+
+    for (int i = 0; i < 80 && shock->isAlive(); ++i) shock->update(board);
+    REQUIRE(100000 - enemy->hp == 7 * 94); // 94 a pulse since 2026-08-04
+}
