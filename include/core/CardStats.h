@@ -690,6 +690,22 @@ struct CardStats {
         onHitPullDamage = damage;
         return *this;
     }
+    // Giant Evolution's Enrage (id 187): once hp <= hpFraction of spawn hp the
+    // unit is enraged for good and leaves a Rage trail (its last `ticks` of
+    // positions). Every friendly entity within radii[step] of a sample gets
+    // speedMultiplier on movement and attack speed for `ticks`; `step` grows by
+    // one per landed attack, clamped to the last radius.
+    float enrageHpFraction = 0.0f;
+    std::vector<float> enrageTrailRadii;
+    int enrageTrailTicks = 0;
+    float enrageSpeedMultiplier = 1.0f;
+    CardStats& withEnrageTrail(float hpFraction, std::vector<float> radii, int ticks, float speedMultiplier) {
+        enrageHpFraction = hpFraction;
+        enrageTrailRadii = std::move(radii);
+        enrageTrailTicks = ticks;
+        enrageSpeedMultiplier = speedMultiplier;
+        return *this;
+    }
     CardStats& withSelfHasteOnHit(int durationTicks, float cooldownMultiplier) {
         selfHasteDurationTicks = durationTicks;
         selfHasteCooldownMultiplier = cooldownMultiplier;

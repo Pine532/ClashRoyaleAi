@@ -108,6 +108,10 @@ inline void applyCardMetadata(const std::shared_ptr<CombatEntity>& entity, const
     entity->onHitPullRadius = stats.onHitPullRadius;
     entity->onHitPullDistance = stats.onHitPullDistance;
     entity->onHitPullDamage = stats.onHitPullDamage;
+    entity->enrageHpFraction = stats.enrageHpFraction;
+    entity->enrageTrailRadii = stats.enrageTrailRadii;
+    entity->enrageTrailTicks = stats.enrageTrailTicks;
+    entity->enrageSpeedMultiplier = stats.enrageSpeedMultiplier;
     entity->selfHasteDurationTicks = stats.selfHasteDurationTicks;
     entity->selfHasteCooldownMultiplier = stats.selfHasteCooldownMultiplier;
     // Runtime state (ability cooldown, souls, invisibility, hit-speed

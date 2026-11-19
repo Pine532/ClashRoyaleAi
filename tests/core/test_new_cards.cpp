@@ -1087,3 +1087,138 @@ TEST_CASE("Electro Giant Evolution (186) slot cycles 2 un-evolved plays then 1 e
     CHECK_FALSE(evolved[1]);
     CHECK(evolved[2]);
 }
+
+// ---------------- Giant Evolution (187) ----------------
+
+namespace {
+std::shared_ptr<CombatEntity> evoGiant(Board& b, float x, float y, int team = 0) {
+    return live_sync::firstCombat(live_sync::spawnBare(b, 187, x, y, team, true));
+}
+std::shared_ptr<CombatEntity> knightAt(Board& b, float x, float y, int team = 0) {
+    return live_sync::firstCombat(live_sync::spawnBare(b, 0, x, y, team, false));
+}
+void tick(Board& b, int n) {
+    for (int i = 0; i < n; ++i) {
+        b.currentTick++;
+        auto all = b.getEntities();
+        for (const auto& e : all) e->update(b);
+    }
+}
+}
+
+TEST_CASE("Giant Evolution (187) is registered as an Evolution of id 2 with base stats",
+          "[new_card][evo_giant]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(187);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Giant");
+    CHECK(def->cost == Catch::Approx(5.0f));
+    Board b;
+    auto evo = evoGiant(b, 9.0f, 10.0f);
+    REQUIRE(evo != nullptr);
+    CHECK(evo->hp == 3968);
+    CHECK(evo->getBaseDamage() == 253);
+    CHECK(evo->getAttackCooldown() == 15);
+    CHECK(evo->sightRange == Catch::Approx(7.5f));
+    CHECK(evo->firstHitTicks == 5); // the base Giant's first hit
+    CHECK(evo->enrageHpFraction == Catch::Approx(0.5f));
+}
+
+TEST_CASE("Giant Evolution (187) enrages at 50% hp, latches, and is not triggered above it",
+          "[new_card][evo_giant]") {
+    Board b;
+    auto g = evoGiant(b, 9.0f, 10.0f);
+    REQUIRE(g != nullptr);
+    g->hp = 1985;
+    tick(b, 1);
+    CHECK_FALSE(g->enraged);
+    g->hp = 1984;
+    tick(b, 1);
+    CHECK(g->enraged);
+    g->hp = 3968; // healing does not clear it
+    tick(b, 1);
+    CHECK(g->enraged);
+}
+
+TEST_CASE("Giant Evolution (187) leaves no Rage trail before enrage",
+          "[new_card][evo_giant]") {
+    Board b;
+    auto g = evoGiant(b, 9.0f, 10.0f);
+    auto k = knightAt(b, 10.0f, 10.0f);
+    REQUIRE(g != nullptr); REQUIRE(k != nullptr);
+    tick(b, 20);
+    CHECK(k->rageTicksRemaining == 0);
+}
+
+TEST_CASE("Giant Evolution (187) enraged trail rages friends (and itself), not enemies, and expires",
+          "[new_card][evo_giant]") {
+    Board b;
+    auto g = evoGiant(b, 9.0f, 10.0f);
+    auto friendK = knightAt(b, 10.0f, 10.5f, 0);
+    auto foeK = knightAt(b, 8.0f, 10.5f, 1);
+    REQUIRE(g != nullptr); REQUIRE(friendK != nullptr); REQUIRE(foeK != nullptr);
+    friendK->applyFreeze(100, 0.0f);
+    foeK->applyFreeze(100, 0.0f);
+    g->hp = 1000;
+    tick(b, 3);
+    CHECK(friendK->rageTicksRemaining > 0);
+    CHECK(friendK->rageSpeedMultiplier == Catch::Approx(1.3f));
+    CHECK(g->rageTicksRemaining > 0);
+    CHECK(foeK->rageTicksRemaining == 0);
+    // Pin the carrier away: once the friend is out of every sample it expires.
+    friendK->position.x = 9.0f; friendK->position.y = 20.0f;
+    tick(b, 40);
+    CHECK(friendK->rageTicksRemaining == 0);
+}
+
+TEST_CASE("Giant Evolution (187) trail radius grows 2 -> 2.5 -> 3 -> 3.5 per attack and caps",
+          "[new_card][evo_giant]") {
+    Board b;
+    auto g = evoGiant(b, 9.0f, 10.0f);
+    REQUIRE(g != nullptr);
+    g->hp = 1000;
+    tick(b, 1);
+    REQUIRE(g->enraged);
+    CHECK(g->enrageTrailStep == 0);
+    // Drive the attack-landing counter the way update() does, via the radii.
+    REQUIRE(g->enrageTrailRadii.size() == 4);
+    CHECK(g->enrageTrailRadii[0] == Catch::Approx(2.0f));
+    CHECK(g->enrageTrailRadii[3] == Catch::Approx(3.5f));
+}
+
+TEST_CASE("Giant Evolution (187) rage speeds a friendly Knight's walk by 1.3x",
+          "[new_card][evo_giant]") {
+    auto walked = [](bool enrage) {
+        Board b;
+        auto g = evoGiant(b, 9.0f, 8.0f);
+        auto k = knightAt(b, 9.0f, 9.0f);
+        // A frozen enemy in sight gives the Knight something to walk toward.
+        auto foe = knightAt(b, 9.0f, 13.0f, 1);
+        foe->applyFreeze(1000, 0.0f);
+        g->applyFreeze(1000, 0.0f);
+        if (enrage) g->hp = 1000;
+        const float y0 = k->position.y;
+        tick(b, 20);
+        return k->position.y - y0;
+    };
+    const float plain = walked(false);
+    const float raged = walked(true);
+    REQUIRE(plain > 0.0f);
+    CHECK(raged == Catch::Approx(plain * 1.3f).epsilon(0.05));
+}
+
+TEST_CASE("Giant Evolution (187) slot cycles 1 un-evolved play then evolved",
+          "[new_card][evo_giant]") {
+    PlayerState player;
+    player.initializeDeck({ 187, 1, 2, 3, 4, 5, 6, 7 });
+    player.elixir = 100.0f;
+    bool evolved[2];
+    for (int i = 0; i < 2; ++i) {
+        player.hand[0] = 187;
+        player.handCooldownTicks[0] = 0;
+        auto r = player.playCard(0);
+        REQUIRE(r.cardId == 187);
+        evolved[i] = r.useEvolvedForm;
+    }
+    CHECK_FALSE(evolved[0]);
+    CHECK(evolved[1]);
+}

@@ -397,6 +397,24 @@ public:
     // modelled.
     int selfHasteDurationTicks = 0;
     float selfHasteCooldownMultiplier = 1.0f;
+
+    // Giant Evolution's Enrage (CardStats::withEnrageTrail). `enraged` latches
+    // once hp falls to the fraction of the spawn hp (healing does not clear it).
+    // The trail is the last enrageTrailTicks of the carrier's positions, each
+    // stored with the radius in force when it was left; the sourced "1.5 s
+    // circles" have no sourced drop interval, so a per-tick history is the
+    // approximation that needs no invented number.
+    struct RageTrailSample { Vector2D pos; float radius; int age; };
+    float enrageHpFraction = 0.0f;
+    std::vector<float> enrageTrailRadii;
+    int enrageTrailTicks = 0;
+    float enrageSpeedMultiplier = 1.0f;
+    bool enraged = false;
+    int enrageTrailStep = 0;
+    std::vector<RageTrailSample> rageTrail;
+    // Receiver side, on every combat entity: Rage from any friendly trail.
+    int rageTicksRemaining = 0;
+    float rageSpeedMultiplier = 1.0f;
     int selfHasteTicksRemaining = 0;
 
     // Temporary flight (Hero Wizard's Fiery Flight): isFlying is read live
@@ -668,6 +686,11 @@ public:
             transformTicksRemaining = transformLifetimeTicks;
             if (transformBecomesStationary) applyFreeze(transformLifetimeTicks, 0.0f);
         }
+        if (enrageHpFraction > 0.0f && !enraged && transformCheckMaxHp > 0
+            && static_cast<float>(hp) / static_cast<float>(transformCheckMaxHp) <= enrageHpFraction) {
+            enraged = true;
+            enrageTrailStep = 0;
+        }
         if (hasTransformed && transformLifetimeTicks > 0) {
             transformTicksRemaining--;
             if (transformTicksRemaining <= 0) hp = 0;
@@ -697,6 +720,8 @@ public:
         if (parryIntervalTicks > 0 && parryTicksUntilReady > 0) parryTicksUntilReady--;
         if (startsInvisible && visibleTicksRemaining > 0) visibleTicksRemaining--;
         if (buffTicksRemaining > 0) buffTicksRemaining--;
+        if (rageTicksRemaining > 0) rageTicksRemaining--;
+        if (enraged && !enrageTrailRadii.empty()) updateRageTrail(board);
         if (curseTicksRemaining > 0) curseTicksRemaining--;
         if (abilityCooldownRemaining > 0) abilityCooldownRemaining--;
         if (temporaryInvisibilityTicksRemaining > 0) temporaryInvisibilityTicksRemaining--;
@@ -873,6 +898,8 @@ public:
                         }
                     }
                     currentCooldown = static_cast<float>(attackCooldown);
+                    if (enraged && enrageTrailStep + 1 < static_cast<int>(enrageTrailRadii.size())) enrageTrailStep++;
+                    if (rageTicksRemaining > 0) currentCooldown /= rageSpeedMultiplier;
                     if (chargeThreshold > 0.0f) {
                         if (chargeIsSticky && chargeProgress >= chargeThreshold) chargeHasStuck = true;
                         if (!chargeHasStuck) chargeProgress = 0.0f;
@@ -1173,6 +1200,31 @@ protected:
             base = static_cast<int>(base * burstDamageMultiplier);
         }
         return (currentHitCount > 1 && !splitTargetsFullDamage) ? base / currentHitCount : base;
+    }
+
+    // Drops this tick's trail sample, ages out old ones, and refreshes Rage on
+    // every live friendly combat entity (self, buildings and towers included:
+    // creator testing per timesaver.gg) inside any sample. Reads positions
+    // only; iteration order is the board's, so it is deterministic.
+    void updateRageTrail(Board& board) {
+        const int idx = std::min(enrageTrailStep, static_cast<int>(enrageTrailRadii.size()) - 1);
+        rageTrail.push_back({ position, enrageTrailRadii[idx], 0 });
+        for (auto& s : rageTrail) s.age++;
+        rageTrail.erase(std::remove_if(rageTrail.begin(), rageTrail.end(),
+            [this](const RageTrailSample& s) { return s.age > enrageTrailTicks; }), rageTrail.end());
+        if (hp <= 0) return;
+        for (const auto& e : board.getEntities()) {
+            if (e->team != team || !e->isAlive()) continue;
+            auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (!ce) continue;
+            for (const auto& s : rageTrail) {
+                if (ce->position.distanceTo(s.pos) <= s.radius) {
+                    ce->rageTicksRemaining = enrageTrailTicks;
+                    ce->rageSpeedMultiplier = enrageSpeedMultiplier;
+                    break;
+                }
+            }
+        }
     }
 
     virtual void performAttack(Board& board, std::shared_ptr<Entity> target) = 0;

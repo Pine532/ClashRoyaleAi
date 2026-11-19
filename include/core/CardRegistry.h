@@ -1939,6 +1939,29 @@ private:
                 .withPeriodicEffect(50, std::make_shared<EliteBarbarianSpearEffect>(3.0f, 4.5f, 220)),
             1, 1);
 
+        // Giant ("Enrage", id 187): stats identical to id 2 (single-source:
+        // timesaver.gg/blog/clash-royale-evo-giant says the Evolution matches
+        // the base card; Supercell's 2026-10-27 post gives none). Unlocks after
+        // 1 cycle (same single source). Once it has taken damage down to 50% of
+        // its hp (single-source: timesaver.gg, citing RoyaleTools; Supercell
+        // says only "take enough damage") it is enraged for good and leaves a
+        // Rage trail: friendly units standing within the trail's radius get
+        // +30% movement and attack speed (single-source: timesaver.gg) for 1.5 s
+        // (same source), refreshed while they stay in it. The radius is 2 tiles
+        // at enrage and grows 0.5 per attack to 3.5 (single-source: timesaver.gg,
+        // creator testing; Supercell: "each of his attacks make that Rage trail
+        // bigger"). The Giant itself and buildings/towers are buffed too (creator
+        // testing, same page, uncontradicted). Not modelled: trail-circle drop
+        // interval (the trail is the Giant's last 1.5 s of positions, no invented
+        // number), evolved-uses beyond 1 (engine convention, unsourced).
+        addEvolution(187,
+            troop(2, "Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G').withFirstHit(5)
+                .withSightRange(7.5f),
+            troop(2, "Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G').withFirstHit(5)
+                .withSightRange(7.5f)
+                .withEnrageTrail(0.5f, {2.0f, 2.5f, 3.0f, 3.5f}, 15, 1.3f),
+            1, 1);
+
         // Electro Giant Evolution ("Zap Pack 2.0", released 2026-10-05, official:
         // https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/).
         // The expanding de-level pulse is NOT modelled: the official post is
