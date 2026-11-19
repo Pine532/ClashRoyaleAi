@@ -11,8 +11,9 @@ from python_ai.advisors import card_probes
 ID = {E.get_card_info(c)["name"]: c for c in E.get_all_card_ids()}
 
 
-def test_the_log_deals_the_registrys_269():
-    assert card_probes.roller_damage(ID["The Log"]) == 269.0
+def test_the_log_deals_the_registrys_268():
+    # 268 since the 2025-09 balance update (2026-11 live sync; was 269).
+    assert card_probes.roller_damage(ID["The Log"]) == 268.0
 
 
 def test_only_rollers_have_a_roller_damage():

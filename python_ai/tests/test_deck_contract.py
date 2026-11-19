@@ -48,7 +48,9 @@ def test_a_deck_without_fireball_keys_the_spell_terms_to_its_own_spell():
     assert spell_lines, text(report)
     lvl, msg = spell_lines[0]
     assert lvl == "INFO" and "Lightning" in msg, msg
-    assert "1057" in msg and "6 elixir" in msg, msg
+    # Lightning's measured Crown Tower damage (265 a strike since the engine
+    # applies published Crown Tower damage, 2026-11 live sync).
+    assert "265" in msg and "6 elixir" in msg, msg
 
 
 def test_a_deck_with_no_damaging_spell_warns_that_the_spell_terms_are_off():

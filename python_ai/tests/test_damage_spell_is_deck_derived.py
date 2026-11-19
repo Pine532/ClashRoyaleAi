@@ -89,10 +89,11 @@ def test_the_tower_probe_reads_what_the_tower_actually_loses():
 
 def test_a_damage_over_time_spell_is_read_to_completion():
     """Poison is 92 every 10 ticks for 8 pulses = 736 (CardRegistry.h); Goblin
-    Curse (43 x 6 = 258) is a second, independent control.
+    Curse (35 x 6 = 210 since the 2025-09 balance update) is a second,
+    independent control.
     """
     assert card_probes.spell_effect(POISON)[1] == pytest.approx(92 * 8)
-    assert card_probes.spell_effect(GOBLIN_CURSE)[1] == pytest.approx(43 * 6)
+    assert card_probes.spell_effect(GOBLIN_CURSE)[1] == pytest.approx(35 * 6)
 
 
 def test_reading_longer_adds_nothing_for_any_damaging_spell():
@@ -127,15 +128,20 @@ def _lethal_stats(tower_hp, *, damage, cost, elixir=10.0):
 
 
 def test_the_lethal_window_is_the_decks_spell_damage():
-    """A tower on 900 HP is lethal to a Rocket and not to a Fireball."""
+    """A tower between the two spells' measured Crown Tower damage is lethal to
+    a Rocket and not to a Fireball. The tower hp sits midway, so the fixture
+    follows the engine (Crown Tower damage is published per spell since the
+    2026-11 live sync: Fireball 159, Rocket 342).
+    """
     _, fb_dmg, fb_cost = card_probes.damage_spell(HOG_26)
     _, rk_dmg, rk_cost = card_probes.damage_spell(ROCKET_26)
-    assert fb_dmg < 900.0 < rk_dmg, "fixture no longer straddles the two spells"
+    tower = (fb_dmg + rk_dmg) / 2.0
+    assert fb_dmg < tower < rk_dmg, "fixture no longer straddles the two spells"
 
     fireball = shaping.lethal_spell_potential(
-        _lethal_stats(900.0, damage=fb_dmg, cost=fb_cost))
+        _lethal_stats(tower, damage=fb_dmg, cost=fb_cost))
     rocket = shaping.lethal_spell_potential(
-        _lethal_stats(900.0, damage=rk_dmg, cost=rk_cost))
+        _lethal_stats(tower, damage=rk_dmg, cost=rk_cost))
     assert float(fireball[0]) == 0.0
     assert float(rocket[0]) == pytest.approx(W.W_LETHAL_SPELL)
 
@@ -229,7 +235,11 @@ def test_the_26_deck_resolves_to_exactly_the_constants_it_used_to_hardcode():
     """
     cid, damage, cost = card_probes.damage_spell(HOG_26)
     assert cid == W.FIREBALL_CARD_ID
-    assert damage == W.FIREBALL_DAMAGE == 689.0
+    # The lethal window reads the MEASURED Crown Tower damage: 159 since the
+    # engine applies published Crown Tower damage (UPSTREAM item 29, 2026-11
+    # live sync). W.FIREBALL_DAMAGE stays the 689 a Fireball deals to troops.
+    assert damage == 159.0
+    assert W.FIREBALL_DAMAGE == 689.0
     assert cost == W.FIREBALL_COST == 4.0   # the retired SPELL_SOLVENCY_RESERVE
 
 
