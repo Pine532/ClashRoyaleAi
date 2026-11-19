@@ -1338,7 +1338,8 @@ TEST_CASE("X-Bow hit speed is 0.4 s", "[live_sync][patch-2026-08-04]") {
     REQUIRE(body->getAttackCooldown() == 4);
 }
 
-TEST_CASE("Void deals 294 per wave to 2-4 targets", "[live_sync][patch-2026-08-04]") {
+// The 2-4 tier went 294 (2026-08-04) -> 307 (2026-10-19); this case pins the current value.
+TEST_CASE("Void deals its 2-4 target damage per wave (294, then 307 from 2026-10-19)", "[live_sync][patch-2026-08-04]") {
     Board board;
     std::vector<std::shared_ptr<StationaryCombatant>> pair;
     for (int i = 0; i < 2; ++i) {
@@ -1346,7 +1347,7 @@ TEST_CASE("Void deals 294 per wave to 2-4 targets", "[live_sync][patch-2026-08-0
         spawn(board, pair.back());
     }
     p26dCastAndRun(board, 104, 9.0f, 9.0f);
-    for (const auto& e : pair) REQUIRE(e->hp == 100000 - 3 * 294);
+    for (const auto& e : pair) REQUIRE(e->hp == 100000 - 3 * 307);
 }
 
 TEST_CASE("Archer Queen hits for 232 (2026-08-26 buff)", "[live_sync][patch-2026-08-26]") {
@@ -1779,4 +1780,53 @@ TEST_CASE("X-Bow damage is 61 (2026-10-06)", "[live_sync][patch-2026-10-06]") {
     auto x = mainBody(board, 92);
     REQUIRE(x);
     CHECK(x->getBaseDamage() == 61);
+}
+
+// ---- Patch 2026-10-19 ----
+
+TEST_CASE("Cannon Cart damage is 202", "[live_sync][patch-2026-10-19]") {
+    Board board;
+    auto cart = mainBody(board, 69);
+    REQUIRE(cart != nullptr);
+    CHECK(cart->getBaseDamage() == 202);
+}
+
+TEST_CASE("Dart Goblin damage is 143, base and Evolution", "[live_sync][patch-2026-10-19]") {
+    Board board;
+    auto base = mainBody(board, 20);
+    REQUIRE(base != nullptr);
+    CHECK(base->getBaseDamage() == 143);
+
+    Board evoBoard;
+    auto evo = mainBody(evoBoard, 131, true);
+    REQUIRE(evo != nullptr);
+    CHECK(evo->getBaseDamage() == 143);
+
+    Board evoBoard2;
+    auto evoBase = mainBody(evoBoard2, 131, false);
+    REQUIRE(evoBase != nullptr);
+    CHECK(evoBase->getBaseDamage() == 143);
+}
+
+TEST_CASE("Flying Machine damage is 179", "[live_sync][patch-2026-10-19]") {
+    Board board;
+    auto fm = mainBody(board, 67);
+    REQUIRE(fm != nullptr);
+    CHECK(fm->getBaseDamage() == 179);
+}
+
+TEST_CASE("Void deals 307 per target to 2-4 targets", "[live_sync][patch-2026-10-19]") {
+    Match m;
+    auto giants = m.spawnCard(2, 9.0f, 10.0f, 1);
+    auto giants2 = m.spawnCard(2, 9.0f, 10.5f, 1);
+    REQUIRE(!giants.empty());
+    REQUIRE(!giants2.empty());
+    const int id1 = giants.front()->id;
+    m.spawnCard(104, 9.0f, 10.2f, 0);
+    m.step(40);
+    REQUIRE(!m.rec->damage.empty());
+    int firstHit = 0;
+    for (const auto& e : m.rec->damage)
+        if (e.targetId == id1 && e.amount > 0) { firstHit = e.amount; break; }
+    CHECK(firstHit == 307);
 }

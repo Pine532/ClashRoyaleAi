@@ -577,7 +577,8 @@ private:
         // 2026-09-08 balance update: damage 281 -> 304 (base, Evolution and Hero; docs/LIVE_SYNC.md).
         add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
             .withTargetsAir().withSplash(1.5f));
-        add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
+        // 2026-10-19 balance update: damage 151 -> 143 (docs/LIVE_SYNC.md).
+        add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
             .withTargetsAir().withSightRange(7.0f)); // 2026-03-02 balance update: 7.5 -> 7.0 tiles (docs/LIVE_SYNC.md).
         // A piercing line: 11.0 total (4.0 range + 7.0), half-width 1.8. The
         // 7.5 -> 7 tile projectile range is from the 2026-08-04 balance update
@@ -823,7 +824,8 @@ private:
         add(troop(66, "Goblin Demolisher", 4.0f, Archetype::RangedSquad, 1300, 0.5f, 5.0f, 186, 11, '&')
             .withSplash(1.5f)
             .withHpTransformIntoDeath(0.5f, std::make_shared<SpawnOnDeath>(goblinDemolisherKamikazeStats())));
-        add(troop(67, "Flying Machine", 4.0f, Archetype::RangedSquad, 614, SPEED_FAST, 6.0f, 171, 11, '+')
+        add(troop(67, "Flying Machine", 4.0f, Archetype::RangedSquad, 614, SPEED_FAST, 6.0f, 179, 11, '+')
+            // 2026-10-19 balance update: damage 171 -> 179 (docs/LIVE_SYNC.md).
             .withFlying().withTargetsAir().withSightRange(6.0f));
         // The curse spawns a Cursed Hog for Mother Witch (CursedHogOnHit).
         add(troop(68, "Mother Witch", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 5.5f, 133, 10, ',')
@@ -832,7 +834,8 @@ private:
         // Cannon Cart: a single 1809 hp pool; at 50% it grounds itself for 15
         // s, then self-destructs, keeping its damage, range and hit speed
         // (CombatEntity::transformBecomesStationary).
-        add(troop(69, "Cannon Cart", 5.0f, Archetype::RangedSquad, 1809, SPEED_MEDIUM, 5.5f, 212, 9, '?')
+        add(troop(69, "Cannon Cart", 5.0f, Archetype::RangedSquad, 1809, SPEED_MEDIUM, 5.5f, 202, 9, '?')
+            // 2026-10-19 balance update: damage 212 -> 202 (docs/LIVE_SYNC.md).
             .withHpTransform(0.5f, 150, true)
             // The sourced sight is 6.0 mobile and 5.5 once grounded; one entity
             // models both, and the mobile value is what matters for chasing.
@@ -1055,9 +1058,10 @@ private:
             .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.5f)));
         // Void: three damage tiers, once per wave. 2026-08-04 balance update
         // (docs/LIVE_SYNC.md): 5 elixir (was 3), 696 per hit on 1 target
-        // (was 340), 294 on 2-4 (was 161), 153 on 5+ (was 76).
+        // (was 340), 294 on 2-4 (was 161), 153 on 5+ (was 76). 2026-10-19
+        // balance update: 2-4 target damage 294 -> 307 (docs/LIVE_SYNC.md).
         add(spell(104, "Void", 5.0f, 2.5f, 0, 8, '&').withRepeats(3, 10)
-            .withSpellTieredDamage(696, 294, 153));
+            .withSpellTieredDamage(696, 307, 153));
         // Vines: only the 3 highest-HP enemies in radius. Pulling flyers to the
         // ground is not modelled.
         // 102 per pulse x 3 = 306 total: 2025-10-06 balance update, total damage
@@ -1310,9 +1314,9 @@ private:
         // card. withTargetsAir on both stat blocks: addEvolution inherits
         // nothing from the base registration.
         addEvolution(131,
-            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
+            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
                 .withTargetsAir().withSightRange(7.0f), // 2026-03-02: 7.0 tiles, as the base card.
-            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
+            troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
                 .withTargetsAir()
                 // 2025-08-06 balance update: poison cloud duration 4 s -> 1 s (40 -> 10 ticks); damage per tick unchanged here (docs/LIVE_SYNC.md).
                 .withOnHit(std::make_shared<PoisonOnHit>(64, 10, 10)).withSightRange(7.0f), // 2026-03-02: 7.0 tiles.
