@@ -2051,6 +2051,31 @@ private:
             add(heroBarbarianBarrelSpellStats);
         }
 
+        // Hero Dark Prince (base: id 46; body restated from the base
+        // registration: hp 1200, 266 damage, 1.4 s hit speed, 240 shield, 2x
+        // charge damage and speed, ignores the river; the hero's own body
+        // values are unpublished, so the base card's are used, with no splash
+        // because the base card models none). Hero-specific, official (Supercell
+        // June 2026 balance post): deploy 2 s -> 1 s, which is the engine
+        // default DEPLOY_TIME_TICKS, and "Tiles Needed for First Charge: 0 ->
+        // 2.5 tiles". The engine has one charge threshold, so re-charges after
+        // a hit also use 2.5 (the base card's 3.0 is not stated for the Hero).
+        // Cost 4: single source, DeckShop (https://deckshop.pro/card/detail/hero-dark-prince); not contradicted.
+        // "Destructive Dismount" (Rhino mount) is NOT modelled: Rhino hp,
+        // trample damage, speed, landing damage/radius and mount-up timing have
+        // no usable source. isHero is set by hand since withHeroAbility needs
+        // an effect; abilityPending keeps random decks from dealing it.
+        {
+            CardStats heroDarkPrince = troop(177, "Hero Dark Prince", 4.0f, Archetype::MeleeSquad, 1200, SPEED_MEDIUM, 1.2f, 266, 14, 'N')
+                .withShield(240) // sourced (base Dark Prince; fandom says 256)
+                .withCharge(2.5f, 2.0f) // June 2026 official: first charge after 2.5 tiles; +100% on a charging hit
+                .withChargeSpeed(2.0f)
+                .withIgnoresRiver();
+            heroDarkPrince.isHero = true;
+            add(heroDarkPrince);
+            markAbilityPending(177);
+        }
+
     }
 
 public:
