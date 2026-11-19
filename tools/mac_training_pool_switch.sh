@@ -11,13 +11,17 @@
 # run is still in the "mirror" phase: that phase ends at rung 8
 # (PHASE2_MIN_CURRICULUM_STAGE), so the default rung is 4.
 #
-# The restart is `stop` (SIGINT, saves) then `start` without
-# CLASH_PHASE1_DECK_POOL. The trainer reports the changed setting at the top of
-# the new log and continues. Any other exported CLASH_* is passed through
-# unchanged.
+# The restart is `stop` (SIGINT, saves), a copy of the checkpoint the stop
+# wrote, then `start` without CLASH_PHASE1_DECK_POOL. The copy is the last
+# mirror-only state, kept as <weights>.pre_pool_switch_<time>: the saves after
+# the switch replace the live file, and on 2026-11-19 they replaced the only
+# copy. If the copy fails, the run restarts unchanged and nothing switches. The
+# trainer reports the changed setting at the top of the new log and continues.
+# Any other exported CLASH_* is passed through unchanged.
 set -u
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 RUNG="${1:-4}"
+WEIGHTS="${CLASH_WEIGHTS:-$REPO/runs/checkpoints/livesync.pth}"  # mac_training.sh's default
 LOGDIR="${CLASH_LOGDIR:-$REPO/runs/livesync}"
 LOGLINK="$(dirname "$LOGDIR")/$(basename "$LOGDIR").current_log"
 echo "$(date): watching $LOGLINK for rung >= $RUNG in the mirror phase"
@@ -34,6 +38,13 @@ while true; do
         echo "$(date): rung $stage reached in the mirror phase; switching the deck pool on"
         "$REPO/tools/mac_training.sh" stop || exit 1
         sleep 5
+        KEPT="$WEIGHTS.pre_pool_switch_$(date +%Y%m%d-%H%M%S)"
+        if ! cp -p "$WEIGHTS" "$KEPT"; then
+            echo "$(date): could not copy $WEIGHTS; restarting unchanged, not switching"
+            "$REPO/tools/mac_training.sh" start
+            exit 1
+        fi
+        echo "$(date): kept the pre-switch checkpoint as $KEPT"
         env -u CLASH_PHASE1_DECK_POOL "$REPO/tools/mac_training.sh" start
         exit $?
     fi
