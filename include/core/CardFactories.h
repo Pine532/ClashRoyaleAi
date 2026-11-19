@@ -207,6 +207,10 @@ inline void spawnDefensiveBuilding(const CardStats& stats, float x, float y, int
         stats.attackRange, stats.damage, stats.attackCooldown);
     applyCardMetadata(building, stats);
     board.addEntity(building);
+    // Every other factory fires the deploy burst; this one did not until
+    // 2026-11-18, so the Goblin Drill's emergence, the Cannon Evolution's Deploy
+    // Barrage and the Tesla Evolution's Electro Pulse never happened.
+    spawnDeployEffect(stats, x, y, team, board);
 }
 
 inline void spawnSpell(const CardStats& stats, float x, float y, int team, Board& board) {

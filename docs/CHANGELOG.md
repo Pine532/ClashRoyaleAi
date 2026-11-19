@@ -12,6 +12,18 @@ The reasoning behind each change, with its measurements, is in
 
 ## Unreleased
 
+*Gameplay-affecting.* **Buildings fire their deploy bursts.** `CardFactories::spawnDefensiveBuilding`
+never called `spawnDeployEffect`, which every troop factory calls, so a building's one-time
+burst on landing never happened. Three cards were silently affected: the Goblin Drill (its
+84-damage emergence; base and both Evolution halves), the Cannon Evolution (Deploy Barrage)
+and the Tesla Evolution (Electro Pulse, with its stun). A burst now also carries its own Crown
+Tower damage (`withSpawnEffectCrownTowerDamage`): the Goblin Drill's is 20 (official,
+2026-10-06). The values skipped while the bursts were dead are applied: Cannon Evolution
+barrage radius 2.0 and damage 261, Tesla Evolution pulse damage 148.
+
+**Compatibility:** Checkpoints load. Win rates involving these three cards are not comparable
+across this change.
+
 *Gameplay-affecting.* The live sync: the engine brought up to the official game as of
 2026-11-18, on branch `update/live-sync`. The per-change ledger, with sources and
 status, is [`LIVE_SYNC.md`](LIVE_SYNC.md).
