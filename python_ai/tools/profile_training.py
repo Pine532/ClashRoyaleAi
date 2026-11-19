@@ -521,8 +521,16 @@ def run_torch_mode(args, led):
     import clash_royale_env as E
     # The constructor needs both decks (the deck does not change the size);
     # the stub accepts any arguments.
-    n_obs = E.ClashRoyaleEnv([1] * 8, [1] * 8, 100).observation_size()
-    obs = torch.randn(B, n_obs)
+    env = E.ClashRoyaleEnv([1] * 8, [1] * 8, 100)
+    n_obs = env.observation_size()
+    if stubbed:
+        obs = torch.randn(B, n_obs)  # the stub cannot build an observation
+    else:
+        # A real observation, repeated. Gaussian noise decodes to nonsense
+        # hands, and sometimes every cell was masked for the sampled card, so
+        # the placement distribution was invalid and the mode crashed about one
+        # run in three. Timing does not depend on the observation's values.
+        obs = torch.tensor([env.get_observation_for_team(0)] * B, dtype=torch.float32)
     hx = torch.zeros(B, net.LSTM_HIDDEN if hasattr(net, "LSTM_HIDDEN") else 256)
     cx = torch.zeros_like(hx)
 
