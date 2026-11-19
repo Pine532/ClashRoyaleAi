@@ -94,11 +94,15 @@ struct CardDefinition {
     std::function<void(float x, float y, int team, Board& board)> spawnEvolvedEntity;
 };
 
-// Exclusive upper bound on card ids: [0, CARD_ID_COUNT). Kept a few ids above
-// the highest registered one (175). Defined here, next to the ids it bounds, so
-// ClashEnv (NUM_CARD_IDS, bound to Python) and GameManager share one
-// definition.
-inline constexpr int CARD_ID_COUNT = 185;
+// Exclusive upper bound on card ids: [0, CARD_ID_COUNT). Defined here, next to
+// the ids it bounds, so ClashEnv (NUM_CARD_IDS, bound to Python) and
+// GameManager share one definition. It sizes the observation (4 hand one-hots
+// and the 2 opponent-cycle blocks) and the network's card-id layers, so a change
+// breaks every checkpoint (python_ai/tools/migrate_checkpoint_card_ids.py pads
+// one forward). Raised 185 -> 256 for the 2026-11 live sync, which needed 13
+// new ids where 9 were free; the rest is headroom for later releases
+// (docs/LIVE_SYNC.md).
+inline constexpr int CARD_ID_COUNT = 256;
 
 class CardRegistry {
 private:

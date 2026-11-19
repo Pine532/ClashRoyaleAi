@@ -228,10 +228,13 @@ PYBIND11_MODULE(clash_royale_env, m) {
         info["deploy_anywhere"] = def->deployAnywhere;
         info["is_champion"] = def->isChampion;
         info["is_hero"] = def->isHero;
+        // Evolution ids are no longer one contiguous range (123-163, then
+        // 182 and 186-188), so Python reads the flag instead of a range.
+        info["is_evolution"] = def->isEvolution;
         return info;
     }, py::arg("card_id"),
         "Registry facts for one card id: name, cost, is_spell, is_building, "
-        "placement_radius, deploy_anywhere, is_champion, is_hero.");
+        "placement_radius, deploy_anywhere, is_champion, is_hero, is_evolution.");
 
     // The slot-legality check GameManager::reset and setOpponentDeck enforce,
     // so Python validates decks without restating the rules. "" for a legal

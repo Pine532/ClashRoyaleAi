@@ -33,7 +33,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
 
 import python_ai  # noqa: E402
 
-UNIFORM_NEXT_CARD_CE = float(np.log(185))   # ln(NUM_CARD_IDS)
+import clash_royale_env  # noqa: E402  (on sys.path via python_ai)
+
+UNIFORM_NEXT_CARD_CE = float(np.log(clash_royale_env.ClashRoyaleEnv.NUM_CARD_IDS))  # uniform guess
 POOL_WINRATE_FLOOR = 0.20                   # opponents/deck_pool.py
 
 
@@ -156,7 +158,7 @@ def report(csv_path, run_dir):
     if ce is not None:
         verdict = ("OK" if ce < UNIFORM_NEXT_CARD_CE
                    else "*** ABOVE UNIFORM -- confidently wrong, poisoning the trunk ***")
-        print(f"  Aux/NextCard_CE {ce:.3f}  vs uniform ln(185)="
+        print(f"  Aux/NextCard_CE {ce:.3f}  vs uniform ln(NUM_CARD_IDS)="
               f"{UNIFORM_NEXT_CARD_CE:.2f}   {verdict}", flush=True)
     wr = last(s.get("Training/Win_Rate_100", []))
     spread = last(s.get("Decks/WinRate_Spread", []))

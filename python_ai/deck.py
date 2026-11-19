@@ -22,7 +22,25 @@ import clash_royale_env as E
 SHIPPED_DECK = (15, 6, 25, 40, 24, 72, 33, 7)
 
 DECK_SIZE = 8
-_EVOLUTION_IDS = range(123, 164)
+
+
+def _evolution_ids():
+    """Every registered Evolution id, read from the engine.
+
+    No longer one contiguous range (123-163, then 182 and 186-188 since the
+    2026-11 live sync), so the engine's own flag decides.
+    """
+    ids = []
+    for cid in range(E.ClashRoyaleEnv.NUM_CARD_IDS):
+        try:
+            if E.get_card_info(cid).get("is_evolution", False):
+                ids.append(cid)
+        except ValueError:
+            continue
+    return tuple(ids)
+
+
+_EVOLUTION_IDS = _evolution_ids()
 
 
 def _norm(name):

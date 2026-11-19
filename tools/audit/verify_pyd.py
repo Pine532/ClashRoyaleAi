@@ -28,8 +28,8 @@ size = cre.ClashRoyaleEnv(DECK, DECK).observation_size()
 print(f"observation_size = {size}")
 # A tripwire for an accidental resize, which kills every checkpoint; editing
 # this literal acknowledges the change was intended.
-if size != 13977:
-    failures.append(f"observation_size is {size}, expected 13977")
+if size != 14403:  # CARD_ID_COUNT 185 -> 256 (2026-11 live sync)
+    failures.append(f"observation_size is {size}, expected 14403")
 
 # The elixir phase must sit at the index the layout says and be symmetric
 # across teams: the tower block two slots earlier is mirrored, and copying that

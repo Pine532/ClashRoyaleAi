@@ -6,7 +6,7 @@
 
 // The observation size, asserted both ways:
 //
-//   18*34*21 + 1 + 4 + 4*185 + 10 + 2*185 = 13977
+//   18*34*21 + 1 + 4 + 4*256 + 10 + 2*256 = 14403
 //
 //   * the formula catches observationSize() disagreeing with the constants it is built from, which would split the flat vector at the wrong offset and misread every scalar silently;
 //   * the literal catches the size changing at all. A resize invalidates every checkpoint, so it must never happen by accident; when intended, updating the literal is the acknowledgement.
@@ -27,12 +27,12 @@ TEST_CASE("ClashEnv::observationSize matches its declared layout", "[clash_env]"
         + ClashEnv::CYCLE_BLOCK_SIZE;                    // opponent seen[] + recency[]
 
     REQUIRE(env.observationSize() == expected);
-    REQUIRE(env.observationSize() == 13977);
+    REQUIRE(env.observationSize() == 14403); // CARD_ID_COUNT 185 -> 256 (2026-11 live sync)
 
     // The CYCLE_START literal is a tripwire: +1 means a scalar was appended to
     // the extra block; a larger jump means something was inserted earlier. The
     // relationship below is the invariant.
-    REQUIRE(ClashEnv::CYCLE_START == 13607);
+    REQUIRE(ClashEnv::CYCLE_START == 13891); // was 13607 before CARD_ID_COUNT 185 -> 256
     REQUIRE(ClashEnv::EXTRA_SCALARS_START + ClashEnv::NUM_EXTRA_SCALARS
             == ClashEnv::CYCLE_START);
 
@@ -103,7 +103,7 @@ TEST_CASE("each hand slot's card-identity block is a true one-hot", "[clash_env]
     const std::vector<float> obs = env.getObservationForTeam(0);
     const std::vector<int> hand = env.getHand();
 
-    constexpr int BOARD_W = 18, BOARD_H = 34, CHANNELS = 21, HAND = 4, CARD_IDS = 185;
+    constexpr int BOARD_W = 18, BOARD_H = 34, CHANNELS = 21, HAND = 4, CARD_IDS = 256;
     const size_t oneHotBase = static_cast<size_t>(BOARD_W) * BOARD_H * CHANNELS + 1 + HAND;
 
     REQUIRE(hand.size() == static_cast<size_t>(HAND));
