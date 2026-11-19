@@ -742,7 +742,7 @@ inline std::vector<int> getAllCardIds() {
 inline std::vector<int> sampleRandomDeck(std::mt19937& rng) {
     std::vector<int> plainPool, evolutionPool, specialUnitPool;
     for (const auto& [id, def] : CardRegistry::getInstance().getAllCards()) {
-        if (def.abilityPending) continue; // a Hero whose ability is not modelled
+        if (def.abilityPending) continue; // unfinished: CardDefinition::abilityPending
         if (def.isEvolution) evolutionPool.push_back(id);
         else if (def.isChampion || def.isHero) specialUnitPool.push_back(id);
         else plainPool.push_back(id);

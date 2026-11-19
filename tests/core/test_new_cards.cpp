@@ -3,6 +3,7 @@
 #include <catch_amalgamated.hpp>
 #include "live_sync_test_helpers.h"
 #include "ClashEnv.h"
+#include <map>
 #include <random>
 
 // ---------------- Hero Balloon (176) ----------------
@@ -864,7 +865,7 @@ TEST_CASE("Hero Ice Wizard (184) is registered with base Ice Wizard's body and a
     CHECK(def->name == "Hero Ice Wizard");
     CHECK(def->cost == Catch::Approx(3.0f));
     CHECK(def->isHero);
-    CHECK_FALSE(def->abilityPending);
+    CHECK(def->abilityPending);  // the Snowman is not built (2026-11-18)
 
     Board a, b;
     auto base = live_sync::mainBody(a, 34);
@@ -1022,6 +1023,26 @@ TEST_CASE("Hero Electro Wizard (185) is flagged ability-pending and is never dea
     }
     CHECK(withIceGolem > 0);
     CHECK(withHero == 0);
+}
+
+TEST_CASE("Random decks never deal a partly built entry (182, 184, 186); finished new entries still appear",
+          "[new_card][random_deck][partly_built]") {
+    const auto& reg = CardRegistry::getInstance();
+    for (int id : { 182, 184, 186 }) CHECK(reg.getCard(id)->abilityPending);
+    // Controls that MUST appear: the finished new entries, one per pool
+    // (Evolution 187, Hero 180, plain 183).
+    for (int id : { 180, 183, 187 }) CHECK_FALSE(reg.getCard(id)->abilityPending);
+
+    std::mt19937 rng(9001);
+    std::map<int, int> seen;
+    for (int i = 0; i < 4000; ++i)
+        for (int id : sampleRandomDeck(rng)) ++seen[id];
+    CHECK(seen[182] == 0);
+    CHECK(seen[184] == 0);
+    CHECK(seen[186] == 0);
+    CHECK(seen[180] > 0);
+    CHECK(seen[183] > 0);
+    CHECK(seen[187] > 0);
 }
 
 TEST_CASE("Hero Electro Wizard (185) has no ability effect, so activation fails and spends nothing",

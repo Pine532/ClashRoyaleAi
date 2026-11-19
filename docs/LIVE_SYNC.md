@@ -90,15 +90,15 @@ All are gameplay-affecting additions with tests tagged `[new_card][<key>]`, each
 | 179 | Hero Tombstone | `7231a17` | Body of base Tombstone (id 96); Regal Revival and the Tomb Queen not built | yes |
 | 180 | Hero Valkyrie | `fafbcd5` | Wild Whirlwind: 3 elixir, single use, dash to nearest ground non-tower within 5.5, 3.5 s spin, 97 per 0.25 s in 2.5 tiles, 48 to Crown Towers, 15% less damage taken (single-source numbers) | no |
 | 181 | Hero Berserker | `0be918a` | Savage Survival: 3 elixir, single use, 3.5 s, hit speed 0.2 s, hp floor 1, 75% less damage to Crown Towers (single-source numbers) | no |
-| 182 | Elite Barbarians Evolution | `aeed1d8` | Body of id 17 plus a 5 s spear (220, ground only, band 3-4.5 tiles); Rage path omitted | no |
+| 182 | Elite Barbarians Evolution | `aeed1d8` | Body of id 17 plus a 5 s spear (220, ground only, band 3-4.5 tiles); Rage path omitted | yes (partly built; flagged 2026-11-18) |
 | 183 | Minion Giant | `9da8008` | Flying building-targeter, 4 elixir, 1817 hp, 153 damage, 1.7 s, range 4.0, sight 6.5, Medium | no |
-| 184 | Hero Ice Wizard | `a1304bc` | Body of base Ice Wizard (id 34); Frosty Fella: 2 elixir, single use, 46 damage, 5 s freeze, radius 2.5 around the nearest slowed troop; the Snowman is omitted | no |
+| 184 | Hero Ice Wizard | `a1304bc` | Body of base Ice Wizard (id 34); Frosty Fella: 2 elixir, single use, 46 damage, 5 s freeze, radius 2.5 around the nearest slowed troop; the Snowman is omitted | yes (partly built; flagged 2026-11-18) |
 | 185 | Hero Electro Wizard | `38b510e` | Body of base Electro Wizard (id 35); Surging Strikes not built | yes |
-| 186 | Electro Giant Evolution | `ce7d206` | Base Electro Giant body (3952 hp, 184 dmg, 1.8 s, 1.0 s first hit) with the base card's periodic stun; the de-level pulse is omitted (no numbers) | no |
+| 186 | Electro Giant Evolution | `ce7d206` | Base Electro Giant body (3952 hp, 184 dmg, 1.8 s, 1.0 s first hit) with the base card's periodic stun; the de-level pulse is omitted (no numbers) | yes (partly built; flagged 2026-11-18) |
 | 187 | Giant Evolution | `9c4d8bc` | Enrage at <= 50% hp (latched), Rage trail of the last 1.5 s of positions, radii 2/2.5/3/3.5 growing per attack, +30% move and attack speed for 1.5 s (single-source numbers) | no |
 | 188 | Mirror Evolution | `6501e2c` | Copies the last card played in its Evolved form at cost + 1; cycles to evolve 2 (single-source), evolved uses 1 (unsourced) | no |
 
-Abilities built: Hero Valkyrie, Hero Berserker and Hero Ice Wizard (their numbers are single-source or partial; see "Values to look up"). Ability-pending: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero Electro Wizard. Per-entry notes are in the commit messages (`git show <commit>`). Id 188 is not in the Evolution id range `123-163`, which is why `deck.py` now reads the `is_evolution` flag.
+Abilities built: Hero Valkyrie, Hero Berserker and Hero Ice Wizard (their numbers are single-source or partial; see "Values to look up"). Ability-pending: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero Electro Wizard. Flagged with the same `abilityPending` on 2026-11-18 because they are only partly built: Elite Barbarians Evolution, Hero Ice Wizard, Electro Giant Evolution. Random decks deal none of these eight. Per-entry notes are in the commit messages (`git show <commit>`). Id 188 is not in the Evolution id range `123-163`, which is why `deck.py` now reads the `is_evolution` flag.
 
 ### Tower Troops: deferred
 

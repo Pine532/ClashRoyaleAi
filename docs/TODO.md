@@ -43,9 +43,11 @@ size, so the first two items gate any training.
    episodes, z = -0.64, PASS. Repeat on the first trained checkpoint.
 3. **Unresolved values.** One table, grouped by card: `docs/live_sync/values_to_look_up.md`
    (engine units and level, best value known with its source, why it is open).
-4. **Ability-pending Heroes.** Hero Balloon, Hero Dark Prince, Hero Bowler, Hero
-   Tombstone and Hero Electro Wizard are body-only (`CardDefinition::abilityPending`);
-   random decks never deal them. Build the abilities, then clear the flag.
+4. **Unfinished entries (`CardDefinition::abilityPending`; random decks never deal them).**
+   Body-only Heroes: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero
+   Electro Wizard. Partly built (flagged 2026-11-18): Elite Barbarians Evolution 182 (Rage
+   path), Hero Ice Wizard 184 (Snowman), Electro Giant Evolution 186 (de-level pulse).
+   Finish each, then clear its flag.
 5. **Tower Troops** (14 items) are deferred to a separate change by decision.
    `include/core/TowerTroops.h` is untouched: its troops are level 11 while the default
    towers are level 9, and its "Tower Princess" option is mislabelled.
@@ -74,7 +76,9 @@ size, so the first two items gate any training.
     MPS is not numerically equal to CPU (critic loss 0.00085 vs 0.00102 on one batch).
     Needs `python_ai/rl/base_trainer.py:106` to pick MPS, plus a check that
     `Loss/Ratio_Dev_First_Minibatch` stays ~0 and the side null holds.
-12. **Decision before phase 2: partly implemented cards reach opponents.** Phase 2's
+12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
+    2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
+    `sample_random_deck` never deals them. Original note: Phase 2's
     scripted bots take `clash_royale_env.sample_random_deck()` (`envs/selfplay_env.py:147`).
     It skips the 5 ability-pending Heroes but can deal ids 180-184 and 186-188, including
     the partly implemented Evo Elite Barbarians (182), Hero Ice Wizard (184) and Evo

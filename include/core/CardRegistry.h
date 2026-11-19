@@ -76,10 +76,13 @@ struct CardDefinition {
     bool isChampion;
     // Champion-slot code checks `isChampion || isHero` throughout.
     bool isHero = false;
-    // A Hero registered with its body only, because the numbers its ability
-    // needs have no source (no invented values). sampleRandomDeck never deals
-    // such a card, so random-deck training does not field a Hero that cannot
-    // use its ability. Set by CardRegistry::markAbilityPending.
+    // An unfinished entry: a Hero registered with its body only, because the
+    // numbers its ability needs have no source (no invented values), or an entry
+    // whose signature mechanic is only partly built (Elite Barbarians Evolution
+    // 182, Hero Ice Wizard 184, Electro Giant Evolution 186). sampleRandomDeck
+    // never deals such a card, so random-deck training does not meet a card
+    // that cannot do what the live one does. One flag covers both kinds. Set by
+    // CardRegistry::markAbilityPending.
     bool abilityPending = false;
     // At registry level because Hero Goblins' post-death ability fires when
     // nothing is alive to read them from. 0 / nullptr for every card without a
@@ -475,8 +478,7 @@ private:
         cards[stats.id] = std::move(def);
     }
 
-    // Flags an already-added card as a Hero whose ability is not modelled yet
-    // (CardDefinition::abilityPending).
+    // Flags an already-added card as unfinished (CardDefinition::abilityPending).
     void markAbilityPending(int id) { cards.at(id).abilityPending = true; }
 
     // Registers an Evolution slot: `evolutionId` is what a deck holds instead
@@ -1952,6 +1954,9 @@ private:
                 .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} })
                 .withPeriodicEffect(50, std::make_shared<EliteBarbarianSpearEffect>(3.0f, 4.5f, 220)),
             1, 1);
+        // Partly built (no Rage path, spear flight time or separate spear
+        // sight), so random decks never deal it.
+        markAbilityPending(182);
 
         // Giant ("Enrage", id 187): stats identical to id 2 (single-source:
         // timesaver.gg/blog/clash-royale-evo-giant says the Evolution matches
@@ -1994,6 +1999,8 @@ private:
                 .withSplash(1.5f)
                 .withPeriodicEffect(50, std::make_shared<AreaStunEffect>(2.5f, 5)),
             2, 1);
+        // Partly built (no de-level pulse), so random decks never deal it.
+        markAbilityPending(186);
 
         // === Mirror ===
         // Registered so it can occupy a deck slot. GameManager::playCard
@@ -2288,6 +2295,8 @@ private:
             .withTargetsAir().withSplash(1.5f).withSightRange(5.5f)
             .withOnHit(std::make_shared<FreezeOnHit>(30, 0.70f))
             .withHeroAbility(2.0f, 0, std::make_shared<HeroIceWizardFrostyFellaEffect>(2.5f, 46, 50), 1));
+        // Partly built (no Snowman), so random decks never deal it.
+        markAbilityPending(184);
 
         // Hero Electro Wizard (base: id 35), released 2026-10-05
         // (https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/).

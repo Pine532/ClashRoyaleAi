@@ -12,6 +12,13 @@ The reasoning behind each change, with its measurements, is in
 
 ## Unreleased
 
+*Training-affecting, not gameplay-affecting.* **Random decks no longer deal the three partly
+built entries:** Elite Barbarians Evolution (182), Hero Ice Wizard (184) and Electro Giant
+Evolution (186). They carry `CardDefinition::abilityPending`, the flag that already kept the
+five body-only Heroes out, so one switch covers all eight unfinished entries. Combat is
+unchanged. `sample_random_deck` draws differ for every seed, and phase 2's scripted opponents
+are the training path that reaches.
+
 *Gameplay-affecting.* **Buildings fire their deploy bursts.** `CardFactories::spawnDefensiveBuilding`
 never called `spawnDeployEffect`, which every troop factory calls, so a building's one-time
 burst on landing never happened. Three cards were silently affected: the Goblin Drill (its
