@@ -410,6 +410,15 @@ public:
     int flightPulseDamage = 0;
     float flightPulsePullDistance = 0.0f;
 
+    // Hero Valkyrie's Wild Whirlwind spin (HeroValkyrieWhirlwindEffect).
+    int whirlTicksRemaining = 0;
+    int whirlElapsedTicks = 0;
+    int whirlHitsDone = 0;
+    int whirlHitIntervalHalfTicks = 0;   // 5 = a hit every 2.5 ticks
+    float whirlRadius = 0.0f;
+    int whirlDamage = 0;
+    int whirlTowerDamage = 0;
+
     // Hit-speed ramp while locked on the same target (Little Prince): the
     // cooldown shrinks, rather than the damage growing. 0 disables it.
     int hitSpeedRampMidTick = 0;
@@ -707,6 +716,28 @@ public:
         // Above: bookkeeping that runs while deploying. Below: action, which a
         // deploying unit takes none of.
         if (deploying) return;
+
+        if (whirlTicksRemaining > 0) {
+            whirlTicksRemaining--;
+            whirlElapsedTicks++;
+            // Cumulative schedule: hit k lands once 2*elapsed >= interval*k, so
+            // 0.25 s = 2.5 ticks becomes 3,5,8,10,... with exactly 14 hits in 35 ticks.
+            while (2 * whirlElapsedTicks >= whirlHitIntervalHalfTicks * (whirlHitsDone + 1)) {
+                ++whirlHitsDone;
+                for (const auto& e : board.getEntities()) {
+                    // Not isTargetable: the spin hits invisible units (official 2026-09-03 fix).
+                    if (e->team == team || !e->isAlive() || e->isFlying) continue;
+                    if (position.distanceTo(e->position) > whirlRadius) continue;
+                    const int dealt = e->isTower() ? whirlTowerDamage : whirlDamage;
+                    e->takeDamage(dealt);
+                    board.statsEvents.notifyDamageDealt(
+                        { id, team, cardId, e->id, e->cardId, e->team, dealt, board.currentTick, e->isTower() });
+                }
+            }
+            // The spin replaces her normal attack and movement: whether she walks
+            // during it is unsourced, so she stays put.
+            return;
+        }
 
         if (periodicIntervalTicks > 0) {
             // Evolved Furnace's Hot Spawning: the fast interval runs only while

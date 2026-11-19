@@ -42,6 +42,7 @@
 #include "HeroMagicArcherTripleThreatEffect.h"
 #include "HeroIceGolemSnowstormEffect.h"
 #include "HeroBarbarianBarrelRerollEffect.h"
+#include "HeroValkyrieWhirlwindEffect.h"
 
 // A registered card. spawnEntity is one of the archetype factories in
 // CardFactories.h bound to the card's CardStats.
@@ -2117,6 +2118,23 @@ private:
             add(heroTombstone);
             markAbilityPending(179);
         }
+
+        // Hero Valkyrie (base: id 10, live level 11; no live-sync row changes base
+        // Valkyrie, so the body restates it, first hit included). "Wild Whirlwind"
+        // (3 elixir, ONE use per deployment: official 2026-08-04 post): dashes to
+        // the nearest enemy non-tower ground unit within 5.5 tiles, then spins for
+        // 3.5 s, hitting everything in 2.5 tiles every 0.25 s for 97 (48 to Crown
+        // Towers), taking 15% less damage meanwhile (HeroValkyrieWhirlwindEffect).
+        // Ability numbers (cost 3, 3.5 s, 2.5 tiles, 0.25 s, 97, -15%, -50% CT,
+        // 5.5 dash): single source, https://timesaver.gg/blog/clash-royale-hero-valkyrie
+        // (wiki-derived); not contradicted. Range, speed, sight and deploy time of
+        // the Hero are unpublished and inherit the base card; sight is the 5.5 default.
+        add(troop(180, "Hero Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V').withFirstHit(1)
+            .withSplash(1.5f)
+            .withHeroAbility(3.0f, 0, std::make_shared<HeroValkyrieWhirlwindEffect>(
+                /*dashRange=*/5.5f, /*spinTicks=*/35, /*radius=*/2.5f,
+                /*hitIntervalHalfTicks=*/5, /*damage=*/97,
+                /*selfDamageTakenMultiplier=*/0.85f, /*towerDamageMultiplier=*/0.5f), 1));
 
     }
 

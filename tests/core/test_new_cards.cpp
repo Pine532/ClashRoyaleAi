@@ -250,3 +250,190 @@ TEST_CASE("Hero Tombstone (179) is flagged ability-pending and is never dealt in
     CHECK(withIceGolem > 0);
     CHECK(withTombstone == 0);
 }
+
+// ---------------- Hero Valkyrie (180) ----------------
+
+namespace {
+
+struct ValkRig {
+    Board board;
+    std::shared_ptr<CombatEntity> valk;
+    live_sync::DamageRecorder* rec = nullptr;
+    std::shared_ptr<live_sync::DamageRecorder> recHolder = std::make_shared<live_sync::DamageRecorder>();
+
+    ValkRig(float x = 9.0f, float y = 10.0f) {
+        board.statsEvents.subscribe(recHolder);
+        valk = live_sync::firstCombat(live_sync::spawnBare(board, 180, x, y, 0));
+        valk->deployTicksRemaining = 0; // the ability is usable once deployed
+    }
+    std::shared_ptr<CombatEntity> enemy(int cardId, float x, float y) {
+        auto e = live_sync::firstCombat(live_sync::spawnBare(board, cardId, x, y, 1));
+        e->hp = 100000; // a damage sponge: totals are never clipped by death
+        return e;
+    }
+    void tick() { board.currentTick++; valk->update(board); }
+};
+
+} // namespace
+
+TEST_CASE("Hero Valkyrie (180) is registered with base Valkyrie's body and a one-use Wild Whirlwind",
+          "[new_card][hero_valkyrie]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(180);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Hero Valkyrie");
+    CHECK(def->cost == Catch::Approx(4.0f));
+    CHECK(def->isHero);
+    CHECK_FALSE(def->isChampion);
+    CHECK_FALSE(def->abilityPending);
+
+    Board a, b;
+    auto base = live_sync::mainBody(a, 10);
+    auto hero = live_sync::mainBody(b, 180);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->hp == 1907);
+    CHECK(hero->getBaseDamage() == 266);
+    CHECK(hero->getAttackCooldown() == 15);
+    CHECK(hero->firstHitTicks == base->firstHitTicks);
+    CHECK(hero->sightRange == Catch::Approx(5.5f));
+    CHECK(hero->abilityElixirCost == Catch::Approx(3.0f));
+    CHECK(hero->abilityCooldownTicks == 0);
+    CHECK(hero->abilityUsesRemaining == 1);
+}
+
+TEST_CASE("Hero Valkyrie (180) Whirlwind dashes to the nearest enemy ground non-tower within 5.5 tiles",
+          "[new_card][hero_valkyrie]") {
+    {
+        ValkRig r;
+        auto foe = r.enemy(0, 9.0f, 15.0f); // 5.0 away
+        REQUIRE(r.valk->activateAbility(r.board));
+        CHECK(r.valk->position.distanceTo(foe->position) == Catch::Approx(1.0f).margin(0.01f));
+    }
+    {
+        ValkRig r; // control: out of dash range, she does not move
+        r.enemy(0, 9.0f, 16.0f); // 6.0 away
+        REQUIRE(r.valk->activateAbility(r.board));
+        CHECK(r.valk->position.y == Catch::Approx(10.0f));
+    }
+    {
+        ValkRig r; // air units are not dash targets
+        r.enemy(44, 9.0f, 15.0f);
+        REQUIRE(r.valk->activateAbility(r.board));
+        CHECK(r.valk->position.y == Catch::Approx(10.0f));
+    }
+}
+
+TEST_CASE("Hero Valkyrie (180) Whirlwind never dashes to a tower (2026-09-01 fix)",
+          "[new_card][hero_valkyrie]") {
+    live_sync::Match m;
+    std::shared_ptr<Entity> tower;
+    for (const auto& e : m.board().getEntities())
+        if (e->isTower() && e->team == 1) { tower = e; break; }
+    REQUIRE(tower != nullptr);
+    auto bodies = m.spawnCard(180, tower->position.x, tower->position.y - 4.0f, 0);
+    auto valk = live_sync::firstCombat(bodies);
+    REQUIRE(valk != nullptr);
+    valk->deployTicksRemaining = 0;
+    const Vector2D before = valk->position;
+    REQUIRE(valk->activateAbility(m.board()));
+    CHECK(valk->position.distanceTo(before) == Catch::Approx(0.0f));
+    CHECK(valk->whirlTicksRemaining == 35); // she still spins
+}
+
+TEST_CASE("Hero Valkyrie (180) spin lands 14 hits of 97 over 35 ticks, then stops",
+          "[new_card][hero_valkyrie]") {
+    ValkRig r;
+    auto foe = r.enemy(0, 9.0f, 11.5f); // she closes to 1.0 tile (y 10.5), staying inside 2.5
+    REQUIRE(r.valk->activateAbility(r.board));
+    CHECK(r.valk->position.y == Catch::Approx(10.5f));
+    std::vector<int> hitTicks;
+    int last = 0;
+    for (int t = 1; t <= 35; ++t) {
+        r.tick();
+        const int now = r.recHolder->totalTo(foe->id);
+        if (now != last) { hitTicks.push_back(t); CHECK(now - last == 97); }
+        last = now;
+    }
+    CHECK(last == 14 * 97);
+    CHECK(hitTicks.size() == 14);
+    CHECK(hitTicks.front() == 3);
+    CHECK(hitTicks.back() == 35);
+    CHECK(r.valk->whirlTicksRemaining == 0);
+    r.tick(); // tick 36: the spin is over
+    CHECK(r.recHolder->totalTo(foe->id) == last);
+}
+
+TEST_CASE("Hero Valkyrie (180) spin ignores units beyond 2.5 tiles, air units and allies",
+          "[new_card][hero_valkyrie]") {
+    ValkRig r;
+    auto inside = r.enemy(0, 9.0f, 11.5f);
+    auto outside = r.enemy(0, 9.0f, 14.5f);  // 4.0 tiles from where she ends up (y 10.5)
+    auto air = r.enemy(44, 9.0f, 11.0f);
+    auto ally = live_sync::firstCombat(live_sync::spawnBare(r.board, 0, 9.0f, 11.0f, 0));
+    REQUIRE(r.valk->activateAbility(r.board));
+    for (int t = 0; t < 35; ++t) r.tick();
+    CHECK(r.recHolder->totalTo(inside->id) > 0);
+    CHECK(r.recHolder->totalTo(outside->id) == 0);
+    CHECK(r.recHolder->totalTo(air->id) == 0);
+    CHECK(r.recHolder->totalTo(ally->id) == 0);
+}
+
+TEST_CASE("Hero Valkyrie (180) spin hits an invisible unit that a normal attack cannot (2026-09-03 fix)",
+          "[new_card][hero_valkyrie]") {
+    ValkRig r;
+    auto ghost = r.enemy(0, 9.0f, 11.5f);
+    ghost->temporaryInvisibilityTicksRemaining = 100;
+    REQUIRE_FALSE(ghost->isTargetable());
+    REQUIRE(r.valk->activateAbility(r.board));
+    for (int t = 0; t < 35; ++t) r.tick();
+    CHECK(r.recHolder->totalTo(ghost->id) == 14 * 97);
+}
+
+TEST_CASE("Hero Valkyrie (180) spin deals 48 to a Crown Tower per hit",
+          "[new_card][hero_valkyrie]") {
+    live_sync::Match m;
+    std::shared_ptr<Entity> tower;
+    for (const auto& e : m.board().getEntities())
+        if (e->isTower() && e->team == 1) { tower = e; break; }
+    REQUIRE(tower != nullptr);
+    auto valk = live_sync::firstCombat(m.spawnCard(180, tower->position.x, tower->position.y - 1.5f, 0));
+    REQUIRE(valk != nullptr);
+    valk->deployTicksRemaining = 0;
+    REQUIRE(valk->activateAbility(m.board()));
+    for (int t = 0; t < 35; ++t) valk->update(m.board());
+    CHECK(m.rec->totalTo(tower->id) == 14 * 48);
+}
+
+TEST_CASE("Hero Valkyrie (180) takes 15% less damage while spinning, and full damage after",
+          "[new_card][hero_valkyrie]") {
+    ValkRig r;
+    REQUIRE(r.valk->activateAbility(r.board));
+    const int hp0 = r.valk->hp;
+    r.valk->takeDamage(100);
+    CHECK(hp0 - r.valk->hp == 85);
+    for (int t = 0; t < 35; ++t) r.tick();
+    const int hp1 = r.valk->hp;
+    r.valk->takeDamage(100);
+    CHECK(hp1 - r.valk->hp == 100);
+}
+
+TEST_CASE("Hero Valkyrie (180) Whirlwind costs 3 elixir, is refused at 2.9 and is single-use",
+          "[new_card][hero_valkyrie]") {
+    GameManager game({ 1, 180, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    game.playerAI.hand[1] = 180;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, 180, 9.0f, 10.0f);
+    for (int i = 0; i < 12; ++i) game.step(); // deployed
+    game.playerAI.elixir = 2.9f;
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+    game.playerAI.elixir = 10.0f;
+    REQUIRE(game.activateChampionAbility(0, 1));
+    CHECK(game.getElixirAI() == Catch::Approx(7.0f));
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+    CHECK(game.getElixirAI() == Catch::Approx(7.0f));
+}
+
+TEST_CASE("A deck with Hero Valkyrie (180) passes validateDeckSlots in slot 1",
+          "[new_card][hero_valkyrie]") {
+    CHECK(validateDeckSlots({ 1, 180, 2, 3, 4, 5, 6, 7 }).empty());
+    CHECK(countHeroes({ 180, 1, 2, 3, 4, 5, 6, 7 }) == 1);
+}
