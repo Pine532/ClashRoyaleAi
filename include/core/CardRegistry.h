@@ -209,7 +209,8 @@ private:
     // item 30), deploying in 0.5 s rather than 1 (official August 2025 notes:
     // "Spear Goblin Deploy Delay: 1sec -> 0.5sec").
     static CardStats goblinHutSpearGoblinStats() {
-        return troop(-17, "Spear Goblins", 0.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S')
+        // First hit 0.5 s: official balance notes (inferred: the same Spear Goblin character) (https://supercell.com/en/games/clashroyale/blog/release-notes/august-balance-changes-2/).
+        return troop(-17, "Spear Goblins", 0.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S').withFirstHit(5)
             .withTargetsAir()
             .withDeployTime(5);
     }
@@ -219,7 +220,9 @@ private:
     // feeds the Evolved Mortar and Goblin Giant evolution spawns, which keep
     // the same Goblins stats.
     static CardStats goblinDrillGoblinStats() {
-        return troop(-18, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g');
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms; the
+        // April 2025 Goblins change (0.4 -> 0.6 s) excluded Drill-spawned Goblins.
+        return troop(-18, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g').withFirstHit(4);
     }
     // Phoenix's one-time revive: a second Phoenix with no death effect of its
     // own. The real card leaves a vulnerable egg for ~4 s; this revives
@@ -230,7 +233,8 @@ private:
     }
     // Spell-spawn children (Goblin Barrel, Royal Delivery, Graveyard).
     static CardStats goblinBarrelGoblinStats() {
-        return troop(-20, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
+        // First hit 0.3 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/).
+        return troop(-20, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g').withFirstHit(3)
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f}, {0.0f, 0.4f} });
     }
     static CardStats graveyardSkeletonStats() {
@@ -277,7 +281,8 @@ private:
             .withIgnoresRiver();
     }
     static CardStats goblinGiantSpearGoblinsStats() {
-        return troop(-26, "Spear Goblins", 0.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S')
+        // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2/).
+        return troop(-26, "Spear Goblins", 0.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S').withFirstHit(5)
             .withOffsets({ {-0.4f, 0.3f}, {0.4f, 0.3f} }).withTargetsAir();
     }
 
@@ -329,7 +334,9 @@ private:
     // patch).
     // 2026-08-04 balance update: 125 damage, as the Goblins card (docs/LIVE_SYNC.md).
     static CardStats goblinDrillDeathGoblinStats() {
-        return troop(-36, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms; the
+        // April 2025 Goblins change (0.4 -> 0.6 s) excluded Drill-spawned Goblins.
+        return troop(-36, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g').withFirstHit(4)
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} });
     }
     // Goblin Demolisher's transformed form: a Very Fast, building-only kamikaze
@@ -487,7 +494,8 @@ private:
         add(troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K'));
 
         // 2026-08-04 balance update: Goblin damage 120 -> 125 (docs/LIVE_SYNC.md).
-        add(troop(4, "Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
+        // First hit 0.6 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/april-balance-changes/).
+        add(troop(4, "Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g').withFirstHit(6)
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }));
 
         add(troop(5, "Mini PEKKA", 4.0f, Archetype::MeleeSquad, 1390, SPEED_FAST, 0.8f, 755, 16, 'M'));
@@ -568,14 +576,16 @@ private:
             .withOffsets({ {0.0f, 0.0f}, {1.0f, 0.0f} })
             .withTargetsAir());
 
-        add(troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
+        // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/february-balance-changes/).
+        add(troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U').withFirstHit(7)
             .withTargetsAir().withSightRange(6.0f));
         // Bomber is ground-only; so are Bowler, Sparky and Cannon Cart.
         // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): damage 225 -> 212.
         add(troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b'));
         // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
         // 2026-09-08 balance update: damage 281 -> 304 (base, Evolution and Hero; docs/LIVE_SYNC.md).
-        add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
+        // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/).
+        add(troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W').withFirstHit(5)
             .withTargetsAir().withSplash(1.5f));
         // 2026-10-19 balance update: damage 151 -> 143 (docs/LIVE_SYNC.md).
         add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 143, 8, 'd')
@@ -587,7 +597,8 @@ private:
         add(troop(22, "Bowler", 5.0f, Archetype::RangedSquad, 2081, SPEED_SLOW, 4.0f, 289, 25, 'w')
             .withSplash(1.8f).withLineSplash(11.0f).withSightRange(4.0f));
 
-        add(troop(23, "Spear Goblins", 2.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S')
+        // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/august-balance-changes-2/).
+        add(troop(23, "Spear Goblins", 2.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S').withFirstHit(5)
             .withTargetsAir()
             .withOffsets({ {0.0f, 0.0f}, {0.7f, 0.0f}, {-0.7f, 0.0f} }));
 
@@ -772,7 +783,8 @@ private:
         // against ground melee; neither is modelled (takeDamage carries no
         // attacker, and there is no melee/ranged distinction).
         // 2026-09-08 balance update: hit speed 1.4 s -> 1.3 s (13 ticks), docs/LIVE_SYNC.md.
-        add(troop(54, "Ronin", 5.0f, Archetype::MeleeSquad, 1779, 0.7f, 1.2f, 371, 13, '2')
+        // First hit 0.4 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/news/final-august-balance-changes-826/).
+        add(troop(54, "Ronin", 5.0f, Archetype::MeleeSquad, 1779, 0.7f, 1.2f, 371, 13, '2').withFirstHit(4)
             .withParry(35));
         // 2026-08-04 balance update: hp 2150 -> 2265, melee damage 212 -> 232
         // (docs/LIVE_SYNC.md); the rocket turret is goblinMachineTurretStats.
@@ -787,7 +799,8 @@ private:
             .withDamageRamp(15, 30, 0.083f, 0.284f));
         // A true chain, not splash: up to 3 distinct targets (hops up to 4
         // tiles), each taking the full 192.
-        add(troop(57, "Electro Dragon", 5.0f, Archetype::MeleeSquad, 1049, SPEED_MEDIUM, 3.5f, 192, 21, '5')
+        // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/).
+        add(troop(57, "Electro Dragon", 5.0f, Archetype::MeleeSquad, 1049, SPEED_MEDIUM, 3.5f, 192, 21, '5').withFirstHit(5)
             .withFlying().withTargetsAir()
             .withSplitTargets(3)
             .withSplitTargetsFullDamage()
@@ -807,7 +820,8 @@ private:
             .withSplash(1.5f)
             .withStunResetsCooldown() // a stun restarts her charge
             .withSightRange(5.0f));
-        add(troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
+        // First hit 0.3 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/march-balance-changes/).
+        add(troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9').withFirstHit(3)
             .withTargetsAir()
             .withSplash(1.5f).withSightRange(9.5f)
             // 2025-03-04 balance update: Deploy Time 1.0 s -> 1.2 s
@@ -818,7 +832,8 @@ private:
         // approximation: linear from full damage point-blank to half at max
         // range.
         // 2024-08-06 balance update: Hunter hp 838 -> 884 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-        add(troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!')
+        // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/june-balance-changes-2/).
+        add(troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!').withFirstHit(7)
             .withTargetsAir()
             .withSplash(1.5f)
             .withRangeFalloff(0.5f));
@@ -902,7 +917,8 @@ private:
 
         // === Swarms (expansion) ===
         // Guards and Royal Recruits shields: 256 and 240.
-        add(troop(76, "Guards", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 1.0f, 117, 10, '?')
+        // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2/).
+        add(troop(76, "Guards", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 1.0f, 117, 10, '?').withFirstHit(5)
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} })
             .withShield(256));
         add(troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@')
@@ -913,7 +929,8 @@ private:
             .withFlying().withTargetsAir());
 
         // 2026-09-08 balance update: hit speed 2.2 s -> 2.3 s (23 ticks), docs/LIVE_SYNC.md.
-        add(troop(79, "Zappies", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 4.5f, 117, 23, '[')
+        // First hit 0.8 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/august-balance-changes-2/).
+        add(troop(79, "Zappies", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 4.5f, 117, 23, '[').withFirstHit(8)
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} })
             .withTargetsAir()
             .withOnHit(std::make_shared<FreezeOnHit>(3, 0.0f)).withSightRange(5.0f));
@@ -922,7 +939,8 @@ private:
         // 2026-02-02 balance update: hit speed 1.2 s -> 1.3 s, so 13 ticks (docs/LIVE_SYNC.md;
         // supercell.com february-balance-changes-26). It carried 10 ticks.
         // 2026-10-06 balance update: 906 hp per Musketeer (docs/LIVE_SYNC.md).
-        add(troop(80, "Three Musketeers", 9.0f, Archetype::RangedSquad, 906, SPEED_MEDIUM, 6.0f, 218, 13, ']')
+        // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/february-balance-changes/).
+        add(troop(80, "Three Musketeers", 9.0f, Archetype::RangedSquad, 906, SPEED_MEDIUM, 6.0f, 218, 13, ']').withFirstHit(7)
             .withOffsets({ {-2.0f, 0.0f}, {0.0f, 0.0f}, {2.0f, 0.0f} })
             .withTargetsAir().withSightRange(6.0f));
 
@@ -949,7 +967,8 @@ private:
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
             .withSplash(1.5f)
             .withDieAfterFirstHit().withSightRange(7.0f));
-        add(troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 184, 18, '|') // 2026-08-26 final August balance update: damage 163 -> 184 (docs/LIVE_SYNC.md)
+        // First hit 1.0 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/may-balance-changes-2026/).
+        add(troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 184, 18, '|').withFirstHit(10) // 2026-08-26 final August balance update: damage 163 -> 184 (docs/LIVE_SYNC.md)
             .withSplash(1.5f)
             .withPeriodicEffect(50, std::make_shared<AreaStunEffect>(2.5f, 5)));
         // 2024-10-08 balance update: Bush speed 45 -> 60 = Medium (docs/LIVE_SYNC.md).
@@ -1000,7 +1019,8 @@ private:
         add(building(92, "X-Bow", 6.0f, 1600, 'P', 11.5f, 61, 4)
             .withDeployDelay(35).withSightRange(11.5f));
         // 2026-08-04 balance update (final August changes, supercell.com): hit speed 5 s -> 4.7 s.
-        add(building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
+        // First hit 1.0 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes/).
+        add(building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47).withFirstHit(10)
             .withMinRange(3.5f).withSightRange(11.5f)); // blind spot
 
         // Spawner buildings do not attack in the real game: 0-damage structures
@@ -1139,10 +1159,12 @@ private:
         // === Compound troops ===
         // Goblin Gang and Rascals: both halves spawn via the primary unit plus
         // secondaryUnit.
-        add(troop(112, "Goblin Gang", 3.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
+        // First hit 0.6 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/april-balance-changes/).
+        add(troop(112, "Goblin Gang", 3.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g').withFirstHit(6)
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {0.0f, 0.5f} })
             .withSecondaryUnit(
-                troop(-27, "Spear Goblins", 0.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S')
+                // First hit 0.5 s: official balance notes (inferred: the same Spear Goblin character) (https://supercell.com/en/games/clashroyale/blog/release-notes/august-balance-changes-2/).
+                troop(-27, "Spear Goblins", 0.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S').withFirstHit(5)
                     .withOffsets({ {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f} })));
         // Rascals: only the Boy's stats are sourced; the two Girls reuse Spear
         // Goblins' ranged stats.
@@ -1462,9 +1484,11 @@ private:
         // (supercell.com november-balance-changes; docs/LIVE_SYNC.md). The
         // special range shape is not modelled.
         addEvolution(140,
-            troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
+            // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/february-balance-changes/).
+            troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U').withFirstHit(7)
                 .withTargetsAir().withSightRange(6.0f),
-            troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
+            // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/february-balance-changes/).
+            troop(6, "Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U').withFirstHit(7)
                 .withTargetsAir().withBurstAttack(3, 1.808f).withSightRange(6.0f),
             2, 1);
 
@@ -1473,9 +1497,11 @@ private:
         // shield-break explosion is not modelled.
         addEvolution(141,
             // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
+            // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/).
+            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W').withFirstHit(5)
                 .withTargetsAir().withSplash(1.5f),
-            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
+            // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/).
+            troop(11, "Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W').withFirstHit(5)
                 .withTargetsAir().withSplash(1.5f).withShield(176),
             2, 1);
 
@@ -1522,10 +1548,12 @@ private:
         // Princess: every hit slows (the real card slows every third shot); the
         // lingering slow zone on death is not modelled.
         addEvolution(145,
-            troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
+            // First hit 0.3 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/march-balance-changes/).
+            troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9').withFirstHit(3)
                 .withTargetsAir().withSplash(1.5f).withSightRange(9.5f)
                 .withDeployTime(12), // 2025-03-04: Deploy Time 1.0 s -> 1.2 s, as the base card
-            troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
+            // First hit 0.3 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/march-balance-changes/).
+            troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9').withFirstHit(3)
                 .withTargetsAir().withSplash(1.5f).withSightRange(9.5f)
                 .withDeployTime(12) // 2025-03-04: Deploy Time 1.0 s -> 1.2 s, as the base card
                 // 2026-08-04 balance update (final August changes, supercell.com): slow duration 7 s -> 5.5 s.
@@ -1536,9 +1564,11 @@ private:
         // s net + 5 s recharge), via PeriodicFreezeNearestEffect.
         addEvolution(146,
             // 2024-08-06 balance update: Hunter hp 838 -> 884 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!')
+            // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/june-balance-changes-2/).
+            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!').withFirstHit(7)
                 .withTargetsAir().withSplash(1.5f).withRangeFalloff(0.5f),
-            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!')
+            // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/june-balance-changes-2/).
+            troop(62, "Hunter", 4.0f, Archetype::RangedSquad, 884, SPEED_MEDIUM, 4.0f, 84, 22, '!').withFirstHit(7)
                 .withTargetsAir().withSplash(1.5f).withRangeFalloff(0.5f)
                 .withPeriodicEffect(80, std::make_shared<PeriodicFreezeNearestEffect>(4.0f, 30)),
             2, 1);
@@ -1596,11 +1626,13 @@ private:
         // Electro Dragon ("Infinite Bolts"): the real unbounded chain with
         // degrading effect is a fixed 6 full-damage targets.
         addEvolution(151,
-            troop(57, "Electro Dragon", 5.0f, Archetype::MeleeSquad, 1049, SPEED_MEDIUM, 3.5f, 192, 21, '5')
+            // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/).
+            troop(57, "Electro Dragon", 5.0f, Archetype::MeleeSquad, 1049, SPEED_MEDIUM, 3.5f, 192, 21, '5').withFirstHit(5)
                 .withFlying().withTargetsAir()
                 .withSplitTargets(3).withSplitTargetsFullDamage()
                 .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f)),
-            troop(57, "Electro Dragon", 5.0f, Archetype::MeleeSquad, 1049, SPEED_MEDIUM, 3.5f, 192, 21, '5')
+            // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/).
+            troop(57, "Electro Dragon", 5.0f, Archetype::MeleeSquad, 1049, SPEED_MEDIUM, 3.5f, 192, 21, '5').withFirstHit(5)
                 .withFlying().withTargetsAir()
                 .withSplitTargets(6).withSplitTargetsFullDamage()
                 .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f)),
@@ -1613,9 +1645,11 @@ private:
         // 0.2s -> 0.5s"). A dedicated copy: Goblin Drill's Goblins share
         // goblinDrillGoblinStats() and are not touched by that post.
         addEvolution(152,
-            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
+            // First hit 1.0 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes/).
+            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47).withFirstHit(10)
                 .withMinRange(3.5f).withSightRange(11.5f),
-            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
+            // First hit 1.0 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes/).
+            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47).withFirstHit(10)
                 .withMinRange(3.5f).withSightRange(11.5f)
                 .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats().withDeployTime(5))),
             2, 1);
@@ -1799,7 +1833,8 @@ private:
 
         // Hero Musketeer (base: id 6). "Trusty Turret": a short-range turret
         // with a 10 s lifetime (heroMusketeerTurretStats).
-        add(troop(168, "Hero Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
+        // First hit 0.7 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/february-balance-changes/).
+        add(troop(168, "Hero Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U').withFirstHit(7)
             .withTargetsAir().withSightRange(6.0f)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withHeroAbility(3.0f, 220, std::make_shared<SpawnOnAbility>(heroMusketeerTurretStats()), 1));
@@ -1812,7 +1847,8 @@ private:
         // 2026-08-04 balance update: Goblin damage 120 -> 125, and Banner
         // Brigade respawns 2 Goblins instead of 3 (docs/LIVE_SYNC.md; the
         // earlier 4 -> 3 change was 2026-02-23, still 4 here).
-        add(troop(172, "Hero Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
+        // First hit 0.6 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/april-balance-changes/).
+        add(troop(172, "Hero Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g').withFirstHit(6)
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} })
             .withPostDeathAbility(1.0f, 50, std::make_shared<PeriodicSpawnEffect>(
                 troop(-48, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
@@ -1832,7 +1868,8 @@ private:
         // (HeroWizardFieryFlightEffect). The 0.5-tile pull approximates the
         // sourced "~50% pull strength". Damage 304 as the base card.
         // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-        add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
+        // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/).
+        add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W').withFirstHit(5)
             .withTargetsAir().withSplash(1.5f)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withHeroAbility(1.0f, 200, std::make_shared<HeroWizardFieryFlightEffect>(35, 4.0f, 20, 0.5f), 1));

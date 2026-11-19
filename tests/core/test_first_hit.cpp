@@ -220,3 +220,53 @@ TEST_CASE("firstHitTicks is copied from CardStats; registry cards read 0", "[fir
         REQUIRE(troop->firstHitTicks == 0);
     }
 }
+
+// ---- Card values: official balance notes ------------------------------------
+// Every unit whose first hit an official post states (latest value; see the
+// comment at each literal in CardRegistry.h and docs/LIVE_SYNC.md).
+
+#include "live_sync_test_helpers.h"
+#include <set>
+
+TEST_CASE("Official first-hit values reach the spawned units", "[first_hit][first_hit_values][official]") {
+    struct Row { int id; bool evolved; int ticks; };
+    const std::vector<Row> rows = {
+        {4, false, 6}, {6, false, 7}, {11, false, 5}, {23, false, 5}, {54, false, 4},
+        {57, false, 5}, {61, false, 3}, {62, false, 7}, {76, false, 5}, {79, false, 8},
+        {80, false, 7}, {84, false, 10}, {93, false, 10}, {167, false, 5}, {168, false, 7},
+        {172, false, 6},
+        {140, false, 7}, {140, true, 7}, {141, false, 5}, {141, true, 5},
+        {145, false, 3}, {145, true, 3}, {146, false, 7}, {146, true, 7},
+        {151, false, 5}, {151, true, 5}, {152, false, 10}, {152, true, 10},
+    };
+    for (const auto& r : rows) {
+        INFO("card " << r.id << (r.evolved ? " (evolved)" : ""));
+        Board board;
+        auto body = live_sync::mainBody(board, r.id, r.evolved);
+        REQUIRE(body != nullptr);
+        CHECK(body->firstHitTicks == r.ticks);
+    }
+}
+
+TEST_CASE("Goblin Gang: Goblins wind up 0.6 s, its Spear Goblins 0.5 s", "[first_hit][first_hit_values][official]") {
+    Board board;
+    auto bodies = live_sync::spawnBare(board, 112);
+    std::set<int> seen;
+    for (const auto& e : bodies)
+        if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) seen.insert(c->firstHitTicks);
+    CHECK(seen == std::set<int>{5, 6});
+}
+
+TEST_CASE("Goblin Barrel's Goblins wind up 0.3 s (2026-10-06)", "[first_hit][first_hit_values][official]") {
+    live_sync::Match m;
+    m.spawnCard(109, 9.0f, 20.0f, 0);
+    std::shared_ptr<CombatEntity> goblin;
+    for (int i = 0; i < 60 && !goblin; ++i) {
+        m.step();
+        for (const auto& e : m.board().getEntities())
+            if (e->team == 0 && e->name == "Goblins")
+                if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) { goblin = c; break; }
+    }
+    REQUIRE(goblin != nullptr);
+    CHECK(goblin->firstHitTicks == 3);
+}
