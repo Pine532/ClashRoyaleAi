@@ -1133,11 +1133,12 @@ private:
             .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinCageBrawlerStats())));
         // Goblin Drill: a one-time 360-degree emergence burst (the spawn
         // effect; knockback not modelled), periodic Goblins, and 2 Goblins on
-        // death.
+        // death. A Crown Tower takes 20 from the burst (2026-10-06 balance
+        // update: "Crown Tower Spawn Damage: 0 -> 20"; docs/LIVE_SYNC.md).
         add(building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
             .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
             .withDeployAnywhere()
-            .withSpawnEffect(2.0f, 84)
+            .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats())));
         // Elixir Collector: no attack; periodically credits elixir
         // (ElixirGrantEffect). 2026-10-06 balance update: production speed
@@ -1774,12 +1775,12 @@ private:
             building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
                 .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
                 .withDeployAnywhere()
-                .withSpawnEffect(2.0f, 84)
+                .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20) // as the base card
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats())),
             building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
                 .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
                 .withDeployAnywhere()
-                .withSpawnEffect(2.0f, 84)
+                .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20) // as the base card
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats()
                     .withOffsets({ {-0.4f,0.0f},{0.4f,0.0f},{0.0f,0.4f},{0.0f,-0.4f} }))),
             2, 1);

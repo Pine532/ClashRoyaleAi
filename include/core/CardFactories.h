@@ -146,6 +146,7 @@ inline void spawnDeployEffect(const CardStats& stats, float x, float y, int team
         0, stats.symbol, stats.spawnEffectOnHit);
     effect->name = stats.name;
     effect->cardId = stats.id;
+    effect->crownTowerDamage = stats.spawnEffectCrownTowerDamage;
     board.addEntity(effect);
 }
 

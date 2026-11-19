@@ -139,6 +139,10 @@ struct CardStats {
     float spawnEffectRadius = 0.0f;
     int spawnEffectDamage = 0;
     std::shared_ptr<IOnHitEffect> spawnEffectOnHit;
+    // What a Crown Tower takes from the deploy burst, as AreaSpell's
+    // crownTowerDamage; -1 = the full spawnEffectDamage. Goblin Drill's
+    // emergence: 20 (2026-10-06 balance update, docs/LIVE_SYNC.md).
+    int spawnEffectCrownTowerDamage = -1;
 
     // Fired once when a unit of this card dies (e.g. Golem's Golemites).
     // Concrete effects live in core/.
@@ -389,6 +393,10 @@ struct CardStats {
         spawnEffectRadius = radius;
         spawnEffectDamage = damage;
         spawnEffectOnHit = std::move(effect);
+        return *this;
+    }
+    CardStats& withSpawnEffectCrownTowerDamage(int damage) {
+        spawnEffectCrownTowerDamage = damage;
         return *this;
     }
     CardStats& withDeathEffect(std::shared_ptr<IDeathEffect> effect) {
