@@ -35,15 +35,14 @@ The live sync (branch `update/live-sync`, ledger in `docs/LIVE_SYNC.md`, summary
 `CHANGELOG.md`) left this work. It is gameplay-affecting and changed the observation
 size, so the first two items gate any training.
 
-1. **Retrain from scratch, or migrate checkpoints.** Observation is now 14403 floats
-   (was 13977). `python_ai/tools/migrate_checkpoint_card_ids.py` migrates an old-layout
-   checkpoint (verified on one; none ships in the repo). Win-rate history and the
-   critic are out of date either way.
-2. **Re-run the side null** after the observation change: a policy against a bit-exact
-   copy of itself must score ~0.50.
-3. **Unresolved values.** Each needs a number no reachable source gives, or sources
-   disagree. See `LIVE_SYNC.md`, "Values to look up" (first-hit time: 138 unresolved, 80 because the hit speed
-   changed since 2023, 28 with no RoyaleAPI entry, 12 with load_time 0, 1 Sparky).
+1. **Retrain from scratch, or migrate checkpoints.** IN PROGRESS: a from-scratch run
+   started 2026-11-18 on macOS (CPU, 2.6 Hog Cycle, `tools/mac_training.sh`, checkpoint
+   `runs/checkpoints/livesync.pth`). Observation is now 14403 floats (was 13977);
+   `python_ai/tools/migrate_checkpoint_card_ids.py` migrates an old-layout checkpoint.
+2. ~~**Re-run the side null**~~ DONE 2026-11-18 on a random-init net: 0.482 over 300
+   episodes, z = -0.64, PASS. Repeat on the first trained checkpoint.
+3. **Unresolved values.** One table, grouped by card: `docs/live_sync/values_to_look_up.md`
+   (engine units and level, best value known with its source, why it is open).
 4. **Ability-pending Heroes.** Hero Balloon, Hero Dark Prince, Hero Bowler, Hero
    Tombstone and Hero Electro Wizard are body-only (`CardDefinition::abilityPending`);
    random decks never deal them. Build the abilities, then clear the flag.
@@ -53,13 +52,13 @@ size, so the first two items gate any training.
 6. **Changes that need a new engine mechanic**: `LIVE_SYNC.md` section 3. Also the
    Minion Horde Evolution hit-speed slowdown, the Elite Barbarians Rage path, the
    Electro Giant de-level pulse (no numbers) and the Ice Wizard Snowman.
-7. **Bug: buildings never run deploy effects** (`spawnDefensiveBuilding` never calls
-   `spawnDeployEffect`), so the Cannon Evolution barrage and the Tesla Evolution pulse
-   never fire. Their value items (radius, damage) were skipped as dead data. Propose via
-   `perception/UPSTREAM_REQUESTS.md` before touching `src/`.
-8. **Teacher combo test fails.** `test_teacher_combos.py::test_the_teacher_actually_executes_a_planned_pair_end_to_end`:
-   the teacher now re-plans in the staged state (plays Skeletons, Hog 30 ticks later)
-   instead of executing the due Hog. Needs a teacher or fixture change in `python_ai/`.
+7. ~~**Bug: buildings never run deploy effects**~~ FIXED 2026-11-18 (`abccf30`, with the
+   user's go-ahead): Goblin Drill, Cannon Evolution, Tesla Evolution. Burst Crown Tower
+   damage `b069d65` (Drill 20); the skipped values `58785df`. Gameplay-affecting
+   (`CHANGELOG.md`). Upstream report drafted, not posted: `docs/upstream_drafts/`.
+8. ~~**Teacher combo test fails.**~~ FIXED 2026-11-18 (`05967fb`): the re-plan (Skeletons
+   on the Golem's bridge cell, Hog 3 s later) was judged sensible; the test now stages
+   8 elixir, where the planned Hog is still the next action. No teacher code changed.
 9. **Smaller engine/model notes.** The Cannon Cart grounds itself with a stun
    (item 32 note); `net.py`'s `aux_card_head` / `cycle_id_head` ignore `num_card_ids`
    (always the live engine width); `test_placement_hires.py::test_both_heads_can_resolve_a_single_column_at_small_scale`
@@ -69,6 +68,25 @@ size, so the first two items gate any training.
 10. **Perception for the new cards.** `card_map` rows exist (6820f16) and need review
     flags confirmed against the recorded build; detector labels, hand templates and
     the deck pools (`meta_decks.json`) do not cover the 13 new entries yet.
+11. **Decision: MPS for training.** Measured 2026-11-18 on Apple Silicon (torch 2.13):
+    a live-size PPO update takes 9.18 s on CPU and 4.06 s on MPS, about 55% of a 16.7 s
+    cycle, so roughly 1.4x end to end; rollout inference is no faster (1.38 vs 1.30 ms).
+    MPS is not numerically equal to CPU (critic loss 0.00085 vs 0.00102 on one batch).
+    Needs `python_ai/rl/base_trainer.py:106` to pick MPS, plus a check that
+    `Loss/Ratio_Dev_First_Minibatch` stays ~0 and the side null holds.
+12. **Decision before phase 2: partly implemented cards reach opponents.** Phase 2's
+    scripted bots take `clash_royale_env.sample_random_deck()` (`envs/selfplay_env.py:147`).
+    It skips the 5 ability-pending Heroes but can deal ids 180-184 and 186-188, including
+    the partly implemented Evo Elite Barbarians (182), Hero Ice Wizard (184) and Evo
+    Electro Giant (186) (about 1.4-3.3% of decks each). Phase 1's pool contains none.
+    Options: accept, filter in `selfplay_env.py`, or mark them `abilityPending`.
+13. **A terminal Ctrl-C can lose the exit save.** It reaches the AsyncVectorEnv workers
+    too; observed: "Interrupted -- saving" with no "Checkpoint saved", and the resume came
+    back at the last periodic save. Suspected cause: `train.py` `_merged_deck_pool` calls
+    the dead workers. `tools/mac_training.sh stop` signals the main process only (verified
+    to save).
+14. **`python_ai/tools/profile_training.py --mode torch` crashes**: it calls
+    `ClashRoyaleEnv()` with no decks (the constructor needs `ai_deck`, `opp_deck`).
 
 ---
 

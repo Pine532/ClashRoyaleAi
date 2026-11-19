@@ -8032,3 +8032,73 @@ These are follow-ups; `python_ai/` and the engine were out of scope for a fix.
 ### Gotcha: GNU Make 3.81 compares mtimes to the second
 
 The macOS build uses Make 3.81. An edit saved in the same second as the last compile leaves stale objects, which once produced "towers read hp 1" nonsense that looked like an engine bug. `touch` the edited files, or wait a second, before rebuilding.
+
+## 2026-11-18 (later): live-sync follow-ups
+
+**Building deploy bursts (gameplay-affecting).** `CardFactories::spawnDefensiveBuilding` was the
+only factory that never called `spawnDeployEffect`, so every building's burst was dead data.
+No other building sets a burst, and buildings spawn only through that factory, so exactly
+three cards were silent: Goblin Drill (98, both halves of 153), Cannon Evolution (129) and
+Tesla Evolution (154).
+
+- Fixed in `abccf30`. The deploy-burst tests (`[deploy_effect]`) fail 4 of 6 without it.
+- `b069d65` came first, so that the fix does not make the Drill hit towers for 84: a burst can
+  carry its own Crown Tower damage (official 20).
+- `58785df` then applied the three values the sync had skipped as dead (barrage radius 2.0
+  and damage 261, pulse 148).
+- Trusty Turret's "placement AOE" ledger item is now buildable, if a value is ever found.
+
+**The teacher re-plan was judged sensible, not a regression.** In the staged
+Ice Golem / Hog / Cannon / Skeletons state at 10 elixir, the teacher follows the Golem with
+Skeletons on the same bridge cell and re-plans Hog 30 ticks later. The re-planned combo scores
+2.203 against 1.364 for Hog now. The whole gap is the positional term at horizon 50, and it is
+deterministic over seeds 0-3. A Hog sent now would overtake the slow Golem and arrive alone.
+
+The old behaviour is a sharp function of the staged elixir:
+
+- at 8 the planned Hog is the next action (4 of 4 seeds);
+- at 9-10 the teacher plays Skeletons;
+- at 6-7 no plan is chosen at all.
+
+So the test stages 8 (`05967fb`) and its assertions are unchanged.
+
+**Training on this Mac: CPU, not MPS, for now.** Measured with torch 2.13 on Apple Silicon:
+
+| | CPU | MPS |
+|---|---|---|
+| rollout inference, 8 envs, one decision | 1.30 ms | 1.38 ms |
+| one live-size PPO update (8 x 500, 4 epochs x 8 minibatches) | 9.18 s | 4.06 s |
+| feature trunk forward + backward, 500 observations | 175 ms | 32 ms |
+
+The update is about 55% of a phase-1 cycle (16.7 s), so MPS would be roughly 1.4x end to end.
+Two reasons to wait:
+
+- The trainer's device switch (`rl/base_trainer.py:106`, CUDA or CPU) is trainer code, which
+  is not to be changed without asking.
+- MPS is not numerically equal to CPU: features differ by up to 0.084, and critic loss is
+  0.00085 vs 0.00102 on the same batch. PPO's ratio self-check depends on the rollout and the
+  update agreeing, so it would need verifying first. TODO L11.
+
+**Throughput.** Phase 1, rung 0, random-init policy, `num_envs = 8`: 215 updates/hour
+(the i5-13420H reference row is 77), about 7,170 episodes/hour on short early episodes.
+Episodes/hour will fall as games lengthen and the teacher's lookahead grows up the ladder.
+Budget in updates.
+
+**Backgrounded runs ignore SIGINT.** A job started with `&` from a non-interactive shell
+inherits SIGINT as ignored, and CPython then installs no KeyboardInterrupt handler: measured,
+a trainer ran on for 2 minutes after `kill -INT`. `tools/mac_training.sh` resets the signal
+before exec'ing the trainer and signals the main process only. Verified: the stop saved past
+the last periodic save, and the resume picked up the same episode.
+
+**Side null after the observation change:** 0.482 over 300 episodes, z = -0.64, PASS
+(random-init net).
+
+**Tests at the end of the follow-ups** (training running alongside):
+
+- C++: 964 cases, 963 passed plus the 1 expected failure, exit 0. That is 956 + 8 new
+  `[deploy_effect]` cases.
+- `perception/tests`: 436 passed, 3 skipped, unchanged.
+- `python_ai/tests`: 1008 passed, 3 skipped, 4 failed (was 1007 / 3 / 5). `test_teacher_combos`
+  is fixed. The 4 failures:
+  - the 3 arm64 bit-exactness cases in `test_rl_ppo_compaction.py`;
+  - the flaky `test_placement_hires` single-column case, which passed 3 of 3 reruns alone.
