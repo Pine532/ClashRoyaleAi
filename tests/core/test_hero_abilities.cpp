@@ -671,7 +671,7 @@ TEST_CASE("Hero Goblins' Banner Brigade activates within the window after the la
         REQUIRE_FALSE(ce->isHero);
         freshCount++;
     }
-    REQUIRE(freshCount == 4);
+    REQUIRE(freshCount == 2); // 2026-08-04: Banner Brigade respawns 2 Goblins
 }
 
 TEST_CASE("Hero Goblins' Banner Brigade reactivates the squad at the last-known death position, not the original deploy point",
@@ -718,7 +718,7 @@ TEST_CASE("Hero Goblins' Banner Brigade reactivates the squad at the last-known 
         centroidAfter.y += ce->position.y;
         countAfter++;
     }
-    REQUIRE(countAfter == 4);
+    REQUIRE(countAfter == 2); // 2026-08-04: Banner Brigade respawns 2 Goblins
     centroidAfter.x /= countAfter;
     centroidAfter.y /= countAfter;
     // Reactivated near the death position, not the (9.0, 10.0) deploy point.

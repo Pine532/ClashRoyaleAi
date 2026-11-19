@@ -111,6 +111,7 @@ public:
     int getTierSingleDamage() const { return tierSingleDamage; }
     int getTierFewDamage() const { return tierFewDamage; }
     int getTierManyDamage() const { return tierManyDamage; }
+    float getKnockback() const { return knockback; } // negative pulls (Giant Snowball Evolution)
 
     // For Board::deepCopy: a spell mid-fuse or mid-volley resumes where the
     // original is.

@@ -87,7 +87,7 @@ TEST_CASE("Every currently-defined card resolves with id/name/cost/isSpell", "[c
         {94, "Barbarian Hut", 6.0f, false}, {95, "Goblin Hut", 4.0f, false}, {96, "Tombstone", 3.0f, false},
         {97, "Goblin Cage", 4.0f, false}, {98, "Goblin Drill", 4.0f, false}, {99, "Elixir Collector", 6.0f, false},
         {100, "Giant Snowball", 2.0f, true}, {101, "Barbarian Barrel", 2.0f, true}, {102, "Goblin Curse", 2.0f, true},
-        {103, "Earthquake", 3.0f, true}, {104, "Void", 3.0f, true}, {105, "Vines", 3.0f, true},
+        {103, "Earthquake", 3.0f, true}, {104, "Void", 5.0f, true}, {105, "Vines", 3.0f, true},
         {106, "Tornado", 3.0f, true}, {107, "Freeze", 4.0f, true}, {108, "Rage", 2.0f, true},
         {109, "Goblin Barrel", 3.0f, true}, {110, "Graveyard", 5.0f, true}, {111, "Royal Delivery", 3.0f, true},
         {112, "Goblin Gang", 3.0f, false}, {113, "Rascals", 5.0f, false}, {114, "Clone", 3.0f, true},
@@ -1236,7 +1236,7 @@ TEST_CASE("Royal Delivery deals landing damage and drops a single shielded defen
     while (spell->isAlive()) spell->update(board);
     board.commitPendingEntities();
 
-    REQUIRE(enemy->hp == 562); // 1000 - 438 landing damage
+    REQUIRE(enemy->hp == 616); // 1000 - 384 landing damage
 
     std::shared_ptr<Entity> defender;
     for (const auto& e : board.getEntities()) {

@@ -484,7 +484,7 @@ TEST_CASE("Evolved Barbarians Blade Rage is +30% attack speed (cooldown x 1/1.30
     Board board;
     auto evo = mainBody(board, 155, true);
     REQUIRE(evo != nullptr);
-    CHECK(evo->selfHasteDurationTicks == 30);
+    // The duration is the 2026-08-04 patch's to pin (5 s); this case owns the boost.
     CHECK(evo->selfHasteCooldownMultiplier == Catch::Approx(1.0f / 1.30f).margin(0.005f));
 }
 
@@ -970,4 +970,381 @@ TEST_CASE("Hero Magic Archer Triple Threat teleports 3.5 tiles and leaves a 271 
         ++decoys;
     }
     REQUIRE(decoys == 1);
+}
+
+// ---------------- patch 2026-08-04 (P26a) ----------------
+// Official "Final August Balance Changes" notes, 4 Aug 2026.
+
+TEST_CASE("Archers Evolution Power Shot does 140 at 4-6 tiles, 112 x 1.25",
+          "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto archers = m.spawnCard(128, 8.5f, 10.0f, 0, true); // the evolved form
+    // A stationary target 5.0 away: inside the 4-6 tile Power Shot band.
+    auto cannon = m.spawnCard(25, 8.5f, 15.0f, 1);
+    std::set<int> archerIds;
+    for (const auto& a : archers) archerIds.insert(a->id);
+    m.step(60);
+    int first = -1;
+    for (const auto& e : m.rec->damage)
+        if (archerIds.count(e.attackerId) && e.targetId == cannon.front()->id) { first = e.amount; break; }
+    REQUIRE(first == 140); // was 168
+}
+
+TEST_CASE("Barbarians Evolution Blade Rage lasts 5 s",
+          "[live_sync][patch-2026-08-04]") {
+    Match m; // an Evolution spawns through a live match
+    auto evolved = firstCombat(m.spawnCard(155, 8.5f, 10.0f, 0, true));
+    REQUIRE(evolved != nullptr);
+    REQUIRE(evolved->selfHasteDurationTicks == 50); // was 30
+}
+
+TEST_CASE("Battle Healer hits for 268 every 2 s with 1920 hp",
+          "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto healer = mainBody(board, 49);
+    REQUIRE(healer != nullptr);
+    REQUIRE(healer->hp == 1920);               // was 1717
+    REQUIRE(healer->getBaseDamage() == 268);   // was 148
+    REQUIRE(healer->getAttackCooldown() == 20); // was 15
+}
+
+TEST_CASE("Bowler's piercing line reaches 7 tiles past its 4.0 range",
+          "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto bowler = mainBody(board, 22);
+    REQUIRE(bowler != nullptr);
+    REQUIRE(bowler->lineSplashRange == Catch::Approx(11.0f)); // was 11.5
+}
+
+TEST_CASE("Giant Snowball Evolution pulls 4.0 tiles",
+          "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto bodies = m.spawnCard(158, 9.0f, 10.0f, 0, true);
+    std::shared_ptr<AreaSpell> spell;
+    for (const auto& e : bodies)
+        if (auto s = std::dynamic_pointer_cast<AreaSpell>(e)) spell = s;
+    REQUIRE(spell != nullptr);
+    REQUIRE(spell->getKnockback() == Catch::Approx(-4.0f)); // was -4.5
+}
+
+TEST_CASE("Goblin Curse slows enemy troop movement 15%, refreshed by each pulse",
+          "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto knight = std::dynamic_pointer_cast<Troop>(m.spawnCard(0, 8.5f, 24.0f, 1).front());
+    m.step(12);
+    m.spawnCard(102, knight->position.x, knight->position.y - 1.5f, 0);
+    m.step(9); // 1 s deploy, then the first pulse lands; from the next tick it walks slowed
+    Vector2D prev = knight->position;
+    m.step();
+    const float stepLen = std::hypot(knight->position.x - prev.x, knight->position.y - prev.y);
+    REQUIRE(stepLen == Catch::Approx(knight->getSpeed() * 0.85f).epsilon(0.02));
+    REQUIRE(knight->freezeTicks == 0); // movement only
+}
+// ---- 2026-08-04 balance update (final August balance changes) ----
+
+TEST_CASE("Goblins and Hero Goblins deal 125 damage", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto base = mainBody(board, 4);
+    REQUIRE(base != nullptr);
+    CHECK(base->getBaseDamage() == 125);
+    Board board2;
+    auto hero = mainBody(board2, 172);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->getBaseDamage() == 125);
+}
+
+TEST_CASE("Goblin Drill's spawned Goblins deal 125 damage (periodic and death spawn)",
+          "[live_sync][patch-2026-08-04]") {
+    for (int cardId : { 98, 153 }) {
+        Match m;
+        bool evolved = (cardId == 153);
+        auto bodies = m.spawnCard(cardId, 9.0f, 10.0f, 0, evolved);
+        std::shared_ptr<CombatEntity> drill = firstCombat(bodies);
+        REQUIRE(drill != nullptr);
+        m.step(80);
+        int periodic = 0;
+        for (const auto& e : m.board().getEntities()) {
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (c && c->cardId == -18 && c->team == 0) {
+                CHECK(c->getBaseDamage() == 125);
+                periodic++;
+            }
+        }
+        CHECK(periodic > 0);
+        drill->takeDamage(drill->hp);
+        m.step(2);
+        int death = 0;
+        for (const auto& e : m.board().getEntities()) {
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (c && c->cardId == -36 && c->team == 0) {
+                CHECK(c->getBaseDamage() == 125);
+                death++;
+            }
+        }
+        CHECK(death >= 2);
+    }
+}
+
+TEST_CASE("Goblin Machine has 2265 hp, 232 melee damage and a 5 s rocket",
+          "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto bodies = spawnBare(board, 55);
+    std::shared_ptr<CombatEntity> arms, rocket;
+    for (const auto& e : bodies) {
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (!c) continue;
+        if (c->cardId == -24) rocket = c; else if (!arms) arms = c;
+    }
+    REQUIRE(arms != nullptr);
+    REQUIRE(rocket != nullptr);
+    CHECK(arms->hp == 2265);
+    CHECK(rocket->hp == 2265);
+    CHECK(arms->getBaseDamage() == 232);
+    CHECK(arms->getAttackCooldown() == 12);
+    CHECK(rocket->getBaseDamage() == 304);
+    CHECK(rocket->getAttackCooldown() == 50);
+}
+
+TEST_CASE("Goblinstein's Doctor deals 135 damage", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto bodies = spawnBare(board, 121);
+    std::shared_ptr<CombatEntity> doctor;
+    for (const auto& e : bodies) {
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (c && c->cardId == -40) doctor = c;
+    }
+    REQUIRE(doctor != nullptr);
+    CHECK(doctor->getBaseDamage() == 135);
+}
+
+TEST_CASE("Goblinstein's Lightning Link pulses for 94 (188 per second)",
+          "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto bodies = m.spawnCard(121, 9.0f, 10.0f, 0);
+    std::shared_ptr<CombatEntity> monster;
+    for (const auto& e : bodies) {
+        auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (c && c->abilityEffect) monster = c;
+    }
+    REQUIRE(monster != nullptr);
+    auto giant = firstCombat(m.spawnCard(2, 9.0f, 11.0f, 1));
+    REQUIRE(giant != nullptr);
+    m.rec->damage.clear();
+    REQUIRE(monster->activateAbility(m.board()));
+    m.step(3);
+    int pulse = 0;
+    for (const auto& e : m.rec->damage) {
+        if (e.targetId == giant->id && e.amount > 0 && e.attackerCardId != -40 && e.attackerCardId != 121) {
+            pulse = e.amount;
+            break;
+        }
+    }
+    CHECK(pulse == 94);
+}
+
+TEST_CASE("Hero Goblins' Banner Brigade respawns two Goblins at 125 damage",
+          "[live_sync][patch-2026-08-04]") {
+    Match m({ 1, 172, 2, 3, 4, 5, 6, 7 });
+    GameManager& game = m.game;
+    game.playerAI.hand[1] = 172;
+    game.playCard(0, 172, 9.0f, 10.0f);
+    game.step();
+    for (const auto& e : game.getBoard().getEntities()) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->cardId == 172 && ce->team == 0) ce->takeDamage(ce->hp);
+    }
+    game.step();
+    game.playerAI.elixir = 10.0f;
+    REQUIRE(game.activateChampionAbility(0, 1));
+    game.step();
+    int count = 0;
+    for (const auto& e : game.getBoard().getEntities()) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (!ce || ce->cardId != -48) continue;
+        CHECK(ce->getBaseDamage() == 125);
+        count++;
+    }
+    CHECK(count == 2);
+}
+// ---- 2026-08-04 balance update, part c (ledger P26c) -----------------------
+
+TEST_CASE("Hero Ice Golem Snowstorm blast deals 69 per blast", "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto golem = firstCombat(m.spawnCard(175, 9.0f, 10.0f, 0));
+    auto knight = firstCombat(m.spawnCard(0, 9.0f, 12.0f, 1));
+    REQUIRE(golem != nullptr);
+    REQUIRE(knight != nullptr);
+    m.step(12); // deploy
+    int before = m.rec->totalTo(knight->id);
+    REQUIRE(golem->activateAbility(m.board()));
+    m.step(3); // only the first of the three staggered blasts (5 ticks apart) has fired
+    REQUIRE(m.rec->totalTo(knight->id) - before == 69);
+}
+
+TEST_CASE("Little Prince Guardienne deals 232 damage", "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto prince = firstCombat(m.spawnCard(120, 9.0f, 10.0f, 0));
+    REQUIRE(prince != nullptr);
+    m.step(12);
+    REQUIRE(prince->activateAbility(m.board()));
+    m.board().commitPendingEntities();
+    std::shared_ptr<CombatEntity> guard;
+    for (const auto& e : m.board().getEntities())
+        if (e->name == "Guardienne") guard = std::dynamic_pointer_cast<CombatEntity>(e);
+    REQUIRE(guard != nullptr);
+    REQUIRE(guard->getBaseDamage() == 232);
+}
+
+TEST_CASE("Little Prince keeps his hit-speed ramp for 0.3 s after his target is gone",
+          "[live_sync][patch-2026-08-04]") {
+    // The grace counts from the last hit LAUNCHED, which a test cannot see
+    // directly. So run the same deterministic scenario with the target removed
+    // at each of several ticks and look for the ramp surviving the removal; with
+    // no grace period it is reset the tick the target is gone, every time.
+    bool everKept = false;
+    bool everReset = false;
+    for (int delay = 0; delay < 8; ++delay) {
+        Match m;
+        auto prince = firstCombat(m.spawnCard(120, 9.0f, 10.0f, 0));
+        auto target = firstCombat(m.spawnCard(0, 9.0f, 14.0f, 1));
+        REQUIRE(prince != nullptr);
+        REQUIRE(target != nullptr);
+        prince->hp = 100000;
+        target->hp = 1000000;
+        m.step(12);
+        for (int i = 0; i < 80; ++i) m.step();
+        REQUIRE(prince->getTicksOnTarget() > 30);
+        m.step(delay);
+        target->takeDamage(2000000);
+        m.step(1);
+        if (prince->getTicksOnTarget() > 0) everKept = true;
+        else everReset = true;
+    }
+    REQUIRE(everKept);
+    REQUIRE(everReset); // the grace is finite
+}
+
+TEST_CASE("Magic Archer deals 135 damage, Hero included", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    REQUIRE(mainBody(board, 63)->getBaseDamage() == 135);
+    Board board2;
+    REQUIRE(mainBody(board2, 171)->getBaseDamage() == 135);
+}
+
+TEST_CASE("Mighty Miner's first damage-ramp stage is 43", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto miner = mainBody(board, 115);
+    REQUIRE(miner != nullptr);
+    int hit = static_cast<int>(miner->getDamagePerTick() * miner->getAttackCooldown() + 0.5f);
+    REQUIRE(hit == 43);
+    REQUIRE(miner->getBaseDamage() == 409); // the max stage is unchanged
+}
+
+TEST_CASE("Mortar and its Evolution fire every 4.7 s", "[live_sync][patch-2026-08-04]") {
+    Board a;
+    REQUIRE(mainBody(a, 93)->getAttackCooldown() == 47);
+    Board b;
+    REQUIRE(mainBody(b, 152, false)->getAttackCooldown() == 47);
+    Board c;
+    REQUIRE(mainBody(c, 152, true)->getAttackCooldown() == 47);
+}
+
+TEST_CASE("Princess Evolution's slow lasts 5.5 s", "[live_sync][patch-2026-08-04]") {
+    Match m;
+    auto princess = m.spawnCard(145, 9.0f, 10.0f, 0, true);
+    REQUIRE(!princess.empty());
+    auto knight = firstCombat(m.spawnCard(0, 9.0f, 18.0f, 1));
+    REQUIRE(knight != nullptr);
+    knight->hp = 1000000;
+    int seen = 0;
+    for (int i = 0; i < 150; ++i) {
+        m.step();
+        if (knight->freezeTicks > seen) seen = knight->freezeTicks;
+    }
+    REQUIRE(seen >= 54);
+    REQUIRE(seen <= 55);
+}
+namespace {
+// Casts a spell at (x, y) on a bare board and runs it to the end.
+void p26dCastAndRun(Board& board, int cardId, float x, float y) {
+    CardRegistry::getInstance().getCard(cardId)->spawnEntity(x, y, 0, board);
+    board.commitPendingEntities();
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+    REQUIRE(spell != nullptr);
+    int guard = 0;
+    while (spell->isAlive() && guard++ < 1000) spell->update(board);
+    board.commitPendingEntities();
+}
+} // namespace
+
+TEST_CASE("Royal Delivery landing damage is 384", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto enemy = std::make_shared<StationaryCombatant>(1, 10.0f, 9.0f, 100000, 1, 5.0f, 10, 10);
+    spawn(board, enemy);
+    p26dCastAndRun(board, 111, 9.0f, 9.0f);
+    REQUIRE(enemy->hp == 100000 - 384);
+}
+
+TEST_CASE("Rune Giant has 2816 hitpoints", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto body = mainBody(board, 86);
+    REQUIRE(body != nullptr);
+    REQUIRE(body->hp == 2816);
+}
+
+TEST_CASE("Valkyrie Evolution Tornado damage is 42", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto evo = mainBody(board, 147, true);
+    REQUIRE(evo != nullptr);
+    REQUIRE(evo->onHitPullDamage == 42);
+}
+
+TEST_CASE("Void costs 5 elixir", "[live_sync][patch-2026-08-04]") {
+    REQUIRE(CardRegistry::getInstance().getCard(104)->cost == 5.0f);
+}
+
+TEST_CASE("Void deals 696 per wave to a lone target and 153 per wave to 5 or more",
+          "[live_sync][patch-2026-08-04]") {
+    {
+        Board board;
+        auto enemy = std::make_shared<StationaryCombatant>(1, 9.0f, 9.0f, 100000, 1, 5.0f, 10, 10);
+        spawn(board, enemy);
+        p26dCastAndRun(board, 104, 9.0f, 9.0f);
+        REQUIRE(enemy->hp == 100000 - 3 * 696);
+    }
+    {
+        Board board;
+        std::vector<std::shared_ptr<StationaryCombatant>> pack;
+        for (int i = 0; i < 5; ++i) {
+            pack.push_back(std::make_shared<StationaryCombatant>(1 + i, 8.5f + 0.25f * i, 9.0f, 100000, 1, 5.0f, 10, 10));
+            spawn(board, pack.back());
+        }
+        p26dCastAndRun(board, 104, 9.0f, 9.0f);
+        for (const auto& e : pack) REQUIRE(e->hp == 100000 - 3 * 153);
+    }
+}
+
+TEST_CASE("Witch Evolution heal-on-hit cap is 1451", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto evo = mainBody(board, 142, true);
+    REQUIRE(evo != nullptr);
+    REQUIRE(evo->healOnHitMaxHp == 1451);
+}
+
+TEST_CASE("X-Bow hit speed is 0.4 s", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    auto body = mainBody(board, 92);
+    REQUIRE(body != nullptr);
+    REQUIRE(body->getAttackCooldown() == 4);
+}
+
+TEST_CASE("Void deals 294 per wave to 2-4 targets", "[live_sync][patch-2026-08-04]") {
+    Board board;
+    std::vector<std::shared_ptr<StationaryCombatant>> pair;
+    for (int i = 0; i < 2; ++i) {
+        pair.push_back(std::make_shared<StationaryCombatant>(1 + i, 8.5f + 0.5f * i, 9.0f, 100000, 1, 5.0f, 10, 10));
+        spawn(board, pair.back());
+    }
+    p26dCastAndRun(board, 104, 9.0f, 9.0f);
+    for (const auto& e : pair) REQUIRE(e->hp == 100000 - 3 * 294);
 }

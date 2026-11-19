@@ -213,8 +213,13 @@ private:
             .withTargetsAir()
             .withDeployTime(5);
     }
+    // 2026-08-04 balance update: the Drill's spawned Goblins deal 125 damage
+    // (+4%, the Goblins card's 120 -> 125; docs/LIVE_SYNC.md). The post gives
+    // no separate figure, so this reuses the Goblins line. This builder also
+    // feeds the Evolved Mortar and Goblin Giant evolution spawns, which keep
+    // the same Goblins stats.
     static CardStats goblinDrillGoblinStats() {
-        return troop(-18, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g');
+        return troop(-18, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g');
     }
     // Phoenix's one-time revive: a second Phoenix with no death effect of its
     // own. The real card leaves a vulnerable egg for ~4 s; this revives
@@ -254,10 +259,11 @@ private:
     // and Rascals), spawned via CardStats::secondaryUnit at the same point and
     // targeting independently.
     //
-    // Goblin Machine's rocket: 304 per shot on a 35-tick cooldown (DPS 86),
-    // against the arms' 212 / 12 ticks.
+    // Goblin Machine's rocket: 304 per shot on a 50-tick cooldown (DPS ~61),
+    // against the arms' 232 / 12 ticks. 2026-08-04 balance update: hit speed
+    // 3.5 s -> 5 s and hp 2150 -> 2265 (docs/LIVE_SYNC.md).
     static CardStats goblinMachineTurretStats() {
-        return troop(-24, "Goblin Machine", 0.0f, Archetype::RangedSquad, 2150, 0.5f, 5.0f, 304, 35, '3')
+        return troop(-24, "Goblin Machine", 0.0f, Archetype::RangedSquad, 2265, 0.5f, 5.0f, 304, 50, '3')
             .withSplash(1.5f).withTargetsAir();
     }
     // The crossbow: 104 per shot on 11 ticks (DPS 94), against the Ram's 250 /
@@ -318,8 +324,9 @@ private:
     }
     // Goblin Drill's death spawn: two Goblins (three before a 2021 balance
     // patch).
+    // 2026-08-04 balance update: 125 damage, as the Goblins card (docs/LIVE_SYNC.md).
     static CardStats goblinDrillDeathGoblinStats() {
-        return troop(-36, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
+        return troop(-36, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} });
     }
     // Goblin Demolisher's transformed form: a Very Fast, building-only kamikaze
@@ -339,9 +346,10 @@ private:
         return troop(-38, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k');
     }
     // Little Prince's Royal Rescue: the Guardienne. Her spawn-in dash and
-    // knockback are not modelled.
+    // knockback are not modelled. 2026-08-04 balance update (final August changes, supercell.com): damage 217 -> 232
+    // (docs/LIVE_SYNC.md).
     static CardStats guardienneStats() {
-        return troop(-39, "Guardienne", 0.0f, Archetype::MeleeSquad, 1600, 0.5f, 1.2f, 217, 12, 'u')
+        return troop(-39, "Guardienne", 0.0f, Archetype::MeleeSquad, 1600, 0.5f, 1.2f, 232, 12, 'u')
             .withCharge(3.0f, 2.0f);
     }
     // Hero Musketeer's "Trusty Turret": a short-range turret that
@@ -475,7 +483,8 @@ private:
         // === Melee troops ===
         add(troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K'));
 
-        add(troop(4, "Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
+        // 2026-08-04 balance update: Goblin damage 120 -> 125 (docs/LIVE_SYNC.md).
+        add(troop(4, "Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }));
 
         add(troop(5, "Mini PEKKA", 4.0f, Archetype::MeleeSquad, 1390, SPEED_FAST, 0.8f, 755, 16, 'M'));
@@ -565,10 +574,12 @@ private:
             .withTargetsAir().withSplash(1.5f));
         add(troop(20, "Dart Goblin", 3.0f, Archetype::RangedSquad, 261, SPEED_VERY_FAST, 6.5f, 151, 8, 'd')
             .withTargetsAir().withSightRange(7.0f)); // 2026-03-02 balance update: 7.5 -> 7.0 tiles (docs/LIVE_SYNC.md).
-        // A piercing line: 11.5 total (4.0 range + 7.5), half-width 1.8.
+        // A piercing line: 11.0 total (4.0 range + 7.0), half-width 1.8. The
+        // 7.5 -> 7 tile projectile range is from the 2026-08-04 balance update
+        // (docs/LIVE_SYNC.md).
         // Knockback is not modelled on the troop attack path.
         add(troop(22, "Bowler", 5.0f, Archetype::RangedSquad, 2081, SPEED_SLOW, 4.0f, 289, 25, 'w')
-            .withSplash(1.8f).withLineSplash(11.5f).withSightRange(4.0f));
+            .withSplash(1.8f).withLineSplash(11.0f).withSightRange(4.0f));
 
         add(troop(23, "Spear Goblins", 2.0f, Archetype::RangedSquad, 133, SPEED_VERY_FAST, 5.0f, 81, 16, 'S')
             .withTargetsAir()
@@ -712,7 +723,9 @@ private:
         // here as one 102 heal per landed hit. The larger deploy heal (202) is
         // not modelled (spawn effects only damage). Battle Healer jumps the
         // river.
-        add(troop(49, "Battle Healer", 4.0f, Archetype::MeleeSquad, 1717, SPEED_MEDIUM, 1.2f, 148, 15, 'f')
+        // 2026-08-04 balance update: 1920 hp, 268 damage, 2 s hit speed
+        // (docs/LIVE_SYNC.md); the post does not restate the heal.
+        add(troop(49, "Battle Healer", 4.0f, Archetype::MeleeSquad, 1920, SPEED_MEDIUM, 1.2f, 268, 20, 'f')
             .withHealAura(3.0f, 102)
             .withIgnoresRiver());
         // Bandit crosses the river only by dashing; with no separate dash
@@ -735,7 +748,9 @@ private:
         // attacker, and there is no melee/ranged distinction).
         add(troop(54, "Ronin", 5.0f, Archetype::MeleeSquad, 1779, 0.7f, 1.2f, 371, 14, '2')
             .withParry(35));
-        add(troop(55, "Goblin Machine", 5.0f, Archetype::MeleeSquad, 2150, 0.5f, 1.2f, 212, 12, '3')
+        // 2026-08-04 balance update: hp 2150 -> 2265, melee damage 212 -> 232
+        // (docs/LIVE_SYNC.md); the rocket turret is goblinMachineTurretStats.
+        add(troop(55, "Goblin Machine", 5.0f, Archetype::MeleeSquad, 2265, 0.5f, 1.2f, 232, 12, '3')
             .withSecondaryUnit(goblinMachineTurretStats())); // independently targeting rocket turret
 
         // Inferno Dragon and Electro Dragon: instant zaps, so MeleeSquad as
@@ -783,7 +798,8 @@ private:
             .withRangeFalloff(0.5f));
         // A piercing line: 11.0 long, half-width 0.25.
         // 2024-10-08 balance update: hp 532 -> 531 (docs/LIVE_SYNC.md). Mortar always takes two hits.
-        add(troop(63, "Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 143, 11, '#')
+        // 2026-08-04 balance update (final August changes, supercell.com): damage 143 -> 135.
+        add(troop(63, "Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 135, 11, '#')
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f));
         add(troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
@@ -909,7 +925,8 @@ private:
         add(troop(85, "Suspicious Bush", 2.0f, Archetype::MeleeBuildingTargeter, 81, SPEED_MEDIUM, 0.25f, 256, 14, '}')
             .withInvisibility(5)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(suspiciousBushGoblinStats())));
-        add(troop(86, "Rune Giant", 4.0f, Archetype::MeleeBuildingTargeter, 2662, 0.5f, 1.2f, 153, 15, '~')
+        // 2026-08-04 balance update: 2816 hp (was 2662; docs/LIVE_SYNC.md).
+        add(troop(86, "Rune Giant", 4.0f, Archetype::MeleeBuildingTargeter, 2816, 0.5f, 1.2f, 153, 15, '~')
             .withAllyBuffAura(3.0f, 3, 1.5f, 50, 2));
         // Ram Rider jumps the river.
         add(troop(87, "Ram Rider", 5.0f, Archetype::MeleeBuildingTargeter, 1766, SPEED_MEDIUM, 1.0f, 250, 17, '"')
@@ -944,9 +961,11 @@ private:
         // === Defensive structures (expansion) ===
         // X-Bow: the default 30 s building lifetime matches the real card;
         // withDeployDelay adds the ~3.5 s lock-on.
-        add(building(92, "X-Bow", 6.0f, 1600, 'P', 11.5f, 43, 3)
+        // 2026-08-04 balance update: hit speed 0.3 s -> 0.4 s (4 ticks; docs/LIVE_SYNC.md).
+        add(building(92, "X-Bow", 6.0f, 1600, 'P', 11.5f, 43, 4)
             .withDeployDelay(35).withSightRange(11.5f));
-        add(building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 50)
+        // 2026-08-04 balance update (final August changes, supercell.com): hit speed 5 s -> 4.7 s.
+        add(building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
             .withMinRange(3.5f).withSightRange(11.5f)); // blind spot
 
         // Spawner buildings do not attack in the real game: 0-damage structures
@@ -1008,15 +1027,19 @@ private:
         // damage amplification removed (docs/LIVE_SYNC.md). One pulse per second
         // (10 ticks), so 35 per application x 6 = 210. The Crown Tower value
         // (6 -> 10 per second) is the separate spell-vs-tower item.
-        add(spell(102, "Goblin Curse", 2.0f, 3.0f, 35, 8, '$').withRepeats(6, 10));
+        // 2026-08-04 balance update: enemies inside move 15% slower (movement
+        // only, refreshed by each pulse, as Poison; docs/LIVE_SYNC.md).
+        add(spell(102, "Goblin Curse", 2.0f, 3.0f, 35, 8, '$').withRepeats(6, 10)
+            .withSpellOnHit(std::make_shared<MoveSlowOnHit>(10, 0.85f)));
         // Earthquake: ground-only damage over time with the 50% movement slow.
         // The real 3.5x damage against buildings is not modelled.
         add(spell(103, "Earthquake", 3.0f, 3.5f, 82, 8, '%').withRepeats(3, 10).withGroundOnly()
             .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.5f)));
-        // Void: three damage tiers (340 per hit on 1 target, 160 on 2-4, 76 on
-        // 5+), once per wave.
-        add(spell(104, "Void", 3.0f, 2.5f, 0, 8, '&').withRepeats(3, 10)
-            .withSpellTieredDamage(340, 160, 76));
+        // Void: three damage tiers, once per wave. 2026-08-04 balance update
+        // (docs/LIVE_SYNC.md): 5 elixir (was 3), 696 per hit on 1 target
+        // (was 340), 294 on 2-4 (was 161), 153 on 5+ (was 76).
+        add(spell(104, "Void", 5.0f, 2.5f, 0, 8, '&').withRepeats(3, 10)
+            .withSpellTieredDamage(696, 294, 153));
         // Vines: only the 3 highest-HP enemies in radius. Pulling flyers to the
         // ground is not modelled.
         // 102 per pulse x 3 = 306 total: 2025-10-06 balance update, total damage
@@ -1056,8 +1079,9 @@ private:
             .withRepeats(12, 5)
             .withSpellSpawnRing(3.3f)
             .withSpellSpawn(std::make_shared<PeriodicSpawnEffect>(graveyardSkeletonStats())));
-        // Royal Delivery: a shielded Royal Recruit plus its own landing damage.
-        add(spell(111, "Royal Delivery", 3.0f, 2.0f, 438, 8, '^')
+        // Royal Delivery: a shielded Royal Recruit plus its own landing damage
+        // (2026-08-04 balance update: 384, was 437; docs/LIVE_SYNC.md).
+        add(spell(111, "Royal Delivery", 3.0f, 2.0f, 384, 8, '^')
             .withSpellSpawn(std::make_shared<PeriodicSpawnEffect>(royalDeliveryRecruitStats())));
 
         // === Compound troops ===
@@ -1082,14 +1106,15 @@ private:
 
         // === Champions ===
         // Mighty Miner: MeleeSquad like the Miner, but not deploy-anywhere.
-        // Damage ramps 40 -> 204 -> 409 on one target, 2 s per stage
+        // Damage ramps 43 -> 204 -> 409 on one target (first stage 40 -> 43 in the 2026-08-04 update), 2 s per stage
         // (Liquipedia, 2025-01-08 patch), so mid 20 and full 40 ticks; `damage`
         // is the max. "Explosive Escape" (1 elixir, ~13 s cooldown): a lane
         // swap leaving a bomb that detonates after ~1 s for 332 with 1.8-tile
         // knockback. The bomb radius (2.5) is not sourced. See
         // MightyMinerEscapeEffect.
         add(troop(115, "Mighty Miner", 4.0f, Archetype::MeleeSquad, 2250, SPEED_MEDIUM, 1.6f, 409, 4, '\'')
-            .withDamageRamp(20, 40, 40.0f / 409.0f, 204.0f / 409.0f)
+            // 2026-08-04 balance update (final August changes, supercell.com): base damage 40 -> 43.
+            .withDamageRamp(20, 40, 43.0f / 409.0f, 204.0f / 409.0f)
             .withChampionAbility(1.0f, 130, std::make_shared<MightyMinerEscapeEffect>(2.5f, 332, 10, 1.8f)));
 
         // Golden Knight's "Dashing Dash": up to 10 dashes to the nearest enemy
@@ -1119,10 +1144,12 @@ private:
 
         // Little Prince: hit speed ramps 1.2 s -> 0.8 s -> 0.4 s on one target
         // (3 attacks per stage, as tick thresholds). "Royal Rescue" summons the
-        // Guardienne.
+        // Guardienne. 2026-08-04 balance update (final August changes, supercell.com): Hit Speed Conservation 0 -> 0.3 s
+        // (3 ticks), modelled as a ramp grace period after the last landed hit.
         add(troop(120, "Little Prince", 3.0f, Archetype::RangedSquad, 698, 0.5f, 5.5f, 104, 12, 'p')
             .withTargetsAir()
             .withHitSpeedRamp(36, 60, 8.0f / 12.0f, 4.0f / 12.0f)
+            .withRampGracePeriod(3)
             .withChampionAbility(3.0f, 300, std::make_shared<SpawnOnAbility>(guardienneStats())));
 
         // Goblinstein: the Monster (front, building-only tank, carries the
@@ -1130,9 +1157,10 @@ private:
         // offset, a brief stun on hit). "Lightning Link": see
         // GoblinsteinLightningLinkEffect.
         add(troop(121, "Goblinstein", 5.0f, Archetype::MeleeBuildingTargeter, 2385, 0.5f, 1.2f, 128, 15, 'G')
-            .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 107, 5, 40))
+            .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 94, 5, 40)) // 2026-08-04: 214 -> 188 damage per second = 94 per 5-tick pulse (docs/LIVE_SYNC.md)
             .withSecondaryUnit(
-                troop(-40, "Goblinstein", 0.0f, Archetype::RangedSquad, 721, 0.5f, 5.5f, 92, 18, 'D')
+                // 2026-08-04 balance update: Doctor damage 92 -> 135 (docs/LIVE_SYNC.md).
+                troop(-40, "Goblinstein", 0.0f, Archetype::RangedSquad, 721, 0.5f, 5.5f, 135, 18, 'D')
                     .withOffsets({ {0.0f, 3.0f} })
                     .withTargetsAir()
                     .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f))));
@@ -1216,13 +1244,14 @@ private:
                 .withSplitTargets(3).withSplitTargetsFullDamage(),
             2, 1);
 
-        // Archers: +1 tile range (6.0). "Power Shot": +50% damage at 4-6 tiles.
+        // Archers: +1 tile range (6.0). "Power Shot": +25% damage at 4-6 tiles
+        // (112 -> 140; was +50%, 168: 2026-08-04 balance update, docs/LIVE_SYNC.md).
         addEvolution(128,
             troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 5.0f, 112, 9, 'A')
                 .withOffsets({ {0.0f, 0.0f}, {1.0f, 0.0f} }).withTargetsAir(),
             troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 6.0f, 112, 9, 'A')
                 .withOffsets({ {0.0f, 0.0f}, {1.0f, 0.0f} }).withTargetsAir()
-                .withRangeBandBonus(4.0f, 6.0f, 1.5f),
+                .withRangeBandBonus(4.0f, 6.0f, 1.25f),
             2, 1);
 
         // Cannon ("Deploy Barrage"): a one-time burst on deploy (2.5 radius).
@@ -1382,7 +1411,8 @@ private:
             2, 1);
 
         // Witch: the real heal when a spawned Skeleton dies is approximated as
-        // healing on her own hits, capped at 124% hp (1040).
+        // healing on her own hits, capped at 1451 (2026-08-04 balance update:
+        // Max Hitpoints 1040 -> 1451; docs/LIVE_SYNC.md).
         // Witch splash 1 -> 1.5 tiles on both forms: 2025-01-07 balance update
         // (docs/LIVE_SYNC.md).
         addEvolution(142,
@@ -1392,7 +1422,7 @@ private:
             troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
                 .withTargetsAir().withSplash(1.5f)
                 .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats()))
-                .withHealOnHit(20, 1040),
+                .withHealOnHit(20, 1451),
             2, 1);
 
         // Royal Giant: every attack also splashes 2.5 tiles. The knockback is
@@ -1429,7 +1459,8 @@ private:
             troop(61, "Princess", 3.0f, Archetype::RangedSquad, 261, SPEED_MEDIUM, 9.0f, 168, 30, '9')
                 .withTargetsAir().withSplash(1.5f).withSightRange(9.5f)
                 .withDeployTime(12) // 2025-03-04: Deploy Time 1.0 s -> 1.2 s, as the base card
-                .withOnHit(std::make_shared<FreezeOnHit>(70, 0.7f)),
+                // 2026-08-04 balance update (final August changes, supercell.com): slow duration 7 s -> 5.5 s.
+                .withOnHit(std::make_shared<FreezeOnHit>(55, 0.7f)),
             2, 1);
 
         // Hunter ("Netting Trap"): nets the nearest enemy for 3 s every 8 s (3
@@ -1446,14 +1477,15 @@ private:
         // Valkyrie ("Whirlwind Axe"): identical stats; every landed hit pulls
         // enemy troops within 5.0 tiles toward her (official December 2025
         // notes, Tornado Radius 5.5 -> 5), plus low damage to everyone
-        // in that radius, Crown Towers included. Pull distance and damage are
-        // not sourced; the lingering zone is not modelled.
+        // in that radius, Crown Towers included. Tornado damage 42 (2026-08-04
+        // balance update, was 84; docs/LIVE_SYNC.md). Pull distance is not
+        // sourced; the lingering zone is not modelled.
         addEvolution(147,
             troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V')
                 .withSplash(1.5f),
             troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V')
                 .withSplash(1.5f)
-                .withOnHitPull(5.0f, 2.0f, 50),
+                .withOnHitPull(5.0f, 2.0f, 42),
             2, 1);
 
         // P.E.K.K.A. ("Butter-Heal"): the real heal on each kill, up to +66% hp
@@ -1505,15 +1537,16 @@ private:
                 .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f)),
             2, 1);
 
-        // Mortar: attack period 5 s -> 4 s. "Green Siege": a Goblin spawns with
+        // Mortar: attack period 4.7 s for both forms (2026-08-04 balance update (final August changes, supercell.com): base 5 s -> 4.7 s,
+        // evolved 4 s -> 4.7 s). "Green Siege": a Goblin spawns with
         // every landed shot (onHitSpawnEffect). The launched Goblins deploy in
         // 0.5 s (5 ticks; official 2026-06-01 balance update, "Deploy Time:
         // 0.2s -> 0.5s"). A dedicated copy: Goblin Drill's Goblins share
         // goblinDrillGoblinStats() and are not touched by that post.
         addEvolution(152,
-            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 50)
+            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
                 .withMinRange(3.5f).withSightRange(11.5f),
-            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 40)
+            building(93, "Mortar", 4.0f, 1369, 'R', 11.5f, 266, 47)
                 .withMinRange(3.5f).withSightRange(11.5f)
                 .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats().withDeployTime(5))),
             2, 1);
@@ -1544,16 +1577,16 @@ private:
 
         // Barbarians: the base 716 hp, the Evolution's hp bonus cut to 0% by
         // the official 4 Aug 2026 notes (was +10%, 760). "Blade Rage": +35%
-        // attack speed for 3 s, refreshed on each attack; the official 24 Oct
-        // 2025 notes cut the boost to +30% (0.77 ~= 1/1.30; docs/LIVE_SYNC.md).
-        // The 4 Aug 2026 notes lengthened it to 5 s, which is not applied here. The
+        // attack speed for 5 s (3 s until the 4 Aug 2026 notes), refreshed on
+        // each attack; the official 24 Oct 2025 notes cut the boost to +30%
+        // (0.77 ~= 1/1.30; docs/LIVE_SYNC.md). The
         // movement-speed boost is not modelled.
         addEvolution(155,
             troop(8, "Barbarians", 5.0f, Archetype::MeleeSquad, 716, SPEED_MEDIUM, 0.7f, 192, 14, 'B')
                 .withOffsets({ {0.0f, 0.0f}, {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }),
             troop(8, "Barbarians", 5.0f, Archetype::MeleeSquad, 716, SPEED_MEDIUM, 0.7f, 192, 14, 'B')
                 .withOffsets({ {0.0f, 0.0f}, {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} })
-                .withSelfHasteOnHit(30, 0.77f),
+                .withSelfHasteOnHit(50, 0.77f),
             2, 1);
 
         // Lumberjack: the ghost (lumberjackGhostStats) composed with the Rage
@@ -1583,8 +1616,8 @@ private:
                 .withRangeBandBonus(0.0f, 2.5f, 1.3414f),
             1, 1);
 
-        // Giant Snowball ("Snow Roll"): trades the base push for a 4.5-tile
-        // pull, gathering enemies in its path. "Untargetable while trapped" is
+        // Giant Snowball ("Snow Roll"): trades the base push for a 4.0-tile
+        // pull (4.5 until the 2026-08-04 balance update, docs/LIVE_SYNC.md), gathering enemies in its path. "Untargetable while trapped" is
         // not modelled.
         addEvolution(158,
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
@@ -1595,7 +1628,7 @@ private:
                 // 2026-05-04 balance update: slow 4 s -> 3 s (30 ticks) to
                 // match the base form (docs/LIVE_SYNC.md). Factor 0.7 unchanged.
                 .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.7f))
-                .withKnockback(-4.5f),
+                .withKnockback(-4.0f),
             2, 1);
 
         // Goblin Giant ("Sack-trick"): the real knife Goblins every 2.2 s below
@@ -1702,11 +1735,14 @@ private:
         // balance update, "Banner Duration: 7s -> 5s", docs/LIVE_SYNC.md): a fresh squad at the death
         // position. withPostDeathAbility, since there is no alive-path ability.
         // The new squad uses plain Goblins stats, so it cannot chain.
-        add(troop(172, "Hero Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
+        // 2026-08-04 balance update: Goblin damage 120 -> 125, and Banner
+        // Brigade respawns 2 Goblins instead of 3 (docs/LIVE_SYNC.md; the
+        // earlier 4 -> 3 change was 2026-02-23, still 4 here).
+        add(troop(172, "Hero Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} })
             .withPostDeathAbility(1.0f, 50, std::make_shared<PeriodicSpawnEffect>(
-                troop(-48, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 120, 11, 'g')
-                    .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }))));
+                troop(-48, "Goblins", 0.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g')
+                    .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} }))));
 
         // Hero Knight (base: id 0). "Triumphant Taunt" (2 elixir, 25 s
         // cooldown): a shield, and enemies within 6.5 tiles must attack him for
@@ -1745,7 +1781,8 @@ private:
         // docs/LIVE_SYNC.md), leaves a decoy, and gains a 7 s multi-shot window
         // (HeroMagicArcherTripleThreatEffect).
         // hp 531 as the base card (2024-10-08 balance update, docs/LIVE_SYNC.md).
-        add(troop(171, "Hero Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 143, 11, '#')
+        // 2026-08-04 balance update (final August changes, supercell.com): damage 143 -> 135 (follows the base form).
+        add(troop(171, "Hero Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 135, 11, '#')
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f)
             .withHeroAbility(2.0f, 250, std::make_shared<HeroMagicArcherTripleThreatEffect>(
@@ -1756,11 +1793,12 @@ private:
         // blasts in a 4-tile radius, the third a 1.5 s freeze, with reduced
         // Crown Tower damage (HeroIceGolemSnowstormEffect). Per-blast damage
         // and slow are not sourced. 2026-04-06 balance update: Snowstorm's
-        // knockback removed (ctor arg 3 = 0, docs/LIVE_SYNC.md).
+        // knockback removed (ctor arg 3 = 0, docs/LIVE_SYNC.md). 2026-08-04
+        // balance update: damage per blast 38 -> 69 (the engine's 80 was unsourced).
         add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1315, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
                 2.0f, 84, std::make_shared<FreezeOnHit>(30, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%
-            .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 80, 0.0f, 20, 0.6f, 15)));
+            .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 69, 0.0f, 20, 0.6f, 15)));
 
         // Hero Barbarian Barrel (base: id 101). The ability lives on the
         // spawned Barbarian (heroBarbarianBarrelBarbarianStats), since the
