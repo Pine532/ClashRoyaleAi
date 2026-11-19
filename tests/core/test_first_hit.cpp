@@ -211,9 +211,10 @@ TEST_CASE("firstHitTicks is copied from CardStats; registry cards read 0", "[fir
         REQUIRE(troop->firstHitTicks == 9);
     }
     {
-        // Control: a registry Knight, which this change gives no value.
+        // Control: Lava Hound, which has no sourced first hit (its hit speed
+        // changed after the 2023 RoyaleAPI data; docs/LIVE_SYNC.md).
         Board board;
-        CardRegistry::getInstance().getCard(0)->spawnEntity(5.0f, 5.0f, 0, board);
+        CardRegistry::getInstance().getCard(91)->spawnEntity(5.0f, 5.0f, 0, board);
         board.commitPendingEntities();
         auto troop = std::dynamic_pointer_cast<CombatEntity>(board.getEntities().back());
         REQUIRE(troop);
@@ -269,4 +270,58 @@ TEST_CASE("Goblin Barrel's Goblins wind up 0.3 s (2026-10-06)", "[first_hit][fir
     }
     REQUIRE(goblin != nullptr);
     CHECK(goblin->firstHitTicks == 3);
+}
+
+// ---- Card values: RoyaleAPI cr-api-data (2023-10), hit_speed - load_time -----
+// Only where load_time > 0, the result is >= 0, load_first_hit is false, and the
+// card's hit speed is still the 2023 one; every other unit is listed as
+// unresolved in docs/LIVE_SYNC.md.
+
+TEST_CASE("RoyaleAPI-derived first-hit values reach the spawned units", "[first_hit][first_hit_values][derived]") {
+    struct Row { int id; bool evolved; int ticks; };
+    const std::vector<Row> rows = {
+        {0, false, 5}, {1, false, 5}, {2, false, 5}, {5, false, 5}, {9, false, 2},
+        {10, false, 1}, {13, false, 5}, {14, false, 5}, {15, false, 6}, {17, false, 5},
+        {19, false, 10}, {21, false, 4}, {22, false, 5}, {26, false, 4}, {34, false, 5},
+        {35, false, 6}, {40, false, 10}, {43, false, 4}, {44, false, 3}, {45, false, 2},
+        {47, false, 6}, {48, false, 5}, {50, false, 4}, {53, false, 1}, {58, false, 8},
+        {59, false, 5}, {64, false, 7}, {68, false, 3}, {71, false, 7}, {77, false, 5},
+        {82, false, 4}, {83, false, 2}, {88, false, 8}, {90, false, 8}, {113, false, 4},
+        {116, false, 2}, {117, false, 3}, {118, false, 3}, {119, false, 2}, {123, false, 2},
+        {123, true, 2}, {127, false, 2}, {127, true, 2}, {128, false, 5}, {128, true, 5},
+        {130, false, 7}, {130, true, 7}, {135, false, 5}, {135, true, 5}, {136, false, 6},
+        {136, true, 6}, {137, false, 3}, {137, true, 3}, {142, false, 7}, {142, true, 7},
+        {147, false, 1}, {147, true, 1}, {148, false, 5}, {148, true, 5}, {150, false, 5},
+        {150, true, 5}, {154, false, 4}, {154, true, 4}, {156, false, 4}, {156, true, 4},
+        {159, false, 8}, {159, true, 8}, {160, false, 5}, {160, true, 5}, {162, false, 4},
+        {162, true, 4}, {166, false, 5}, {169, false, 5}, {170, false, 5}, {173, false, 4},
+        {175, false, 10},
+    };
+    for (const auto& r : rows) {
+        INFO("card " << r.id << (r.evolved ? " (evolved)" : ""));
+        Board board;
+        auto body = live_sync::mainBody(board, r.id, r.evolved);
+        REQUIRE(body != nullptr);
+        CHECK(body->firstHitTicks == r.ticks);
+    }
+}
+
+TEST_CASE("A Knight's first swing lands 0.5 s after he engages, then every 1.2 s", "[first_hit][first_hit_values][derived]") {
+    Board board;
+    auto target = std::make_shared<DummyEntity>(900, 5.0f, 6.0f, 100000, 1);
+    spawn(board, target);
+    auto knight = live_sync::mainBody(board, 0);
+    REQUIRE(knight != nullptr);
+    knight->position = Vector2D{ 5.0f, 5.0f };
+    advancePastDeploy(knight, board);
+    std::vector<int> hitTicks;
+    int last = target->hp;
+    for (int t = 0; t < 40; ++t) {
+        knight->update(board);
+        if (target->hp != last) { hitTicks.push_back(t); last = target->hp; }
+    }
+    REQUIRE(hitTicks.size() >= 3);
+    CHECK(hitTicks[0] == 5);                  // armed on tick 0, lands 5 ticks later
+    CHECK(hitTicks[1] - hitTicks[0] == 12);   // continuous attacks keep the 1.2 s hit speed
+    CHECK(hitTicks[2] - hitTicks[1] == 12);
 }

@@ -22,6 +22,15 @@ inline void advancePastDeploy(const std::shared_ptr<Entity>& entity, Board& boar
     for (int i = 0; i < DEPLOY_TIME_TICKS; ++i) entity->update(board);
 }
 
+// Runs a unit through its first-hit wind-up (CardStats::firstHitTicks) against
+// a target already in range: after this, the next update() lands the first
+// attack, as it did before units had a wind-up. Call after advancePastDeploy.
+inline void advanceThroughWindup(const std::shared_ptr<Entity>& entity, Board& board) {
+    auto combat = std::dynamic_pointer_cast<CombatEntity>(entity);
+    if (!combat) return;
+    for (int i = 0; i < combat->firstHitTicks; ++i) entity->update(board);
+}
+
 // A bare Entity with a no-op update(), for Entity's own state; a valid target,
 // since targeting is Entity-typed. Use StationaryCombatant only where freeze or
 // on-hit effects are needed.

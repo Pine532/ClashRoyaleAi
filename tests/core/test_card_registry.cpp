@@ -689,6 +689,7 @@ TEST_CASE("Ice Wizard is genuinely ranged: freeze lands with the arrow, not when
     REQUIRE(std::dynamic_pointer_cast<RangedTroop>(iceWizardEntity) != nullptr);
 
     advancePastDeploy(iceWizardEntity, board);
+    advanceThroughWindup(iceWizardEntity, board);
     iceWizardEntity->update(board); // fires: spawns a projectile, does not freeze yet
     board.commitPendingEntities();
     REQUIRE(enemy->freezeTicks == 0);
@@ -717,6 +718,7 @@ TEST_CASE("Ice Golem's slow is on its death explosion, never on its attack",
 
     auto golem = board.getEntities().back();
     advancePastDeploy(golem, board);
+    advanceThroughWindup(golem, board);
     const int hpBeforeAttack = enemy->hp;
     golem->update(board);
 
@@ -753,6 +755,7 @@ TEST_CASE("Electro Wizard stuns on hit via the on-hit decorator (freeze with slo
     // Direct damage (an instant zap): damage and stun land the same tick. One
     // enemy in range, so it takes the full damage, not the split half.
     advancePastDeploy(electroWizardEntity, board);
+    advanceThroughWindup(electroWizardEntity, board);
     electroWizardEntity->update(board);
 
     REQUIRE(enemy->hp == 884); // 1000 - 116
@@ -779,6 +782,7 @@ TEST_CASE("Electro Wizard splits its attack across the 2 closest enemies at half
     REQUIRE(electroWizardEntity != nullptr);
 
     advancePastDeploy(electroWizardEntity, board);
+    advanceThroughWindup(electroWizardEntity, board);
     electroWizardEntity->update(board);
 
     REQUIRE(near->hp == 942);  // 1000 - 116/2
@@ -1079,6 +1083,7 @@ TEST_CASE("Valkyrie's splash hits a second enemy standing near her primary targe
     board.commitPendingEntities();
 
     advancePastDeploy(board.getEntities().back(), board);
+    advanceThroughWindup(board.getEntities().back(), board);
     board.getEntities().back()->update(board);
 
     REQUIRE(primary->hp == 734);  // 1000 - 266

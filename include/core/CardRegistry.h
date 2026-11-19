@@ -153,7 +153,8 @@ private:
     // Golemite: spawned only by a Golem's death, never registered.
     static CardStats golemiteStats() {
         // SPEED_SLOW, the tier of the Golem it splits from.
-        return troop(-1, "Golemite", 0.0f, Archetype::MeleeBuildingTargeter, 1039, SPEED_SLOW, 0.25f, 84, 25, 'q')
+        // First hit 1.0 s: RoyaleAPI cr-api-data, hit_speed 2500 - load_time 1500 ms (docs/LIVE_SYNC.md).
+        return troop(-1, "Golemite", 0.0f, Archetype::MeleeBuildingTargeter, 1039, SPEED_SLOW, 0.25f, 84, 25, 'q').withFirstHit(10)
             .withOffsets({ {-0.3f, 0.0f}, {0.3f, 0.0f} }).withSightRange(7.0f);
     }
 
@@ -228,7 +229,8 @@ private:
     // own. The real card leaves a vulnerable egg for ~4 s; this revives
     // immediately at full hp.
     static CardStats phoenixReviveStats() {
-        return troop(-19, "Phoenix", 0.0f, Archetype::MeleeSquad, 1052, SPEED_MEDIUM, 1.0f, 217, 10, '7')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1000 - load_time 500 ms (docs/LIVE_SYNC.md).
+        return troop(-19, "Phoenix", 0.0f, Archetype::MeleeSquad, 1052, SPEED_MEDIUM, 1.0f, 217, 10, '7').withFirstHit(5)
             .withFlying().withTargetsAir();
     }
     // Spell-spawn children (Goblin Barrel, Royal Delivery, Graveyard).
@@ -241,7 +243,8 @@ private:
         return troop(-21, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k');
     }
     static CardStats royalDeliveryRecruitStats() {
-        return troop(-22, "Royal Recruits", 0.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 800 ms (docs/LIVE_SYNC.md).
+        return troop(-22, "Royal Recruits", 0.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@').withFirstHit(5)
             .withShield(240); // Royal Recruits' shield
     }
     static CardStats barbarianBarrelBarbarianStats() {
@@ -276,7 +279,8 @@ private:
     // 17. withIgnoresRiver matches the Ram, or the crossbow is left on the near
     // bank.
     static CardStats ramRiderCrossbowStats() {
-        return troop(-25, "Ram Rider", 0.0f, Archetype::RangedSquad, 1766, 0.5f, 5.0f, 104, 11, '"')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
+        return troop(-25, "Ram Rider", 0.0f, Archetype::RangedSquad, 1766, 0.5f, 5.0f, 104, 11, '"').withFirstHit(4)
             .withTargetsAir()
             .withIgnoresRiver();
     }
@@ -291,7 +295,8 @@ private:
     static CardStats lavaHoundPupStats() {
         // 2025-02-04 balance update: Lava Pups damage 90 -> 84 (docs/LIVE_SYNC.md).
         // 215 hp: official December 2025 balance notes, 217 -> 215 (level 11).
-        return troop(-29, "Lava Pups", 0.0f, Archetype::MeleeSquad, 215, 0.5f, 1.6f, 84, 17, 'y')
+        // First hit 1.0 s: RoyaleAPI cr-api-data, hit_speed 1700 - load_time 700 ms (docs/LIVE_SYNC.md).
+        return troop(-29, "Lava Pups", 0.0f, Archetype::MeleeSquad, 215, 0.5f, 1.6f, 84, 17, 'y').withFirstHit(10)
             .withOffsets({ {-0.8f, 0.0f}, {0.8f, 0.0f}, {-0.5f, 0.7f}, {0.5f, 0.7f}, {-0.5f, -0.7f}, {0.5f, -0.7f} })
             .withFlying().withTargetsAir();
     }
@@ -301,18 +306,21 @@ private:
     }
     static CardStats goblinCageBrawlerStats() {
         // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): hitpoints 1080 -> 1121.
-        return troop(-31, "Goblin Brawler", 0.0f, Archetype::MeleeSquad, 1121, 0.7f, 0.8f, 337, 11, 'o');
+        // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 900 ms (docs/LIVE_SYNC.md).
+        return troop(-31, "Goblin Brawler", 0.0f, Archetype::MeleeSquad, 1121, 0.7f, 0.8f, 337, 11, 'o').withFirstHit(2);
     }
     // Elixir Golem's split chain: Golem -> 2 Golemites -> 2 Blobs each. Each
     // tier spawns the next and grants the OPPONENT elixir: 1.0 from the Golem,
     // 0.5 from each Golemite and each Blob, 4.0 in total. The Blob is the base
     // case.
     static CardStats elixirBlobStats() {
-        return troop(-33, "Elixir Blob", 0.0f, Archetype::MeleeBuildingTargeter, 360, 0.7f, 0.5f, 64, 11, 'e')
+        // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 300 ms (docs/LIVE_SYNC.md).
+        return troop(-33, "Elixir Blob", 0.0f, Archetype::MeleeBuildingTargeter, 360, 0.7f, 0.5f, 64, 11, 'e').withFirstHit(8)
             .withDeathEffect(std::make_shared<EnemyElixirGrantOnDeath>(0.5f)).withSightRange(7.5f);
     }
     static CardStats elixirGolemiteStats() {
-        return troop(-32, "Elixir Golemite", 0.0f, Archetype::MeleeBuildingTargeter, 762, 0.5f, 1.0f, 128, 11, 'e')
+        // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 300 ms (docs/LIVE_SYNC.md).
+        return troop(-32, "Elixir Golemite", 0.0f, Archetype::MeleeBuildingTargeter, 762, 0.5f, 1.0f, 128, 11, 'e').withFirstHit(8)
             .withDeathEffect(std::make_shared<CompositeDeathEffect>(
                 std::vector<std::shared_ptr<IDeathEffect>>{
                     std::make_shared<SpawnOnDeath>(
@@ -323,7 +331,8 @@ private:
     // Mother Witch's Cursed Hog, spawned for the opposite team via
     // SpawnOnDeathForEnemyTeam (see CursedHogOnHit).
     static CardStats cursedHogStats() {
-        return troop(-34, "Cursed Hog", 0.0f, Archetype::MeleeBuildingTargeter, 629, 1.0f, 0.75f, 53, 12, 'h');
+        // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 950 ms (docs/LIVE_SYNC.md).
+        return troop(-34, "Cursed Hog", 0.0f, Archetype::MeleeBuildingTargeter, 629, 1.0f, 0.75f, 53, 12, 'h').withFirstHit(3);
     }
     // The single Barbarian released when the Hut dies; the periodic spawn's
     // stats.
@@ -491,41 +500,48 @@ private:
         // speed, range, count). Speeds are the SPEED_* tiers (CardStats.h).
 
         // === Melee troops ===
-        add(troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K'));
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 700 ms (docs/LIVE_SYNC.md).
+        add(troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K').withFirstHit(5));
 
         // 2026-08-04 balance update: Goblin damage 120 -> 125 (docs/LIVE_SYNC.md).
         // First hit 0.6 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/april-balance-changes/).
         add(troop(4, "Goblins", 2.0f, Archetype::MeleeSquad, 202, SPEED_VERY_FAST, 0.5f, 125, 11, 'g').withFirstHit(6)
             .withOffsets({ {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }));
 
-        add(troop(5, "Mini PEKKA", 4.0f, Archetype::MeleeSquad, 1390, SPEED_FAST, 0.8f, 755, 16, 'M'));
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1600 - load_time 1100 ms (docs/LIVE_SYNC.md).
+        add(troop(5, "Mini PEKKA", 4.0f, Archetype::MeleeSquad, 1390, SPEED_FAST, 0.8f, 755, 16, 'M').withFirstHit(5));
 
         add(troop(8, "Barbarians", 5.0f, Archetype::MeleeSquad, 716, SPEED_MEDIUM, 0.7f, 192, 14, 'B')
             .withOffsets({ {0.0f, 0.0f}, {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} }));
 
-        add(troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V')
+        // First hit 0.1 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1400 ms (docs/LIVE_SYNC.md).
+        add(troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V').withFirstHit(1)
             .withSplash(1.5f)); // 360-degree swing
 
         add(troop(12, "Skeleton Army", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 's')
             .withOffsets(skeletonArmyOffsets()));
 
-        add(troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E').withSightRange(5.0f));
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1300 ms (docs/LIVE_SYNC.md).
+        add(troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E').withFirstHit(5).withSightRange(5.0f));
 
         // Prince jumps the river (withIgnoresRiver). The charge distance is
         // 2.5 tiles (official 24 Oct 2025 balance post, 2 -> 2.5; docs/LIVE_SYNC.md);
         // the damage is not sourced; the charge speed is (2x, the game files'
         // charge_speed_multiplier 200; UPSTREAM_REQUESTS.md item 35).
-        add(troop(14, "Prince", 5.0f, Archetype::MeleeSquad, 1920, SPEED_MEDIUM, 1.6f, 391, 14, 'p')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1400 - load_time 900 ms (docs/LIVE_SYNC.md).
+        add(troop(14, "Prince", 5.0f, Archetype::MeleeSquad, 1920, SPEED_MEDIUM, 1.6f, 391, 14, 'p').withFirstHit(5)
             .withCharge(2.5f, 2.0f).withChargeSpeed(2.0f)
             .withIgnoresRiver());
 
-        add(troop(17, "Elite Barbarians", 6.0f, Archetype::MeleeSquad, 1341, SPEED_FAST, 1.2f, 384, 14, 'e')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1400 - load_time 900 ms (docs/LIVE_SYNC.md).
+        add(troop(17, "Elite Barbarians", 6.0f, Archetype::MeleeSquad, 1341, SPEED_FAST, 1.2f, 384, 14, 'e').withFirstHit(5)
             .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} }));
 
         // The death-potion radius and duration are not sourced. The Rage boost
         // is 30% (official 24 Oct 2025 balance post, 35% -> 30%; docs/LIVE_SYNC.md),
         // so the damage multiplier is 1.30 (the previous 1.75 matched no source).
-        add(troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 800 - load_time 400 ms (docs/LIVE_SYNC.md).
+        add(troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l').withFirstHit(4)
             .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55)));
 
         add(troop(24, "Skeletons", 1.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k')
@@ -549,7 +565,8 @@ private:
         // (supercell.com march-balance-changes; the earlier 118 was unsourced).
         // The deploy zap keeps its own 118: no source states a deploy-zap
         // damage change.
-        add(troop(35, "Electro Wizard", 4.0f, Archetype::MeleeSquad, 714, SPEED_FAST, 5.0f, 116, 18, 'z')
+        // First hit 0.6 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1200 ms (docs/LIVE_SYNC.md).
+        add(troop(35, "Electro Wizard", 4.0f, Archetype::MeleeSquad, 714, SPEED_FAST, 5.0f, 116, 18, 'z').withFirstHit(6)
             .withTargetsAir()
             .withSplitTargets(2)
             .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f))
@@ -566,13 +583,15 @@ private:
                            {-0.6f, 0.3f}, {0.0f, 0.3f}, {0.6f, 0.3f} })
             .withFlying().withTargetsAir());
 
-        add(troop(43, "Mega Minion", 3.0f, Archetype::MeleeSquad, 837, SPEED_MEDIUM, 1.6f, 312, 15, 'F')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1100 ms (docs/LIVE_SYNC.md).
+        add(troop(43, "Mega Minion", 3.0f, Archetype::MeleeSquad, 837, SPEED_MEDIUM, 1.6f, 312, 15, 'F').withFirstHit(4)
             .withFlying().withTargetsAir());
 
         // === Ranged troops ===
         // Each needs its own confirmed Target field before .withTargetsAir();
         // "ranged" does not imply it.
-        add(troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 5.0f, 112, 9, 'A')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 900 - load_time 400 ms (docs/LIVE_SYNC.md).
+        add(troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 5.0f, 112, 9, 'A').withFirstHit(5)
             .withOffsets({ {0.0f, 0.0f}, {1.0f, 0.0f} })
             .withTargetsAir());
 
@@ -581,7 +600,8 @@ private:
             .withTargetsAir().withSightRange(6.0f));
         // Bomber is ground-only; so are Bowler, Sparky and Cannon Cart.
         // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): damage 225 -> 212.
-        add(troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b'));
+        // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1600 ms (docs/LIVE_SYNC.md).
+        add(troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b').withFirstHit(2));
         // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
         // 2026-09-08 balance update: damage 281 -> 304 (base, Evolution and Hero; docs/LIVE_SYNC.md).
         // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/).
@@ -594,7 +614,8 @@ private:
         // 7.5 -> 7 tile projectile range is from the 2026-08-04 balance update
         // (docs/LIVE_SYNC.md).
         // Knockback is not modelled on the troop attack path.
-        add(troop(22, "Bowler", 5.0f, Archetype::RangedSquad, 2081, SPEED_SLOW, 4.0f, 289, 25, 'w')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 2500 - load_time 2000 ms (docs/LIVE_SYNC.md).
+        add(troop(22, "Bowler", 5.0f, Archetype::RangedSquad, 2081, SPEED_SLOW, 4.0f, 289, 25, 'w').withFirstHit(5)
             .withSplash(1.8f).withLineSplash(11.0f).withSightRange(4.0f));
 
         // First hit 0.5 s: official balance notes (https://supercell.com/en/games/clashroyale/blog/release-notes/august-balance-changes-2/).
@@ -604,7 +625,8 @@ private:
 
         // Ice Wizard fires a projectile; the slow lands on arrival.
         // 2024-08-06 balance update: attack splash radius 1 -> 1.5 tiles (Supercell august-balance-changes; docs/LIVE_SYNC.md).
-        add(troop(34, "Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1700 - load_time 1200 ms (docs/LIVE_SYNC.md).
+        add(troop(34, "Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i').withFirstHit(5)
             .withTargetsAir().withSplash(1.5f)
             // 2025-10-06 balance update: slowdown 35% -> 30%, so speed factor 0.70
             // (docs/LIVE_SYNC.md).
@@ -617,19 +639,23 @@ private:
             .withTargetsAir()
             .withBoomerang(15));
 
-        add(troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y')
+        // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1200 ms (docs/LIVE_SYNC.md).
+        add(troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y').withFirstHit(3)
             .withFlying().withTargetsAir()
             .withSplash(1.5f));
 
         // === Building targeters ===
-        add(troop(2, "Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G').withSightRange(7.5f));
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1000 ms (docs/LIVE_SYNC.md).
+        add(troop(2, "Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G').withFirstHit(5).withSightRange(7.5f));
 
-        add(troop(15, "Hog Rider", 4.0f, Archetype::MeleeBuildingTargeter, 1697, SPEED_VERY_FAST, 0.8f, 317, 16, 'H')
+        // First hit 0.6 s: RoyaleAPI cr-api-data, hit_speed 1600 - load_time 1000 ms (docs/LIVE_SYNC.md).
+        add(troop(15, "Hog Rider", 4.0f, Archetype::MeleeBuildingTargeter, 1697, SPEED_VERY_FAST, 0.8f, 317, 16, 'H').withFirstHit(6)
             .withIgnoresRiver().withSightRange(9.5f));
 
         // Golem splits into two Golemites and deals a death explosion: two
         // death effects composed, since deathEffect is a single slot.
-        add(troop(19, "Golem", 8.0f, Archetype::MeleeBuildingTargeter, 5120, SPEED_SLOW, 0.75f, 312, 25, 'L')
+        // First hit 1.0 s: RoyaleAPI cr-api-data, hit_speed 2500 - load_time 1500 ms (docs/LIVE_SYNC.md).
+        add(troop(19, "Golem", 8.0f, Archetype::MeleeBuildingTargeter, 5120, SPEED_SLOW, 0.75f, 312, 25, 'L').withFirstHit(10)
             .withDeathEffect(std::make_shared<CompositeDeathEffect>(
                 std::vector<std::shared_ptr<IDeathEffect>>{
                     std::make_shared<SpawnOnDeath>(golemiteStats()),
@@ -640,14 +666,16 @@ private:
         // there is no on-attack slow. The slow is 30% (factor 0.70), 2025-10-06
         // balance update; 2026-09-08 balance update: hitpoints 1315 -> 1228 and
         // slow duration 2.5 s (25 ticks) (docs/LIVE_SYNC.md).
-        add(troop(40, "Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c')
+        // First hit 1.0 s: RoyaleAPI cr-api-data, hit_speed 2500 - load_time 1500 ms (docs/LIVE_SYNC.md).
+        add(troop(40, "Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c').withFirstHit(10)
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
                 2.0f, 84, std::make_shared<FreezeOnHit>(25, 0.70f))).withSightRange(7.0f));
 
         // Balloon: flying and building-only, point-blank range; building
         // targeters never consider air, so no withTargetsAir. The real death
         // bomb drops only if shot down before bombing; here it always does.
-        add(troop(45, "Balloon", 5.0f, Archetype::MeleeBuildingTargeter, 1676, SPEED_MEDIUM, 0.1f, 640, 20, 'a')
+        // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 2000 - load_time 1800 ms (docs/LIVE_SYNC.md).
+        add(troop(45, "Balloon", 5.0f, Archetype::MeleeBuildingTargeter, 1676, SPEED_MEDIUM, 0.1f, 640, 20, 'a').withFirstHit(2)
             .withFlying()
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(1.5f, 240)).withSightRange(7.7f));
 
@@ -656,7 +684,8 @@ private:
 
         // === Defensive structures ===
         add(building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10));
-        add(building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withTargetsAir());
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
+        add(building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withFirstHit(4).withTargetsAir());
         // withSightRange(6.0f) is not redundant with the 5.5 default: with
         // attackRange 6.0, the default would let it attack what it cannot see.
         // Pinned by test_sight_range.cpp.
@@ -741,7 +770,8 @@ private:
             .withIgnoresRiver());
         // Royal Ghost jumps the river.
         // 2026-10-06 balance update: 1152 hp, 263 damage (docs/LIVE_SYNC.md).
-        add(troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q')
+        // First hit 0.6 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1200 ms (docs/LIVE_SYNC.md).
+        add(troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q').withFirstHit(6)
             .withInvisibility(20) // 2026-03-02 balance update: invisibility delay 1.8 s -> 2 s (docs/LIVE_SYNC.md); was 5 here, which contradicted the post's old 1.8 s
             .withIgnoresRiver());
         // Mega Knight: the deploy slam is the spawn-effect burst (radius 1.3,
@@ -750,7 +780,8 @@ private:
         // over the river; with no "mid-jump" state, he ignores the river
         // always, as Bandit does. Stats are an exact level-11 row (hp 3993,
         // area 268, spawn 429).
-        add(troop(48, "Mega Knight", 7.0f, Archetype::MeleeSquad, 3993, SPEED_MEDIUM, 1.2f, 268, 17, 'X')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1700 - load_time 1200 ms (docs/LIVE_SYNC.md).
+        add(troop(48, "Mega Knight", 7.0f, Archetype::MeleeSquad, 3993, SPEED_MEDIUM, 1.2f, 268, 17, 'X').withFirstHit(5)
             .withSplash(1.5f)
             .withSpawnEffect(1.3f, 430)
             .withJump(3.5f, 5.0f, 2.0f, 2.2f)
@@ -766,7 +797,8 @@ private:
             .withIgnoresRiver());
         // Bandit crosses the river only by dashing; with no separate dash
         // state, she always ignores it.
-        add(troop(50, "Bandit", 3.0f, Archetype::MeleeSquad, 906, SPEED_FAST, 1.0f, 194, 10, 'u')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1000 - load_time 600 ms (docs/LIVE_SYNC.md).
+        add(troop(50, "Bandit", 3.0f, Archetype::MeleeSquad, 906, SPEED_FAST, 1.0f, 194, 10, 'u').withFirstHit(4)
             .withCharge(3.0f, 2.0f)
             .withChargeInvulnerability() // invulnerable while charging
             .withSightRange(6.0f)
@@ -777,7 +809,8 @@ private:
         add(troop(51, "Berserker", 2.0f, Archetype::MeleeSquad, 896, SPEED_FAST, 0.8f, 102, 6, 'v'));
         add(troop(52, "Miner", 3.0f, Archetype::MeleeSquad, 1210, SPEED_FAST, 1.0f, 194, 13, '0')
             .withDeployAnywhere());
-        add(troop(53, "Fisherman", 3.0f, Archetype::MeleeSquad, 870, SPEED_MEDIUM, 1.0f, 194, 13, '1')
+        // First hit 0.1 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 1200 ms (docs/LIVE_SYNC.md).
+        add(troop(53, "Fisherman", 3.0f, Archetype::MeleeSquad, 870, SPEED_MEDIUM, 1.0f, 194, 13, '1').withFirstHit(1)
             .withHook(6.5f).withSightRange(7.5f));
         // Parry every 3.5 s. The real parry reflects 200% damage and only
         // against ground melee; neither is modelled (takeDamage carries no
@@ -807,11 +840,13 @@ private:
             .withOnHit(std::make_shared<FreezeOnHit>(5, 0.0f)));
 
         // Night Witch: releases 3 Bats on death and spawns Bats periodically.
-        add(troop(58, "Night Witch", 4.0f, Archetype::MeleeSquad, 906, SPEED_MEDIUM, 1.0f, 314, 13, '6')
+        // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 550 ms (docs/LIVE_SYNC.md).
+        add(troop(58, "Night Witch", 4.0f, Archetype::MeleeSquad, 906, SPEED_MEDIUM, 1.0f, 314, 13, '6').withFirstHit(8)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(nightWitchBatStats()))
             .withPeriodicEffect(50, std::make_shared<PeriodicSpawnEffect>(nightWitchPeriodicBatStats())));
         // Phoenix: one-time revive (phoenixReviveStats).
-        add(troop(59, "Phoenix", 4.0f, Archetype::MeleeSquad, 1052, SPEED_MEDIUM, 1.0f, 217, 10, '7')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1000 - load_time 500 ms (docs/LIVE_SYNC.md).
+        add(troop(59, "Phoenix", 4.0f, Archetype::MeleeSquad, 1052, SPEED_MEDIUM, 1.0f, 217, 10, '7').withFirstHit(5)
             .withFlying().withTargetsAir()
             .withDeathEffect(std::make_shared<SpawnOnDeath>(phoenixReviveStats())));
 
@@ -843,7 +878,8 @@ private:
         add(troop(63, "Magic Archer", 4.0f, Archetype::RangedSquad, 531, SPEED_MEDIUM, 7.0f, 135, 11, '#')
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f));
-        add(troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
+        // First hit 0.7 s: RoyaleAPI cr-api-data, hit_speed 3000 - load_time 2350 ms (docs/LIVE_SYNC.md).
+        add(troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$').withFirstHit(7)
             .withTargetsAir()
             .withSplash(1.5f)
             // 2025-08-06 balance update: sight range 8.5 -> 8 tiles (official post, docs/LIVE_SYNC.md).
@@ -860,7 +896,8 @@ private:
             // 2026-10-19 balance update: damage 171 -> 179 (docs/LIVE_SYNC.md).
             .withFlying().withTargetsAir().withSightRange(6.0f));
         // The curse spawns a Cursed Hog for Mother Witch (CursedHogOnHit).
-        add(troop(68, "Mother Witch", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 5.5f, 133, 10, ',')
+        // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1000 - load_time 700 ms (docs/LIVE_SYNC.md).
+        add(troop(68, "Mother Witch", 4.0f, Archetype::RangedSquad, 529, SPEED_MEDIUM, 5.5f, 133, 10, ',').withFirstHit(3)
             .withTargetsAir()
             .withOnHit(std::make_shared<CursedHogOnHit>(1.3f, 60, cursedHogStats())));
         // Cannon Cart: a single 1809 hp pool; at 50% it grounds itself for 15
@@ -878,7 +915,8 @@ private:
             .withTargetsAir()
             .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(furnaceFireSpiritStats())));
         // Witch splash 1 -> 1.5 tiles: 2025-01-07 balance update (docs/LIVE_SYNC.md).
-        add(troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
+        // First hit 0.7 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 400 ms (docs/LIVE_SYNC.md).
+        add(troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':').withFirstHit(7)
             .withTargetsAir().withSplash(1.5f)
             .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats())));
 
@@ -921,7 +959,8 @@ private:
         add(troop(76, "Guards", 3.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 1.0f, 117, 10, '?').withFirstHit(5)
             .withOffsets({ {0.0f, 0.0f}, {0.6f, 0.0f}, {-0.6f, 0.0f} })
             .withShield(256));
-        add(troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 800 ms (docs/LIVE_SYNC.md).
+        add(troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@').withFirstHit(5)
             .withOffsets({ {-2.5f, 0.0f}, {-1.5f, 0.0f}, {-0.5f, 0.0f}, {0.5f, 0.0f}, {1.5f, 0.0f}, {2.5f, 0.0f} })
             .withShield(240));
         add(troop(78, "Bats", 2.0f, Archetype::MeleeSquad, 81, SPEED_VERY_FAST, 1.0f, 81, 12, 't')
@@ -958,12 +997,14 @@ private:
             .withDeathEffect(std::make_shared<SpawnOnDeath>(battleRamBarbarianStats()))
             .withCharge(3.0f, 2.0f).withChargeSpeed(2.0f).withDieAfterFirstHit().withSightRange(6.5f));
         // Royal Hogs jump the river.
-        add(troop(82, "Royal Hogs", 5.0f, Archetype::MeleeBuildingTargeter, 837, SPEED_VERY_FAST, 1.0f, 74, 12, '_')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 800 ms (docs/LIVE_SYNC.md).
+        add(troop(82, "Royal Hogs", 5.0f, Archetype::MeleeBuildingTargeter, 837, SPEED_VERY_FAST, 1.0f, 74, 12, '_').withFirstHit(4)
             .withOffsets({ {-1.0f, -0.3f}, {-0.3f, 0.3f}, {0.3f, -0.3f}, {1.0f, 0.3f} })
             .withCharge(3.0f, 2.0f).withSightRange(9.5f)
             .withIgnoresRiver());
         // 2026-10-06 balance update: 302 damage per Wall Breaker (docs/LIVE_SYNC.md).
-        add(troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{')
+        // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 1000 ms (docs/LIVE_SYNC.md).
+        add(troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{').withFirstHit(2)
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
             .withSplash(1.5f)
             .withDieAfterFirstHit().withSightRange(7.0f));
@@ -985,7 +1026,8 @@ private:
             .withSecondaryUnit(ramRiderCrossbowStats()) // the rider's independently targeting crossbow (default 5.5 sight)
             .withSightRange(7.5f) // the ram itself
             .withIgnoresRiver());
-        add(troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`')
+        // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 700 ms (docs/LIVE_SYNC.md).
+        add(troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`').withFirstHit(8)
             .withSecondaryUnit(goblinGiantSpearGoblinsStats()).withSightRange(7.5f)); // carried Spear Goblins, independently targeting
         // Skeleton Barrel releases 2 Skeletons on death.
         add(troop(89, "Skeleton Barrel", 3.0f, Archetype::MeleeBuildingTargeter, 532, SPEED_FAST, 1.0f, 81, 10, ',')
@@ -994,7 +1036,8 @@ private:
         // The split chain: Golem -> 2 Golemites (each -> 2 Blobs), with elixir
         // to the opponent at each tier (see elixirGolemiteStats,
         // elixirBlobStats).
-        add(troop(90, "Elixir Golem", 3.0f, Archetype::MeleeBuildingTargeter, 1569, SPEED_SLOW, 1.0f, 253, 11, '(')
+        // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 300 ms (docs/LIVE_SYNC.md).
+        add(troop(90, "Elixir Golem", 3.0f, Archetype::MeleeBuildingTargeter, 1569, SPEED_SLOW, 1.0f, 253, 11, '(').withFirstHit(8)
             .withDeathEffect(std::make_shared<CompositeDeathEffect>(
                 std::vector<std::shared_ptr<IDeathEffect>>{
                     std::make_shared<SpawnOnDeath>(
@@ -1168,7 +1211,8 @@ private:
                     .withOffsets({ {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f} })));
         // Rascals: only the Boy's stats are sourced; the two Girls reuse Spear
         // Goblins' ranged stats.
-        add(troop(113, "Rascals", 5.0f, Archetype::MeleeSquad, 1832, SPEED_MEDIUM, 1.2f, 217, 15, 'X')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1100 ms (docs/LIVE_SYNC.md).
+        add(troop(113, "Rascals", 5.0f, Archetype::MeleeSquad, 1832, SPEED_MEDIUM, 1.2f, 217, 15, 'X').withFirstHit(4)
             .withSecondaryUnit(
                 troop(-28, "Rascals", 0.0f, Archetype::RangedSquad, 133, 0.5f, 5.0f, 81, 17, 'r')
                     .withOffsets({ {-0.5f, 0.0f}, {0.5f, 0.0f} })));
@@ -1197,14 +1241,16 @@ private:
         // 2026-10-06 balance update: damage 161 -> 168, dash range 5.5 -> 5
         // tiles (docs/LIVE_SYNC.md); the live range is measured to the target's
         // edge, the engine's to its centre.
-        add(troop(116, "Golden Knight", 4.0f, Archetype::MeleeSquad, 1799, SPEED_MEDIUM, 1.2f, 168, 9, 'k')
+        // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 900 - load_time 700 ms (docs/LIVE_SYNC.md).
+        add(troop(116, "Golden Knight", 4.0f, Archetype::MeleeSquad, 1799, SPEED_MEDIUM, 1.2f, 168, 9, 'k').withFirstHit(2)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withChampionAbility(1.0f, 120, std::make_shared<GoldenKnightDashEffect>(335, 5.0f, 10), 1));
 
         // Skeleton King: collects up to 10 souls from any death within
         // soulCollectionRadius (not sourced); "Soul Summoning" spawns 6 + 1 per
         // soul, consuming them.
-        add(troop(117, "Skeleton King", 4.0f, Archetype::MeleeSquad, 2298, SPEED_MEDIUM, 1.2f, 180, 16, 'K')
+        // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1600 - load_time 1300 ms (docs/LIVE_SYNC.md).
+        add(troop(117, "Skeleton King", 4.0f, Archetype::MeleeSquad, 2298, SPEED_MEDIUM, 1.2f, 180, 16, 'K').withFirstHit(3)
             .withSplash(1.3f)
             .withSoulCollection(5.0f, 10)
             .withChampionAbility(2.0f, 200,
@@ -1213,7 +1259,8 @@ private:
 
         // Archer Queen's "Cloaking Cape": untargetable and ~2.8x attack speed
         // for 3.5 s.
-        add(troop(118, "Archer Queen", 5.0f, Archetype::RangedSquad, 1000, SPEED_MEDIUM, 5.0f, 232, 12, 'Q') // 2026-08-26 final August balance update: damage 225 -> 232 (docs/LIVE_SYNC.md)
+        // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 900 ms (docs/LIVE_SYNC.md).
+        add(troop(118, "Archer Queen", 5.0f, Archetype::RangedSquad, 1000, SPEED_MEDIUM, 5.0f, 232, 12, 'Q').withFirstHit(3) // 2026-08-26 final August balance update: damage 225 -> 232 (docs/LIVE_SYNC.md)
             .withTargetsAir()
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withChampionAbility(1.0f, 170, std::make_shared<ArcherQueenCloakEffect>(35, 1.0f / 2.8f), 1));
@@ -1221,7 +1268,8 @@ private:
         // Monk: his 3-hit combo is flat damage here. "Pensive Protection" (65%
         // damage reduction for 4 s): see MonkDeflectEffect.
         // Cost 5 elixir (DeckShop; cr-api-data's 4 predates the live value).
-        add(troop(119, "Monk", 5.0f, Archetype::MeleeSquad, 2214, SPEED_MEDIUM, 1.2f, 140, 8, 'M')
+        // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 800 - load_time 600 ms (docs/LIVE_SYNC.md).
+        add(troop(119, "Monk", 5.0f, Archetype::MeleeSquad, 2214, SPEED_MEDIUM, 1.2f, 140, 8, 'M').withFirstHit(2)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withChampionAbility(1.0f, 170, std::make_shared<MonkDeflectEffect>(0.35f, 40), 1));
 
@@ -1275,11 +1323,13 @@ private:
         // walking-damage buff, so the stats stay unchanged.
         // 2026-10-06 balance update: 302 damage per Wall Breaker, both halves (docs/LIVE_SYNC.md).
         addEvolution(123,
-            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{')
+            // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 1000 ms (docs/LIVE_SYNC.md).
+            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{').withFirstHit(2)
                 .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
                 .withSplash(1.5f)
                 .withDieAfterFirstHit().withSightRange(7.0f),
-            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{')
+            // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 1000 ms (docs/LIVE_SYNC.md).
+            troop(83, "Wall Breakers", 2.0f, Archetype::MeleeBuildingTargeter, 330, SPEED_VERY_FAST, 1.0f, 302, 12, '{').withFirstHit(2)
                 .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
                 .withSplash(1.5f)
                 .withDieAfterFirstHit().withSightRange(7.0f)
@@ -1328,17 +1378,21 @@ private:
         // Bomber: +25% hp (380). "Bouncy Bomb" bounces twice at full damage,
         // approximated as a 3-target full-damage split.
         addEvolution(127,
-            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b'), // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): damage 212
-            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 380, SPEED_MEDIUM, 4.5f, 212, 18, 'b') // same 212 damage
+            // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1600 ms (docs/LIVE_SYNC.md).
+            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 4.5f, 212, 18, 'b').withFirstHit(2), // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): damage 212
+            // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1600 ms (docs/LIVE_SYNC.md).
+            troop(9, "Bomber", 2.0f, Archetype::RangedSquad, 380, SPEED_MEDIUM, 4.5f, 212, 18, 'b').withFirstHit(2) // same 212 damage
                 .withSplitTargets(3).withSplitTargetsFullDamage(),
             2, 1);
 
         // Archers: +1 tile range (6.0). "Power Shot": +25% damage at 4-6 tiles
         // (112 -> 140; was +50%, 168: 2026-08-04 balance update, docs/LIVE_SYNC.md).
         addEvolution(128,
-            troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 5.0f, 112, 9, 'A')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 900 - load_time 400 ms (docs/LIVE_SYNC.md).
+            troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 5.0f, 112, 9, 'A').withFirstHit(5)
                 .withOffsets({ {0.0f, 0.0f}, {1.0f, 0.0f} }).withTargetsAir(),
-            troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 6.0f, 112, 9, 'A')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 900 - load_time 400 ms (docs/LIVE_SYNC.md).
+            troop(1, "Archers", 3.0f, Archetype::RangedSquad, 304, SPEED_MEDIUM, 6.0f, 112, 9, 'A').withFirstHit(5)
                 .withOffsets({ {0.0f, 0.0f}, {1.0f, 0.0f} }).withTargetsAir()
                 .withRangeBandBonus(4.0f, 6.0f, 1.25f),
             2, 1);
@@ -1358,9 +1412,11 @@ private:
         // is not sourced; 3 ticks approximates 0.25 s.
         addEvolution(130,
             // 2025-08-06 balance update: sight range 8.5 -> 8 tiles on both blocks (docs/LIVE_SYNC.md).
-            troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
+            // First hit 0.7 s: RoyaleAPI cr-api-data, hit_speed 3000 - load_time 2350 ms (docs/LIVE_SYNC.md).
+            troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$').withFirstHit(7)
                 .withTargetsAir().withSplash(1.5f).withRecoil(1.0f).withSightRange(8.0f),
-            troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$')
+            // First hit 0.7 s: RoyaleAPI cr-api-data, hit_speed 3000 - load_time 2350 ms (docs/LIVE_SYNC.md).
+            troop(64, "Firecracker", 3.0f, Archetype::RangedSquad, 304, SPEED_FAST, 6.0f, 64, 30, '$').withFirstHit(7)
                 .withTargetsAir().withSplash(1.5f).withRecoil(1.0f).withSightRange(8.0f)
                 .withOnHit(std::make_shared<PoisonOnHit>(16, 30, 3)),
             2, 1);
@@ -1419,8 +1475,10 @@ private:
         // Knight: the real shield (60% less damage while approaching) is a flat
         // permanent 35% reduction (withPassiveDamageReduction).
         addEvolution(135,
-            troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K'),
-            troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 700 ms (docs/LIVE_SYNC.md).
+            troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K').withFirstHit(5),
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 700 ms (docs/LIVE_SYNC.md).
+            troop(0, "Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K').withFirstHit(5)
                 .withPassiveDamageReduction(0.65f),
             2, 1);
 
@@ -1430,9 +1488,11 @@ private:
         // anyway.
         // 2026-10-06 balance update: Royal Ghost 1152 hp, 263 damage, both halves (docs/LIVE_SYNC.md).
         addEvolution(136,
-            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q')
+            // First hit 0.6 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1200 ms (docs/LIVE_SYNC.md).
+            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q').withFirstHit(6)
                 .withInvisibility(20).withIgnoresRiver(), // 2026-03-02: 2 s, as the base card.
-            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q')
+            // First hit 0.6 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1200 ms (docs/LIVE_SYNC.md).
+            troop(47, "Royal Ghost", 3.0f, Archetype::MeleeSquad, 1152, SPEED_FAST, 1.2f, 263, 18, 'Q').withFirstHit(6)
                 .withInvisibility(20) // 2026-03-02 balance update: 1.8 s -> 2 s (docs/LIVE_SYNC.md)
                 .withOnHitSpawn(std::make_shared<PeriodicSpawnEffect>(royalGhostSouldierStats()
                     .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })))
@@ -1445,9 +1505,11 @@ private:
         // Splash 1.2 -> 1.5 tiles on both forms (the base id 44 already had it):
         // 2025-01-07 balance update (docs/LIVE_SYNC.md).
         addEvolution(137,
-            troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y')
+            // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1200 ms (docs/LIVE_SYNC.md).
+            troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y').withFirstHit(3)
                 .withFlying().withTargetsAir().withSplash(1.5f),
-            troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y')
+            // First hit 0.3 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1200 ms (docs/LIVE_SYNC.md).
+            troop(44, "Baby Dragon", 4.0f, Archetype::RangedSquad, 1152, SPEED_FAST, 3.5f, 168, 15, 'y').withFirstHit(3)
                 .withFlying().withTargetsAir().withSplash(1.5f)
                 .withAllyBuffAura(4.0f, 1, 1.3f, 20, 1000000),
             2, 1);
@@ -1511,10 +1573,12 @@ private:
         // Witch splash 1 -> 1.5 tiles on both forms: 2025-01-07 balance update
         // (docs/LIVE_SYNC.md).
         addEvolution(142,
-            troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
+            // First hit 0.7 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 400 ms (docs/LIVE_SYNC.md).
+            troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':').withFirstHit(7)
                 .withTargetsAir().withSplash(1.5f)
                 .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats())),
-            troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':')
+            // First hit 0.7 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 400 ms (docs/LIVE_SYNC.md).
+            troop(71, "Witch", 5.0f, Archetype::RangedSquad, 839, SPEED_MEDIUM, 5.5f, 135, 11, ':').withFirstHit(7)
                 .withTargetsAir().withSplash(1.5f)
                 .withPeriodicEffect(70, std::make_shared<PeriodicSpawnEffect>(witchSkeletonStats()))
                 .withHealOnHit(20, 1451),
@@ -1580,9 +1644,11 @@ private:
         // balance update, was 84; docs/LIVE_SYNC.md). Pull distance is not
         // sourced; the lingering zone is not modelled.
         addEvolution(147,
-            troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V')
+            // First hit 0.1 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1400 ms (docs/LIVE_SYNC.md).
+            troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V').withFirstHit(1)
                 .withSplash(1.5f),
-            troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V')
+            // First hit 0.1 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1400 ms (docs/LIVE_SYNC.md).
+            troop(10, "Valkyrie", 4.0f, Archetype::MeleeSquad, 1907, SPEED_MEDIUM, 1.2f, 266, 15, 'V').withFirstHit(1)
                 .withSplash(1.5f)
                 .withOnHitPull(5.0f, 2.0f, 42),
             2, 1);
@@ -1590,9 +1656,11 @@ private:
         // P.E.K.K.A. ("Butter-Heal"): the real heal on each kill, up to +66% hp
         // (6242), is a smaller heal on every hit; there is no on-kill hook.
         addEvolution(148,
-            troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1300 ms (docs/LIVE_SYNC.md).
+            troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E').withFirstHit(5)
                 .withSightRange(5.0f),
-            troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1800 - load_time 1300 ms (docs/LIVE_SYNC.md).
+            troop(13, "P.E.K.K.A.", 7.0f, Archetype::MeleeSquad, 3760, SPEED_SLOW, 1.2f, 842, 18, 'E').withFirstHit(5)
                 .withHealOnHit(40, 6242).withSightRange(5.0f),
             2, 1);
 
@@ -1614,10 +1682,12 @@ private:
         // Royal Recruits: the real charge after the shield breaks (2.5 tiles
         // for 2x) is unconditional here.
         addEvolution(150,
-            troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 800 ms (docs/LIVE_SYNC.md).
+            troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@').withFirstHit(5)
                 .withOffsets({ {-2.5f, 0.0f}, {-1.5f, 0.0f}, {-0.5f, 0.0f}, {0.5f, 0.0f}, {1.5f, 0.0f}, {2.5f, 0.0f} })
                 .withShield(240),
-            troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1300 - load_time 800 ms (docs/LIVE_SYNC.md).
+            troop(77, "Royal Recruits", 7.0f, Archetype::MeleeSquad, 547, SPEED_MEDIUM, 1.0f, 133, 13, '@').withFirstHit(5)
                 .withOffsets({ {-2.5f, 0.0f}, {-1.5f, 0.0f}, {-0.5f, 0.0f}, {0.5f, 0.0f}, {1.5f, 0.0f}, {2.5f, 0.0f} })
                 .withShield(240)
                 .withCharge(2.5f, 2.0f),
@@ -1673,8 +1743,10 @@ private:
         // Tesla ("Electro Pulse"): 6-tile radius, low damage and a 0.5 s stun.
         // There is no hiding to emerge from here, so it fires once on deploy.
         addEvolution(154,
-            building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withTargetsAir(),
-            building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withTargetsAir()
+            // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
+            building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withFirstHit(4).withTargetsAir(),
+            // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
+            building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withFirstHit(4).withTargetsAir()
                 .withSpawnEffect(6.0f, 100, std::make_shared<FreezeOnHit>(5, 0.0f)),
             2, 1);
 
@@ -1695,9 +1767,11 @@ private:
         // Lumberjack: the ghost (lumberjackGhostStats) composed with the Rage
         // drop (30% boost, official 24 Oct 2025 balance post; docs/LIVE_SYNC.md).
         addEvolution(156,
-            troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l')
+            // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 800 - load_time 400 ms (docs/LIVE_SYNC.md).
+            troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l').withFirstHit(4)
                 .withDeathEffect(std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55)),
-            troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l')
+            // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 800 - load_time 400 ms (docs/LIVE_SYNC.md).
+            troop(21, "Lumberjack", 4.0f, Archetype::MeleeSquad, 1282, SPEED_VERY_FAST, 0.7f, 256, 8, 'l').withFirstHit(4)
                 .withDeathEffect(std::make_shared<CompositeDeathEffect>(
                     std::vector<std::shared_ptr<IDeathEffect>>{
                         std::make_shared<AreaBuffOnDeath>(2.5f, 1.30f, 55),
@@ -1740,9 +1814,11 @@ private:
         // 50% hp are an unconditional periodic spawn from deploy; a periodic
         // effect cannot be gated on hp.
         addEvolution(159,
-            troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`')
+            // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 700 ms (docs/LIVE_SYNC.md).
+            troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`').withFirstHit(8)
                 .withSecondaryUnit(goblinGiantSpearGoblinsStats()).withSightRange(7.5f),
-            troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`')
+            // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 700 ms (docs/LIVE_SYNC.md).
+            troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`').withFirstHit(8)
                 .withSecondaryUnit(goblinGiantSpearGoblinsStats()).withSightRange(7.5f)
                 .withPeriodicEffect(22, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats())),
             2, 1);
@@ -1751,9 +1827,11 @@ private:
         // tiles toward the enemy Crown Tower) is not modelled: there is no
         // "knock the target toward a point" primitive.
         addEvolution(160,
-            troop(48, "Mega Knight", 7.0f, Archetype::MeleeSquad, 3993, SPEED_MEDIUM, 1.2f, 268, 17, 'X')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1700 - load_time 1200 ms (docs/LIVE_SYNC.md).
+            troop(48, "Mega Knight", 7.0f, Archetype::MeleeSquad, 3993, SPEED_MEDIUM, 1.2f, 268, 17, 'X').withFirstHit(5)
                 .withSplash(1.5f).withSpawnEffect(1.3f, 430).withJump(3.5f, 5.0f, 2.0f, 2.2f).withIgnoresRiver(),
-            troop(48, "Mega Knight", 7.0f, Archetype::MeleeSquad, 3993, SPEED_MEDIUM, 1.2f, 268, 17, 'X')
+            // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1700 - load_time 1200 ms (docs/LIVE_SYNC.md).
+            troop(48, "Mega Knight", 7.0f, Archetype::MeleeSquad, 3993, SPEED_MEDIUM, 1.2f, 268, 17, 'X').withFirstHit(5)
                 .withSplash(1.5f).withSpawnEffect(1.3f, 430).withJump(3.5f, 5.0f, 2.0f, 2.2f).withIgnoresRiver(),
             2, 1);
 
@@ -1779,10 +1857,12 @@ private:
         // for 155% damage on the first attack) is not modelled, and how it
         // would stack with the charge bonus is unsourced.
         addEvolution(162,
-            troop(82, "Royal Hogs", 5.0f, Archetype::MeleeBuildingTargeter, 837, SPEED_VERY_FAST, 1.0f, 74, 12, '_')
+            // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 800 ms (docs/LIVE_SYNC.md).
+            troop(82, "Royal Hogs", 5.0f, Archetype::MeleeBuildingTargeter, 837, SPEED_VERY_FAST, 1.0f, 74, 12, '_').withFirstHit(4)
                 .withOffsets({ {-1.0f, -0.3f}, {-0.3f, 0.3f}, {0.3f, -0.3f}, {1.0f, 0.3f} })
                 .withCharge(3.0f, 2.0f).withSightRange(9.5f).withIgnoresRiver(),
-            troop(82, "Royal Hogs", 5.0f, Archetype::MeleeBuildingTargeter, 837, SPEED_VERY_FAST, 1.0f, 74, 12, '_')
+            // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 800 ms (docs/LIVE_SYNC.md).
+            troop(82, "Royal Hogs", 5.0f, Archetype::MeleeBuildingTargeter, 837, SPEED_VERY_FAST, 1.0f, 74, 12, '_').withFirstHit(4)
                 .withOffsets({ {-1.0f, -0.3f}, {-0.3f, 0.3f}, {0.3f, -0.3f}, {1.0f, 0.3f} })
                 .withCharge(3.0f, 2.0f).withSightRange(9.5f).withIgnoresRiver(),
             2, 1);
@@ -1828,7 +1908,8 @@ private:
 
         // Hero Mini P.E.K.K.A. (base: id 5). "Breakfast Boost": a flat one-time
         // hp and damage boost (HeroMiniPekkaBoostEffect).
-        add(troop(170, "Hero Mini P.E.K.K.A.", 4.0f, Archetype::MeleeSquad, 1390, SPEED_FAST, 0.8f, 755, 16, 'M')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1600 - load_time 1100 ms (docs/LIVE_SYNC.md).
+        add(troop(170, "Hero Mini P.E.K.K.A.", 4.0f, Archetype::MeleeSquad, 1390, SPEED_FAST, 0.8f, 755, 16, 'M').withFirstHit(5)
             .withHeroAbility(1.0f, 0, std::make_shared<HeroMiniPekkaBoostEffect>(210, 1.15f), 1));
 
         // Hero Musketeer (base: id 6). "Trusty Turret": a short-range turret
@@ -1858,7 +1939,8 @@ private:
         // cooldown): a shield, and enemies within 6.5 tiles must attack him for
         // 5 s (HeroKnightTauntEffect). 2026-07-06 balance update: shield 768 ->
         // 512 hp (docs/LIVE_SYNC.md).
-        add(troop(166, "Hero Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1200 - load_time 700 ms (docs/LIVE_SYNC.md).
+        add(troop(166, "Hero Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K').withFirstHit(5)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withHeroAbility(2.0f, 250, std::make_shared<HeroKnightTauntEffect>(512, 50, 6.5f), 1));
 
@@ -1877,7 +1959,8 @@ private:
         // Hero Giant (base: id 2). "Heroic Hurl" (2 elixir, 14 s cooldown):
         // throws the highest-HP enemy troop within 3.0 tiles (not sourced) to
         // the other lane and stuns it 2 s (HeroGiantHurlEffect).
-        add(troop(169, "Hero Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G')
+        // First hit 0.5 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1000 ms (docs/LIVE_SYNC.md).
+        add(troop(169, "Hero Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G').withFirstHit(5)
             .withSightRange(7.5f)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withHeroAbility(2.0f, 140, std::make_shared<HeroGiantHurlEffect>(3.0f, 20), 1));
@@ -1886,7 +1969,8 @@ private:
         // locked for the first 1.5 s): teleports to the lowest-HP enemy
         // anywhere and deals bonus damage (HeroMegaMinionWarpEffect). Warp
         // damage 422 per the 2026-09-08 balance update (399 -> 422; docs/LIVE_SYNC.md).
-        add(troop(173, "Hero Mega Minion", 3.0f, Archetype::MeleeSquad, 837, SPEED_MEDIUM, 1.6f, 312, 15, 'F')
+        // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 1100 ms (docs/LIVE_SYNC.md).
+        add(troop(173, "Hero Mega Minion", 3.0f, Archetype::MeleeSquad, 837, SPEED_MEDIUM, 1.6f, 312, 15, 'F').withFirstHit(4)
             .withFlying().withTargetsAir()
             .withHeroAbility(2.0f, 0, std::make_shared<HeroMegaMinionWarpEffect>(422), 1)
             .withInitialAbilityCooldown(15));
@@ -1910,7 +1994,8 @@ private:
         // and slow are not sourced. 2026-04-06 balance update: Snowstorm's
         // knockback removed (ctor arg 3 = 0, docs/LIVE_SYNC.md). 2026-08-04
         // balance update: damage per blast 38 -> 69 (the engine's 80 was unsourced).
-        add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c')
+        // First hit 1.0 s: RoyaleAPI cr-api-data, hit_speed 2500 - load_time 1500 ms (docs/LIVE_SYNC.md).
+        add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c').withFirstHit(10)
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
                 2.0f, 84, std::make_shared<FreezeOnHit>(25, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%; 2026-09-08: 1228 hp, 2.5 s
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.

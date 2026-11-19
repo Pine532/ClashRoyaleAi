@@ -49,6 +49,7 @@ TEST_CASE("Ice Wizard splash hits a unit 1.2 tiles from the target (radius 1.5)"
     REQUIRE(iceWizard != nullptr);
     REQUIRE(iceWizard->splashRadius == Catch::Approx(1.5f));
     advancePastDeploy(iceWizard, board);
+    advanceThroughWindup(iceWizard, board);
     iceWizard->update(board);
     board.commitPendingEntities();
     for (int i = 0; i < 5; ++i) {
@@ -443,6 +444,7 @@ TEST_CASE("Ice Wizard slow is 30% (speed factor 0.70)", "[live_sync][patch-2025-
     spawn(board, enemy);
     auto wiz = spawnBare(board, 34, 5.0f, 5.0f, 0).front();
     advancePastDeploy(wiz, board);
+    advanceThroughWindup(wiz, board);
     wiz->update(board);
     board.commitPendingEntities();
     auto projectile = std::dynamic_pointer_cast<Projectile>(board.getEntities().back());
