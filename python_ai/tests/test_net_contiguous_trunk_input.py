@@ -45,3 +45,25 @@ def test_extract_features_on_mps_matches_cpu():
         ref = net.extract_features(obs)[0]
         got = net.to("mps").extract_features(obs.to("mps"))[0].cpu()
     assert (ref - got).abs().max().item() < 1e-4
+
+
+def test_hires_features_hands_the_trunk_a_contiguous_board():
+    # The same slice as extract_features_hires; search/search.py calls it.
+    net = MicroRoyaleNet(num_ability_slots=0).eval()
+    seen = []
+    net.cnn_trunk[0].register_forward_pre_hook(
+        lambda mod, args: seen.append(args[0].is_contiguous()))
+    with torch.no_grad():
+        net.hires_features(_real_obs())
+    assert seen == [True]
+
+
+@pytest.mark.skipif(not torch.backends.mps.is_available(), reason="needs Apple MPS")
+def test_hires_features_on_mps_matches_cpu():
+    torch.manual_seed(0)
+    net = MicroRoyaleNet(num_ability_slots=0).eval()
+    obs = _real_obs()
+    with torch.no_grad():
+        ref = net.hires_features(obs)
+        got = net.to("mps").hires_features(obs.to("mps")).cpu()
+    assert (ref - got).abs().max().item() < 1e-4

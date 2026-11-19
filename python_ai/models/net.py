@@ -614,8 +614,9 @@ class MicroRoyaleNet(nn.Module):
         """The trunk's activation before pooling: (Batch, 16, 34, 18), the
         full-resolution branch's input.
         """
+        # Contiguous for the same reason as in extract_features_hires.
         spatial_obs = obs[:, :self.spatial_size].view(
-            -1, self.channels, self.board_height, self.board_width)
+            -1, self.channels, self.board_height, self.board_width).contiguous()
         return self.cnn_trunk[:2](spatial_obs)
 
     def affordability_mask(self, obs, hand_ready=None):
