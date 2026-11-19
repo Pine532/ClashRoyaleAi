@@ -823,6 +823,12 @@ private:
         // Dark Prince jumps the river.
         add(troop(46, "Dark Prince", 4.0f, Archetype::MeleeSquad, 1200, SPEED_MEDIUM, 1.2f, 266, 14, 'N')
             .withShield(240) // sourced
+            // First hit 0.4 s = 4 ticks: single-source, Liquipedia (https://liquipedia.net/clashroyale/Dark_Prince; hit speed 1.4 matches the May 2026 change).
+            .withFirstHit(4)
+            // Area damage: single-source, Liquipedia (https://liquipedia.net/clashroyale/Dark_Prince) says splash radius 1.1;
+            // the official 2025-01-07 balance rule ("all troops, except for Skeleton Dragons, should have a Splash Radius of
+            // 1.5 tiles on their attacks") contradicts it, so 1.5 (official) is used.
+            .withSplash(1.5f)
             .withCharge(3.0f, 2.0f) // +100% on a charging hit
             .withChargeSpeed(2.0f)  // and runs at 2x (item 35)
             .withIgnoresRiver());
@@ -2224,12 +2230,11 @@ private:
         // Hero Dark Prince (base: id 46; body restated from the base
         // registration: hp 1200, 266 damage, 1.4 s hit speed, 240 shield, 2x
         // charge damage and speed, ignores the river; the hero's own body
-        // values are unpublished, so the base card's are used, with no splash
-        // because the base card models none). Hero-specific, official (Supercell
-        // June 2026 balance post): deploy 2 s -> 1 s, which is the engine
-        // default DEPLOY_TIME_TICKS, and "Tiles Needed for First Charge: 0 ->
-        // 2.5 tiles". The engine has one charge threshold, so re-charges after
-        // a hit also use 2.5 (the base card's 3.0 is not stated for the Hero).
+        // values are unpublished, so the base card's are used, including the
+        // splash and first hit). Hero-specific, official (Supercell June 2026
+        // balance post): deploy 2 s -> 1 s, which is the engine default
+        // DEPLOY_TIME_TICKS. The post's "Tiles Needed for First Charge: 0 ->
+        // 2.5 tiles" is the Rhino's, not the body's (see the charge below).
         // Cost 4: single source, DeckShop (https://deckshop.pro/card/detail/hero-dark-prince); not contradicted.
         // "Destructive Dismount" (Rhino mount) is NOT modelled: Rhino hp,
         // trample damage, speed, landing damage/radius and mount-up timing have
@@ -2238,7 +2243,15 @@ private:
         {
             CardStats heroDarkPrince = troop(177, "Hero Dark Prince", 4.0f, Archetype::MeleeSquad, 1200, SPEED_MEDIUM, 1.2f, 266, 14, 'N')
                 .withShield(240) // sourced (base Dark Prince; fandom says 256)
-                .withCharge(2.5f, 2.0f) // June 2026 official: first charge after 2.5 tiles; +100% on a charging hit
+                // First hit 0.4 s = 4 ticks and splash 1.5: as base Dark Prince (46), both single-source, Liquipedia
+                // (https://liquipedia.net/clashroyale/Dark_Prince); radius 1.5 is the official 2025-01-07 rule, not Liquipedia's 1.1.
+                .withFirstHit(4)
+                .withSplash(1.5f)
+                // The June 2026 official "Tiles Needed for First Charge 0 -> 2.5" belongs to the Hero's Rhino (a mount that
+                // charged at once), not the Prince's body (https://timesaver.gg/blog/clash-royale-hero-dark-prince ;
+                // https://supercell.com/en/games/clashroyale/blog/release-notes/june-balance-changes-2026). The Rhino is not
+                // built, so the body keeps base Dark Prince's threshold 3.0; +100% on a charging hit.
+                .withCharge(3.0f, 2.0f)
                 .withChargeSpeed(2.0f)
                 .withIgnoresRiver();
             heroDarkPrince.isHero = true;

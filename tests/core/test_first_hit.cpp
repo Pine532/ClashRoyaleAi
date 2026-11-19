@@ -539,3 +539,65 @@ TEST_CASE("Skeleton Barrel (89) drops 7 Skeletons on death, as its Evolution doe
     // Tombstone's periodic spawn is a different effect and keeps its own count (2 per pulse).
     CHECK(effectChildFirstHits(96, Fire::Periodic).size() == 2);
 }
+
+// ---- Dark Prince (46) and Hero Dark Prince (177) ----------------------------
+// Section A: the June 2026 first-charge 0 -> 2.5 tiles belongs to the Hero Rhino,
+// not his body, so 177 keeps base Dark Prince charge threshold. Section B
+// (single-source, Liquipedia): first hit 0.4 s = 4 ticks; area damage, radius
+// 1.5 (official 2025-01-07 rule wins over Liquipedia 1.1).
+
+namespace {
+std::shared_ptr<CombatEntity> spawnDarkPrince(int cardId, Board& board) {
+    CardRegistry::getInstance().getCard(cardId)->spawnEntity(9.0f, 9.0f, 0, board);
+    board.commitPendingEntities();
+    return std::dynamic_pointer_cast<CombatEntity>(board.getEntities().back());
+}
+
+// Hp lost by a second enemy dummy placed `d` tiles from the target dummy
+// (9, 10.0) after Dark Prince has hit the target once.
+int splashLoss(int cardId, float d) {
+    Board board;
+    auto dp = spawnDarkPrince(cardId, board);
+    auto a = std::make_shared<MeleeTroop>(board.allocateId(), 9.0f, 10.0f, 100000, 1, 0.0f, 1.2f, 0, 1000, 'T');
+    auto b = std::make_shared<MeleeTroop>(board.allocateId(), 9.0f + d, 10.0f, 100000, 1, 0.0f, 1.2f, 0, 1000, 'T');
+    board.addEntity(a);
+    board.addEntity(b);
+    board.commitPendingEntities(0);
+    for (int t = 0; t < 40; ++t) {
+        board.currentTick = t;
+        board.commitPendingEntities(t);
+        for (const auto& e : board.getEntities()) if (e->isAlive()) e->update(board);
+        if (a->hp < 100000) break;
+    }
+    REQUIRE(a->hp < 100000);
+    return 100000 - b->hp;
+}
+}  // namespace
+
+TEST_CASE("Hero Dark Prince's charge threshold equals base Dark Prince's",
+          "[live_sync_values][dark_prince]") {
+    Board b1, b2;
+    auto base = spawnDarkPrince(46, b1);
+    auto hero = spawnDarkPrince(177, b2);
+    REQUIRE(base->chargeThreshold == Catch::Approx(3.0f));
+    REQUIRE(hero->chargeThreshold == Catch::Approx(base->chargeThreshold));
+    REQUIRE(hero->chargeMultiplier == Catch::Approx(base->chargeMultiplier));
+}
+
+TEST_CASE("Dark Prince and Hero Dark Prince hit first after 4 ticks",
+          "[live_sync_values][dark_prince]") {
+    for (int id : {46, 177}) {
+        Board board;
+        REQUIRE(spawnDarkPrince(id, board)->firstHitTicks == 4);
+    }
+}
+
+TEST_CASE("Dark Prince and Hero Dark Prince splash at 1.5 tiles",
+          "[live_sync_values][dark_prince]") {
+    for (int id : {46, 177}) {
+        Board board;
+        REQUIRE(spawnDarkPrince(id, board)->splashRadius == Catch::Approx(1.5f));
+        CHECK(splashLoss(id, 1.2f) > 0);   // inside 1.5
+        CHECK(splashLoss(id, 2.0f) == 0);  // outside
+    }
+}

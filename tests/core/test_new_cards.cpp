@@ -90,17 +90,17 @@ TEST_CASE("Hero Dark Prince (177) is registered as a Hero with the base Dark Pri
     CHECK(body->isHero);
 }
 
-TEST_CASE("Hero Dark Prince (177) starts its first charge after 2.5 tiles, the base card after 3.0",
+TEST_CASE("Hero Dark Prince (177) body starts its first charge after 3.0 tiles, like the base card (the 2.5 is the unbuilt Rhino's)",
           "[new_card][hero_dark_prince]") {
     Board a, b;
     auto hero = live_sync::mainBody(a, 177);
     auto base = live_sync::mainBody(b, 46);
     REQUIRE(hero != nullptr);
     REQUIRE(base != nullptr);
-    CHECK(hero->chargeThreshold == Catch::Approx(2.5f));
+    CHECK(hero->chargeThreshold == Catch::Approx(3.0f));
     CHECK(hero->chargeMultiplier == Catch::Approx(2.0f));
     CHECK(hero->chargeSpeedMultiplier == Catch::Approx(2.0f));
-    // Control: the two thresholds must differ.
+    // Control: the base card is the reference value.
     CHECK(base->chargeThreshold == Catch::Approx(3.0f));
 }
 
