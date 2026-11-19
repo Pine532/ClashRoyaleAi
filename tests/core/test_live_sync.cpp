@@ -2011,3 +2011,97 @@ TEST_CASE("Single-use abilities: Boss Bandit keeps two uses (control)",
     REQUIRE(r.usesAfterFirst == 1);
     REQUIRE(r.second); // the exempt card must still refire once its cooldown is clear
 }
+
+// ---------------------------------------------------------------------------
+// Building lifetimes, Goblin Drill spawn timing, Goblin Cage Brawler
+// (docs/live_sync/values-lookup-results.md, section A; Brawler first hit B).
+// ---------------------------------------------------------------------------
+namespace blife {
+
+// Ticks until the building (placed at tick 0) is no longer alive; -1 if it is
+// still alive after `limit`. Towers asleep, so nothing else touches it.
+inline int ticksToExpire(int cardId, bool evolved, int limit = 400) {
+    live_sync::Match m;
+    auto bodies = m.spawnCard(cardId, 9.0f, 20.0f, 0, evolved);
+    std::shared_ptr<CombatEntity> b = live_sync::firstCombat(bodies);
+    for (int t = 1; t <= limit; ++t) {
+        m.step();
+        if (!b->isAlive()) return t;
+    }
+    return -1;
+}
+
+inline std::vector<std::shared_ptr<CombatEntity>> named(live_sync::Match& m, const std::string& name) {
+    std::vector<std::shared_ptr<CombatEntity>> out;
+    for (const auto& e : m.board().getEntities())
+        if (auto c = std::dynamic_pointer_cast<CombatEntity>(e))
+            if (c->name == name) out.push_back(c);
+    return out;
+}
+
+// Active ticks (after the building's own deploy time) until the first Goblin
+// of the Drill's periodic spawn exists, or -1.
+inline int ticksToFirstDrillGoblin(bool evolved) {
+    live_sync::Match m;
+    auto drill = live_sync::firstCombat(m.spawnCard(evolved ? 153 : 98, 9.0f, 20.0f, 0, evolved));
+    REQUIRE(drill != nullptr);
+    int deployTicks = drill->deployTicksRemaining;
+    for (int t = 1; t <= 120; ++t) {
+        m.step();
+        if (!named(m, "Goblins").empty()) return t - deployTicks;
+    }
+    return -1;
+}
+
+} // namespace blife
+
+TEST_CASE("Building lifetimes: Goblin Drill 100 ticks, Goblin Cage 200, Cannon still 300",
+          "[live_sync_values][building_lifetime]") {
+    CHECK(blife::ticksToExpire(98, false) == 100);
+    CHECK(blife::ticksToExpire(153, false) == 100);   // both halves of 153
+    CHECK(blife::ticksToExpire(153, true) == 100);
+    CHECK(blife::ticksToExpire(97, false) == 200);
+    CHECK(blife::ticksToExpire(139, false) == 200);   // both halves of 139
+    CHECK(blife::ticksToExpire(139, true) == 200);
+    CHECK(blife::ticksToExpire(25, false) == 300);    // control: unchanged default
+}
+
+TEST_CASE("Goblin Drill's first Goblin appears 10 active ticks after deploy",
+          "[live_sync_values][building_lifetime]") {
+    CHECK(blife::ticksToFirstDrillGoblin(false) == 10);
+    CHECK(blife::ticksToFirstDrillGoblin(true) == 10);
+}
+
+TEST_CASE("Goblin Drill keeps its 30-tick interval after the first spawn",
+          "[live_sync_values][building_lifetime]") {
+    live_sync::Match m;
+    auto drill = live_sync::firstCombat(m.spawnCard(98, 9.0f, 20.0f, 0));
+    REQUIRE(drill != nullptr);
+    const int deploy = drill->deployTicksRemaining;
+    std::vector<int> seen; // active tick at which the Goblin count grew
+    size_t last = 0;
+    for (int t = 1; t <= deploy + 80; ++t) {
+        m.step();
+        size_t n = blife::named(m, "Goblins").size();
+        if (n > last) { seen.push_back(t - deploy); last = n; }
+    }
+    REQUIRE(seen.size() >= 3);
+    CHECK(seen[0] == 10);
+    CHECK(seen[1] == 40);
+    CHECK(seen[2] == 70);
+}
+
+TEST_CASE("Goblin Cage's Goblin Brawler is Fast with a 0.2 s first hit",
+          "[live_sync_values][building_lifetime]") {
+    live_sync::Match m;
+    auto cage = live_sync::firstCombat(m.spawnCard(97, 9.0f, 20.0f, 0));
+    REQUIRE(cage != nullptr);
+    cage->takeDamage(100000);
+    m.step(2);
+    auto brawlers = blife::named(m, "Goblin Brawler");
+    REQUIRE(brawlers.size() == 1);
+    auto troop = std::dynamic_pointer_cast<Troop>(brawlers[0]);
+    REQUIRE(troop != nullptr);
+    CHECK(troop->getSpeed() == Catch::Approx(SPEED_FAST * MOVEMENT_SPEED_SCALE));
+    CHECK(brawlers[0]->firstHitTicks == 2);
+}
