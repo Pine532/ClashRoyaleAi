@@ -573,8 +573,10 @@ class MicroRoyaleNet(nn.Module):
           spatial_map: (Batch, 32, pooled_h, pooled_w), the CNN map before flattening.
           hires_map: (Batch, 16, board_height, board_width), the activation before the first pool, for the full-resolution branch.
         """
-        # Spatial then scalar, following observationSize() in C++.
-        spatial_obs = obs[:, :self.spatial_size].view(-1, self.channels, self.board_height, self.board_width)
+        # Spatial then scalar, following observationSize() in C++. Contiguous:
+        # the slice's rows skip the scalar tail, and torch 2.13's MPS Conv2d
+        # mis-computes that strided input (test_net_contiguous_trunk_input.py).
+        spatial_obs = obs[:, :self.spatial_size].view(-1, self.channels, self.board_height, self.board_width).contiguous()
         scalar_obs = obs[:, self.spatial_size:]
 
         # The trunk runs in two halves to expose the pre-pool activation;
