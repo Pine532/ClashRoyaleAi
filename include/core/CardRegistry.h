@@ -343,7 +343,10 @@ private:
     static CardStats goblinCageBrawlerStats() {
         // 2026-09-08 balance update (supercell.com September balance changes, docs/LIVE_SYNC.md): hitpoints 1080 -> 1121.
         // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 900 ms (docs/LIVE_SYNC.md).
-        return troop(-31, "Goblin Brawler", 0.0f, Archetype::MeleeSquad, 1121, 0.7f, 0.8f, 337, 11, 'o').withFirstHit(2);
+        // Movement Fast (90): liquipedia.net/clashroyale/Goblin_Cage ; clashroyale.fandom.com/wiki/Goblin_Cage
+        // (section A; Liquipedia's history mentions a 2019 change to 120 but its current table says Fast 90).
+        // First hit 0.2 s (2 ticks): liquipedia.net/clashroyale/Goblin_Cage, section B, single-source.
+        return troop(-31, "Goblin Brawler", 0.0f, Archetype::MeleeSquad, 1121, SPEED_FAST, 0.8f, 337, 11, 'o').withFirstHit(2);
     }
     // Elixir Golem's split chain: Golem -> 2 Golemites -> 2 Blobs each. Each
     // tier spawns the next and grants the OPPONENT elixir: 1.0 from the Golem,
@@ -1172,6 +1175,7 @@ private:
         add(building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
             .withLifetime(100)
             .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
+            .withPeriodicFirstDelay(10) // first Goblin 1.0 s, then every 3.0 s: liquipedia.net/clashroyale/Goblin_Drill ; clashroyale.fandom.com/wiki/Goblin_Drill (section A)
             .withDeployAnywhere()
             .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats())));
@@ -1819,12 +1823,14 @@ private:
             building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
                 .withLifetime(100) // 10 s, as the base Drill (same sources)
                 .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
+                .withPeriodicFirstDelay(10) // first Goblin 1.0 s, then every 3.0 s: liquipedia.net/clashroyale/Goblin_Drill ; clashroyale.fandom.com/wiki/Goblin_Drill (section A)
                 .withDeployAnywhere()
                 .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20) // as the base card
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats())),
             building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
                 .withLifetime(100) // 10 s, as the base Drill (same sources)
                 .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
+                .withPeriodicFirstDelay(10) // first Goblin 1.0 s, then every 3.0 s: liquipedia.net/clashroyale/Goblin_Drill ; clashroyale.fandom.com/wiki/Goblin_Drill (section A)
                 .withDeployAnywhere()
                 .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20) // as the base card
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats()

@@ -2078,12 +2078,12 @@ TEST_CASE("Goblin Drill keeps its 30-tick interval after the first spawn",
     auto drill = live_sync::firstCombat(m.spawnCard(98, 9.0f, 20.0f, 0));
     REQUIRE(drill != nullptr);
     const int deploy = drill->deployTicksRemaining;
-    std::vector<int> seen; // active tick at which the Goblin count grew
-    size_t last = 0;
+    std::vector<int> seen; // active tick at which a new Goblin id first appeared
+    std::set<int> ids;
     for (int t = 1; t <= deploy + 80; ++t) {
         m.step();
-        size_t n = blife::named(m, "Goblins").size();
-        if (n > last) { seen.push_back(t - deploy); last = n; }
+        for (const auto& g : blife::named(m, "Goblins"))
+            if (ids.insert(g->id).second) seen.push_back(t - deploy);
     }
     REQUIRE(seen.size() >= 3);
     CHECK(seen[0] == 10);
