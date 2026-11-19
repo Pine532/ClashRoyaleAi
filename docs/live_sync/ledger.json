@@ -565,17 +565,17 @@
    ],
    "stat": "Splash (area damage) radius",
    "engine_current": "none (no withSplash) (include/core/CardRegistry.h:671-675)",
-   "target": "unresolved (1.1 or 1.5 tiles, or none)",
+   "target": "splash 1.5 tiles",
    "target_verbatim": "1.1 tiles (stale cr-api-data); post: \"all troops ... Splash Radius of 1.5 tiles\"",
    "as_of": "unknown",
    "source_url": "https://royaleapi.github.io/cr-api-data/json/cards_stats.json",
-   "status": "unresolved",
+   "status": "applied",
    "corroboration": "drift only (source: cr-api-data, stale; Supercell 2025-01-07 post names only Baby Dragon and Witch)",
    "tests_pinning_old_value": [],
-   "notes": "Needs a live source on whether Dark Prince has splash at all. Verifier: Supercell 2025-01-07 post (january-balance-changes-2) states 'all troops, except Skeleton Dragons, should have a Splash Radius of 1.5 tiles', so the stale 1.1 is superseded IF Dark Prince splashes at all; whether he does remains unsourced by an official post. Stays unresolved (needs a second source on existence of splash).",
+   "notes": "Needs a live source on whether Dark Prince has splash at all. Verifier: Supercell 2025-01-07 post (january-balance-changes-2) states 'all troops, except Skeleton Dragons, should have a Splash Radius of 1.5 tiles', so the stale 1.1 is superseded IF Dark Prince splashes at all; whether he does remains unsourced by an official post. Stays unresolved (needs a second source on existence of splash). | 2026-11-19 (docs/live_sync/values-lookup-results.md): Area damage: Liquipedia (single-source). Radius 1.5 from the official 2025-01-07 rule, which contradicts Liquipedia's 1.1. Also applied to Hero Dark Prince 177.",
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "single_source",
+   "applied_in": "c984ff0",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -1651,18 +1651,18 @@
    ],
    "stat": "Goblin Brawler Movement Speed",
    "engine_current": "raw 0.7f (include/core/CardRegistry.h:288)",
-   "target": "SPEED_FAST (if confirmed)",
+   "target": "Fast (SPEED_FAST)",
    "target_verbatim": "Fast (90) (wiki)",
    "as_of": "unknown",
    "source_url": "https://clashroyale.fandom.com/wiki/Goblin_Cage",
-   "status": "unresolved",
+   "status": "applied",
    "corroboration": "drift only (sources: Fandom wiki, single)",
-   "notes": "Wiki-only; engine literal 0.7 is between Medium and Fast tiers. Needs a second source before editing.",
+   "notes": "Wiki-only; engine literal 0.7 is between Medium and Fast tiers. Needs a second source before editing. | 2026-11-19 (docs/live_sync/values-lookup-results.md): Section A: Liquipedia + Fandom agree on Fast (90).",
    "tests_pinning_old_value": [],
    "mechanic": "",
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "two_sources",
+   "applied_in": "cfad4fd",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -1675,18 +1675,18 @@
    ],
    "stat": "Lifetime",
    "engine_current": "300 ticks default (include/entities/Building.h:17; no per-card value)",
-   "target": "200 ticks (20 s) if confirmed",
+   "target": "20 s (200 ticks)",
    "target_verbatim": "Lifetime 20 sec (wiki)",
    "as_of": "unknown",
    "source_url": "https://clashroyale.fandom.com/wiki/Goblin_Cage",
-   "status": "unresolved",
+   "status": "applied",
    "mechanic": "per-card building lifetime",
    "corroboration": "drift only (sources: Fandom wiki, single)",
-   "notes": "Also blocks Tesla lifetime 30->25 s (2026-06-01 post) and any other non-30 s building. Needs a per-card lifetime field plus a second source for Cage.",
+   "notes": "Also blocks Tesla lifetime 30->25 s (2026-06-01 post) and any other non-30 s building. Needs a per-card lifetime field plus a second source for Cage. | 2026-11-19 (docs/live_sync/values-lookup-results.md): Section A: Liquipedia + Fandom. New per-card lifetime field (CardStats::withLifetime).",
    "tests_pinning_old_value": [],
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "two_sources",
+   "applied_in": "299104d",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -1901,18 +1901,18 @@
    ],
    "stat": "Building lifetime",
    "engine_current": "300 ticks (30 s), Building ctor default (include/entities/Building.h:16-17); no per-card override (CardRegistry.h:944-949)",
-   "target": "10 s = 100 ticks (wiki only)",
+   "target": "10 s (100 ticks)",
    "target_verbatim": "Lifetime 10 sec (Fandom wiki)",
    "as_of": "unknown",
    "source_url": "https://clashroyale.fandom.com/wiki/Goblin_Drill",
-   "status": "unresolved",
+   "status": "applied",
    "mechanic": "",
    "corroboration": "drift only (sources: Fandom wiki)",
    "tests_pinning_old_value": [],
-   "notes": "One source; no official post. Needs a second source (RoyaleAPI/DeckShop) and a per-card building lifetime field. Not applied.",
+   "notes": "One source; no official post. Needs a second source (RoyaleAPI/DeckShop) and a per-card building lifetime field. Not applied. | 2026-11-19 (docs/live_sync/values-lookup-results.md): Section A: Liquipedia + Fandom. First spawn 1.0 s applied in cfad4fd (spawn interval 3.0 s already matched).",
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "two_sources",
+   "applied_in": "299104d",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -4074,17 +4074,17 @@
    ],
    "stat": "Third-hit damage / knockback",
    "engine_current": "flat 140 every hit (include/core/CardRegistry.h:1067)",
-   "target": "422 damage, 1.8 tile knockback (unconfirmed)",
+   "target": "422 on every third attack; 1.8-tile knockback",
    "target_verbatim": "422 damage, 1.8 tile knockback (timesaver.gg)",
    "as_of": "unknown",
    "source_url": "https://timesaver.gg/blog/clash-royale-monk",
-   "status": "unresolved",
+   "status": "applied",
    "corroboration": "drift only (sources: timesaver.gg alone)",
-   "notes": "DeckShop page and posts give no combo data; need a second source.",
+   "notes": "DeckShop page and posts give no combo data; need a second source. | 2026-11-19 (docs/live_sync/values-lookup-results.md): Damage 422: Liquipedia + timesaver (section A). Knockback 1.8 tiles: timesaver only (section B, single-source). Count per Monk across targets is a modelling choice.",
    "tests_pinning_old_value": [],
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "two_sources",
+   "applied_in": "d050eed",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -4216,13 +4216,13 @@
    "target_verbatim": "A similar bug fix (-1 HP) was applied to Mother Witch.",
    "as_of": "2024-10-08",
    "source_url": "https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes/",
-   "status": "unresolved",
+   "status": "resolved_no_change",
    "mechanic": "",
    "corroboration": "official only: no absolute value in corpus; no drift row",
    "tests_pinning_old_value": [],
-   "notes": "Needs RoyaleAPI/DeckShop level-11 HP to check 529.",
+   "notes": "Needs RoyaleAPI/DeckShop level-11 HP to check 529. | 2026-11-19 (docs/live_sync/values-lookup-results.md): Liquipedia shows 529 after the 2025-03-31 -0.18% HP entry; the engine already holds 529.",
    "verifier": "confirmed",
-   "confidence": "unresolved",
+   "confidence": "single_source",
    "applied_in": null,
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
@@ -4767,12 +4767,12 @@
    "target_verbatim": "Noff 371; other sites 337 (L11)",
    "as_of": "unknown",
    "source_url": "",
-   "status": "unresolved",
+   "status": "resolved_no_change",
    "corroboration": "conflict: Noff 371 vs other sites 337; no official value",
-   "notes": "Engine matches Noff.",
+   "notes": "Engine matches Noff. | 2026-11-19 (docs/live_sync/values-lookup-results.md): 371 per Liquipedia and Noff; the engine already holds 371.",
    "tests_pinning_old_value": [],
    "verifier": "confirmed",
-   "confidence": "unresolved",
+   "confidence": "two_sources",
    "applied_in": null,
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
@@ -5240,17 +5240,17 @@
    ],
    "stat": "Skeleton count on death",
    "engine_current": "2 offsets (include/core/CardRegistry.h:172-173)",
-   "target": "7 skeletons (unconfirmed)",
+   "target": "7",
    "target_verbatim": "7 Skeletons (clasher.us, sportskeeda, noff.gg; not official)",
    "as_of": "unknown",
    "source_url": "",
-   "status": "unresolved",
+   "status": "applied",
    "corroboration": "drift only (sources: clasher.us, sportskeeda, noff.gg via search snippets)",
-   "notes": "No official statement; evolution already uses 7. Needs a fetchable RoyaleAPI/DeckShop value before applying.",
+   "notes": "No official statement; evolution already uses 7. Needs a fetchable RoyaleAPI/DeckShop value before applying. | 2026-11-19 (docs/live_sync/values-lookup-results.md): RoyaleAPI (\"Skeletons per Barrel: 7 (same)\") + devtrackers (7 since April 2018). Evolution 134 un-evolved half follows the base card.",
    "tests_pinning_old_value": [],
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "two_sources",
+   "applied_in": "ad878d7",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -6743,18 +6743,18 @@
    "engine_ids": [],
    "stat": "Ability cooldown resets on new Champion placement",
    "engine_current": "persists old cooldown (include/core/GameManager.h:586)",
-   "target": "unknown (ready vs full cooldown)",
+   "target": "ready (cooldown 0) on a new placement",
    "target_verbatim": "Ability cooldowns will reset as each new Champion is placed",
    "as_of": "2025-09-25",
    "source_url": "https://supercell.com/en/games/clashroyale/blog/release-notes/october-update-2025/",
-   "status": "unresolved",
+   "status": "applied",
    "corroboration": "official only; ambiguous wording",
-   "notes": "Moot for single-use abilities (Aug 2026) except Boss Bandit 122.",
+   "notes": "Moot for single-use abilities (Aug 2026) except Boss Bandit 122. | 2026-11-19 (docs/live_sync/values-lookup-results.md): Fandom Cards page: \"Resets instantly (ability ready)\" (single-source). Moot for single-use abilities; matters for Boss Bandit 122.",
    "tests_pinning_old_value": [],
    "mechanic": "",
    "verifier": "confirmed",
-   "confidence": "unresolved",
-   "applied_in": null,
+   "confidence": "single_source",
+   "applied_in": "5490e92",
    "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
@@ -7601,7 +7601,8 @@
    "verifier_summary": "Corrections: Targets wording softened (ground-immunity not sourced); Balloon template corrected to Melee. Damage/hit speed/dates verified official.",
    "implemented_in": "9da8008",
    "implemented_id": 183,
-   "ability_pending": false
+   "ability_pending": false,
+   "lookup_2026_11_19": "A: hp 1817 now has two sources (After Strategy citing RoyaleAPI, LDPlayer); knockback immune applied in a6b4fb2. C: deploy time, projectile speed, splash, range, speed still unpublished."
   },
   {
    "name": "Hero Ice Wizard",
@@ -7938,7 +7939,8 @@
    },
    "implemented_in": "a1304bc",
    "implemented_id": 184,
-   "ability_pending": false
+   "ability_pending": false,
+   "lookup_2026_11_19": "A (no engine change; already matching): ability cost 2, freeze only on targets already slowed, Snowman spawn damage 46, radius 2.5. Snowman left out by decision (hp 266 vs 425 still conflicts, section C)."
   },
   {
    "name": "Hero Electro Wizard",
@@ -8228,7 +8230,8 @@
    },
    "implemented_in": "38b510e",
    "implemented_id": 185,
-   "ability_pending": true
+   "ability_pending": true,
+   "lookup_2026_11_19": "A: Surging Strikes costs 2, two beams lock the 2 closest enemies, 0.5 s stun every 0.5 s for 3 s; since 2026-10-06 no attack delay after it. C: beam damage and range unpublished, so the ability stays unbuilt."
   },
   {
    "name": "Hero Balloon",
@@ -8665,7 +8668,8 @@
    },
    "implemented_in": "a87d191",
    "implemented_id": 176,
-   "ability_pending": true
+   "ability_pending": true,
+   "lookup_2026_11_19": "A: ability cost 2 (RoyaleAPI launch tweet; TrophyCoach's 1 is the outlier). B: Skeletroopers target the nearest ground enemy within 6.5 tiles. Skeletrooper hp and count unpublished, so the ability stays unbuilt."
   },
   {
    "name": "Hero Dark Prince",
@@ -9087,7 +9091,8 @@
    },
    "implemented_in": "1e90f09",
    "implemented_id": 177,
-   "ability_pending": true
+   "ability_pending": true,
+   "lookup_2026_11_19": "A: ability cost 3; shield 240 (engine already 240); the June 2026 2.5-tile first charge is the Rhino's, so the body went back to base 3.0 in c984ff0. B: Rhino about Ram Rider minus 20% (approximate, not applied); first hit 0.4 s and splash 1.5 applied in c984ff0."
   },
   {
    "name": "Hero Bowler",
@@ -9252,7 +9257,8 @@
    },
    "implemented_in": "72e68aa",
    "implemented_id": 178,
-   "ability_pending": true
+   "ability_pending": true,
+   "lookup_2026_11_19": "A: Stone Swish costs 2, range 11.5 tiles, 3 shots over 7.3 s. B: radius 1.5, wind-up 2.5 s, +30% hit speed while planted (one source each). Shot damage unpublished, so the ability stays unbuilt."
   },
   {
    "name": "Hero Tombstone",
@@ -9653,7 +9659,8 @@
    },
    "implemented_in": "7231a17",
    "implemented_id": 179,
-   "ability_pending": true
+   "ability_pending": true,
+   "lookup_2026_11_19": "C: nothing beyond the official Tomb Queen hp 4224, damage 422, sight 7."
   },
   {
    "name": "Hero Valkyrie",
@@ -10951,7 +10958,8 @@
    },
    "implemented_in": "ce7d206",
    "implemented_id": 186,
-   "ability_pending": false
+   "ability_pending": false,
+   "lookup_2026_11_19": "A: de-level pulse every 6 s, radius 6, -1 level per pulse (min level 1), never Crown Towers, no damage, about 9% hp and damage per level. C: first-pulse time (note.com hints 5.5 s) and cycles still unresolved, so the pulse stays unbuilt (the engine has no levels; \"about 9%\" would be a conversion guess)."
   },
   {
    "name": "Giant Evolution",
@@ -11371,5 +11379,92 @@
    "implemented_id": 188,
    "ability_pending": false
   }
- ]
+ ],
+ "values_lookup_2026_11_19": {
+  "source": "docs/live_sync/values-lookup-results.md",
+  "policy": "Section A applied as sourced; section B applied as single-source (commented in code); section C recorded as notes only; the Hero Ice Wizard Snowman left out (user decision 2026-11-19).",
+  "applied": [
+   {
+    "commit": "997fbaa",
+    "section": "A",
+    "what": "First hit: Cannon 25/129 10 ticks; Giant Skeleton 39 3; Skeletons 24 and helpers -11/-13/-21/-38 5; Skeletons Evolution 125 evolved 4."
+   },
+   {
+    "commit": "415391d",
+    "section": "B",
+    "what": "First hit (single-source, Liquipedia): Minions 41 5; Minion Horde 42/149 5 (inferred from Minions); Bats 78, -12, -14 and 126 un-evolved 6; Skeleton Army 12/133 5; Royal Giant 18/143 9; Miner 52 5; Cannon Cart 69 5; Dart Goblin 20/131 4 (0.35 s: nearest tick, ties up)."
+   },
+   {
+    "commit": "ad878d7",
+    "section": "A",
+    "what": "Skeleton Barrel 89 (and 134 un-evolved) drops 7 Skeletons."
+   },
+   {
+    "commit": "299104d",
+    "section": "A",
+    "what": "Per-card building lifetime: Goblin Drill 98/153 100 ticks, Goblin Cage 97/139 200 ticks."
+   },
+   {
+    "commit": "cfad4fd",
+    "section": "A+B",
+    "what": "Goblin Drill first spawn 1.0 s (A); Goblin Brawler Fast (A) and first hit 0.2 s (B)."
+   },
+   {
+    "commit": "c984ff0",
+    "section": "A+B",
+    "what": "Hero Dark Prince 177 charge threshold back to base 3.0 (A: the 2.5 is the Rhino's); Dark Prince 46/177 first hit 4 and splash 1.5 (B; radius from the official rule)."
+   },
+   {
+    "commit": "5490e92",
+    "section": "B",
+    "what": "A newly placed Champion's ability is ready (Fandom, single-source)."
+   },
+   {
+    "commit": "77f7efc",
+    "section": "mechanism",
+    "what": "Entity::knockbackImmune and CardStats::withBurstKnockback."
+   },
+   {
+    "commit": "d050eed",
+    "section": "A+B",
+    "what": "Monk 119: every third attack 422 (A) and 1.8-tile knockback (B)."
+   },
+   {
+    "commit": "a6b4fb2",
+    "section": "A",
+    "what": "Minion Giant 183 knockback immune."
+   }
+  ],
+  "not_applied": [
+   {
+    "what": "Bats Evolution 126 evolved first hit 0.2 s (official Nov 2023)",
+    "why": "Its hit speed changed on 2026-03-02 (1.3 -> 1.2 s), after the value was published."
+   },
+   {
+    "what": "Executioner 36/157 first hit 0.5 s",
+    "why": "Liquipedia models his hit speed as 0.9 s; the engine uses the card value 2.4 s, so the first-hit value does not transfer (the file's own condition)."
+   },
+   {
+    "what": "Barbarians first hit 0.4 s; X-Bow first hit 0.3 s",
+    "why": "The file flags both Liquipedia pages as stale (low confidence)."
+   },
+   {
+    "what": "Dark Prince splash 1.1 tiles",
+    "why": "Contradicted by the official 2025-01-07 rule (1.5 for all troops but Skeleton Dragons); 1.5 applied instead."
+   },
+   {
+    "what": "Mother Witch 529, Ronin 371, Hero Ice Wizard cost/freeze/radius/damage, Hero Dark Prince shield 240",
+    "why": "The engine already holds these values; rows closed or confirmed."
+   },
+   {
+    "what": "Electro Giant Evolution pulse; Hero Electro Wizard, Bowler, Balloon and Dark Prince abilities",
+    "why": "Numbers still missing (section C or unpublished); building them would mean guessing. Recorded as notes on new_entries."
+   },
+   {
+    "what": "Hero Ice Wizard Snowman",
+    "why": "Left out by user decision (hp still conflicts: 266 vs 425)."
+   }
+  ],
+  "section_C_notes": "Recorded on the matching new_entries (lookup_2026_11_19) and in values_to_look_up.md. Also new: Cannon level-11 damage disagrees between Liquipedia (202) and Fandom (212); the engine holds 202."
+ }
 }

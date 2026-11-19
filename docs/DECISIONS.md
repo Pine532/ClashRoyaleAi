@@ -8174,3 +8174,41 @@ Readings at each 500-episode mark, from 500 to 3,500:
 Diagnosed the same evening: `docs/live_sync/rung0_stall_diagnosis.md`. The live sync did not
 cause it; it is the documented cold start of a fresh net against the meta-deck pool. MPS stays
 deferred, as the user decided, until the floor check passes.
+
+## 2026-11-19: the values lookup, applied (user decision)
+
+The user supplied `docs/live_sync/values-lookup-results.md` and decided how to use it:
+- section A applied as sourced;
+- section B applied as single-source;
+- section C as ledger notes only;
+- the Hero Ice Wizard Snowman left out.
+
+It was applied after the mirror test climbed, as the user's plan required. Five groups were
+implemented in isolated worktrees, each with a test that fails before and passes after, then
+reviewed independently and integrated. The full record is in `ledger.json`,
+`values_lookup_2026_11_19`.
+
+Calls made while applying it:
+- **Dart Goblin, 0.35 s.** Ticks are 0.1 s and no rounding precedent existed, so the rule is the
+  nearest tick, ties up, giving 4 ticks.
+- **Dark Prince splash.** Liquipedia's 1.1 tiles is contradicted by the official 2025-01-07 rule
+  (1.5 for every troop but Skeleton Dragons). So "Dark Prince deals area damage" is applied as
+  single-source, with the official radius.
+- **Hero Dark Prince's 2.5-tile first charge** had been applied to the Prince's body. The lookup
+  shows it is the Rhino's: the official "0 -> 2.5" fits a mount that charged at once. The body is
+  back to base Dark Prince's 3.0.
+- **Not applied:**
+  - Bats Evolution's official 2023 first hit: its hit speed changed afterwards.
+  - Executioner: the source models a 0.9 s hit time against the engine's 2.4 s.
+  - Barbarians and X-Bow: stale pages.
+  - The abilities whose numbers are still missing: the Electro Giant Evolution pulse, and Hero
+    Electro Wizard, Bowler, Balloon and Dark Prince. "About 9% per level" and "about Ram Rider
+    minus 20%" would be conversions, not values.
+- **The Monk's combo** counts per Monk across targets. No source covers it; this is a modelling
+  choice.
+- **Consequence noticed in a test:** the Cannon's new 1.0 s first hit lets a lone Hog Rider land a
+  second swing (634 against 317). A default-deck QA pin went from "5x less damage" to "3x".
+- **A flaky test, not a regression:** `test_the_scenario_window_truncates_rather_than_terminating`
+  drew an unseeded scenario. Under a no-op defence, 13 of 200 draws on the old engine (7 of 200 on
+  the new) were pushes that really kill the King, which correctly report `terminated`. The test
+  now pins its draw.

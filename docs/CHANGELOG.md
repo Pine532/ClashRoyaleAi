@@ -12,6 +12,38 @@ The reasoning behind each change, with its measurements, is in
 
 ## Unreleased
 
+*Gameplay-affecting.* **Values from the 2026-11-19 lookup** (`docs/live_sync/values-lookup-results.md`).
+Section A (two or more sources, or official) is applied as sourced. Section B (one source) is
+applied and marked "single-source" in the code.
+- First-hit times for Cannon, Giant Skeleton, Skeletons (with every spawned Skeleton) and the
+  Skeletons Evolution. Single-source: Minions, Minion Horde, Bats, Skeleton Army, Royal Giant,
+  Miner, Cannon Cart, Dart Goblin, Dark Prince and the Goblin Brawler.
+- Skeleton Barrel drops 7 Skeletons.
+- Per-card building lifetimes (new `CardStats::withLifetime`): Goblin Drill 10 s, Goblin Cage
+  20 s. The Drill's first Goblin comes at 1.0 s, and the Goblin Brawler is Fast.
+- The Monk's third consecutive hit deals 422 and knocks back 1.8 tiles (the knockback is
+  single-source).
+- Minion Giant is knockback immune (new `Entity::knockbackImmune`).
+- Dark Prince and Hero Dark Prince splash at 1.5 tiles. Hero Dark Prince's first-charge
+  distance is back to 3.0: the June 2026 2.5 tiles belongs to the unbuilt Rhino.
+- A newly placed Champion's ability is ready (single-source; matters for Boss Bandit).
+
+Not applied, with reasons in `ledger.json` (`values_lookup_2026_11_19`):
+- Bats Evolution's first hit;
+- Executioner;
+- Barbarians and X-Bow (stale pages);
+- the Electro Giant Evolution pulse and four Hero abilities (numbers still missing);
+- the Hero Ice Wizard Snowman.
+
+**Compatibility:** Checkpoints load. Win rates are not comparable across this change.
+
+*Training-affecting, not gameplay-affecting.* **The card mask follows the engine's hand-slot
+lock.** After a card is played, its slot is locked for 20 ticks. The observation does not show
+the lock, so 10-16% of card attempts (on `main` too) were silently refused and trained on as
+real choices. The env now reports readiness from the engine (`get_hand_cooldown_ticks`), the
+rollout masks with it, and the buffer stores it so the PPO update applies the same mask. The
+observation and checkpoints are unchanged.
+
 *Training-affecting, not gameplay-affecting.* **Random decks no longer deal the three partly
 built entries:** Elite Barbarians Evolution (182), Hero Ice Wizard (184) and Electro Giant
 Evolution (186). They carry `CardDefinition::abilityPending`, the flag that already kept the
