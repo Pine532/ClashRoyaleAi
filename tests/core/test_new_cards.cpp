@@ -209,3 +209,44 @@ TEST_CASE("Hero Bowler (178) is flagged ability-pending and is never dealt in ra
     CHECK(withIceGolem > 0);
     CHECK(withBowler == 0);
 }
+
+// ---------------- Hero Tombstone (179) ----------------
+
+TEST_CASE("Hero Tombstone (179) is registered as a 3-elixir Hero with the base Tombstone's body",
+          "[new_card][hero_tombstone]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(179);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Hero Tombstone");
+    CHECK(def->cost == Catch::Approx(3.0f));
+    CHECK(def->isHero);
+    CHECK_FALSE(def->isChampion);
+    CHECK_FALSE(def->isSpell);
+
+    Board a, b;
+    auto base = live_sync::mainBody(a, 96);
+    auto hero = live_sync::mainBody(b, 179);
+    REQUIRE(base != nullptr);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->isHero);
+    CHECK(hero->hp == 529);
+    CHECK(hero->hp == base->hp);
+    CHECK(hero->sightRange == Catch::Approx(base->sightRange));
+}
+
+TEST_CASE("Hero Tombstone (179) is flagged ability-pending and is never dealt in random decks",
+          "[new_card][hero_tombstone]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(179);
+    REQUIRE(def != nullptr);
+    CHECK(def->abilityPending);
+
+    std::mt19937 rng(778);
+    int withTombstone = 0, withIceGolem = 0;
+    for (int i = 0; i < 4000; ++i) {
+        for (int id : sampleRandomDeck(rng)) {
+            if (id == 179) ++withTombstone;
+            if (id == 175) ++withIceGolem;
+        }
+    }
+    CHECK(withIceGolem > 0);
+    CHECK(withTombstone == 0);
+}

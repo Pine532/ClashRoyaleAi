@@ -2096,6 +2096,28 @@ private:
             markAbilityPending(178);
         }
 
+        // Hero Tombstone (base: id 96; body restated from the base registration:
+        // hp 529, 2 Skeletons per 35-tick pulse, 4 Skeletons on death, 30 s
+        // lifetime; the hero's own body values are unpublished, and the base's
+        // pulse interval, death count and +-1 hp are themselves unresolved
+        // across sources, so they are inherited, not chosen). Cost 3: single
+        // source, DeckShop (https://www.deckshop.pro/card/detail/hero-tombstone);
+        // not contradicted. "Regal Revival" (5 elixir, single use, destroys the
+        // Tombstone and raises Tomb Queen: Supercell 2026-06-01, 2026-07-06,
+        // 2026-08-04) is NOT modelled: Tomb Queen's hit speed, movement speed,
+        // range and size have no source (hp 4224, damage 422, sight 7 are
+        // official but not enough to build her). isHero is set by hand since
+        // withHeroAbility needs an effect; abilityPending keeps random decks
+        // from dealing it.
+        {
+            CardStats heroTombstone = building(179, "Hero Tombstone", 3.0f, 529, '5', 0.0f, 0, 100)
+                .withPeriodicEffect(35, std::make_shared<PeriodicSpawnEffect>(skeletonBarrelSkeletonStats()))
+                .withDeathEffect(std::make_shared<SpawnOnDeath>(witchSkeletonStats()));
+            heroTombstone.isHero = true;
+            add(heroTombstone);
+            markAbilityPending(179);
+        }
+
     }
 
 public:
