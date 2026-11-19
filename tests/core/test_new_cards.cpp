@@ -1402,3 +1402,23 @@ TEST_CASE("Mirror Evolution (188) leaves base Mirror (164) copying the base form
     game.step();
     CHECK(rangeOf(game, "Archers", 2) == Catch::Approx(5.0f));
 }
+
+TEST_CASE("Minion Giant (183) is knockback immune; a Minion beside it is not",
+          "[new_card][minion_giant][knockback_immunity][live_sync_values]") {
+    Board board;
+    auto giant = live_sync::mainBody(board, 183);
+    auto minion = live_sync::mainBody(board, 41);  // control: an ordinary flying troop
+    REQUIRE(giant);
+    REQUIRE(minion);
+    CHECK(giant->knockbackImmune);
+    CHECK_FALSE(minion->knockbackImmune);
+    // Every knockback source (spell push, The Log's roll, the Monk's burst)
+    // goes through pushAway / pushAlong, which an immune entity ignores.
+    const Vector2D g0 = giant->position, m0 = minion->position;
+    pushAway(*giant, Vector2D{ g0.x - 1.0f, g0.y }, 1.8f);
+    pushAlong(*giant, 0.0f, 1.0f, 1.0f);
+    pushAway(*minion, Vector2D{ m0.x - 1.0f, m0.y }, 1.8f);
+    CHECK(giant->position.x == Catch::Approx(g0.x));
+    CHECK(giant->position.y == Catch::Approx(g0.y));
+    CHECK(minion->position.x == Catch::Approx(m0.x + 1.8f));
+}

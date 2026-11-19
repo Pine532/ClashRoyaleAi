@@ -5,8 +5,9 @@
 
 // Monk's "Pensive Protection": reduced damage taken for a fixed duration, via
 // applyCurse with a multiplier below 1. Not modelled: reflecting projectiles
-// (takeDamage carries no attacker) and knockback immunity (pull/push are shared
-// primitives with no opt-out).
+// (takeDamage carries no attacker) and knockback immunity during the ability
+// (Entity::knockbackImmune exists since 2026-11-19, but no source states that
+// Pensive Protection grants it, so it is not set here).
 class MonkDeflectEffect : public IAbilityEffect {
     float damageTakenMultiplier;
     int durationTicks;

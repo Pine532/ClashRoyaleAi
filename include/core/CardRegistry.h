@@ -1132,9 +1132,14 @@ private:
         // published); projectile speed is the RangedBuildingTargeter constant.
         // Symbol 'Y' is Royal Giant's (symbols are not unique); 'j' is Lightning's and
         // src/main.cpp hides it from the spawn log.
+        // Knockback immune: two sources (https://trophycoach.com/guides/how-to-counter-minion-giant-deck,
+        // citing RoyaleAPI; https://after-strategy.com/en/clash-royale-season-87-minion-academy-minion-giant-2026/,
+        // citing Rigged Royale), docs/live_sync/values-lookup-results.md section A. The
+        // 1817 hp now has a second source too (After Strategy, citing RoyaleAPI).
         add(troop(183, "Minion Giant", 4.0f, Archetype::RangedBuildingTargeter, 1817, SPEED_MEDIUM, 4.0f, 153, 17, 'Y')
             .withFlying()
-            .withSightRange(6.5f));
+            .withSightRange(6.5f)
+            .withKnockbackImmunity());
 
         // === Defensive structures (expansion) ===
         // X-Bow: the default 30 s building lifetime matches the real card;
