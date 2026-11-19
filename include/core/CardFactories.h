@@ -113,6 +113,7 @@ inline void applyCardMetadata(const std::shared_ptr<CombatEntity>& entity, const
     // Runtime state (ability cooldown, souls, invisibility, hit-speed
     // multiplier) is not copied from stats.
     applyOnHit(entity, stats);
+    entity->firstHitTicks = stats.firstHitTicks;
     if (stats.initialCooldownTicks > 0) entity->seedCooldown(stats.initialCooldownTicks);
     if (stats.passiveDamageReduction < 1.0f) entity->applyCurse(stats.passiveDamageReduction, 999999);
 }

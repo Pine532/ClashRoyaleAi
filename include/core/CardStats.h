@@ -246,6 +246,10 @@ struct CardStats {
     // Deploy delay before the first attack (X-Bow); see
     // CombatEntity::seedCooldown.
     int initialCooldownTicks = 0;
+    // Live "First Hit Speed": the wind-up after a unit starts engaging a target
+    // (RoyaleAPI "First Hit = Hit Time - Load Time"; docs/LIVE_SYNC.md). See
+    // CombatEntity::firstHitTicks. 0 = no wind-up.
+    int firstHitTicks = 0;
     // HP-threshold transform (Cannon Cart).
     float transformAtHpFraction = 0.0f;
     int transformLifetimeTicks = 0;
@@ -539,6 +543,10 @@ struct CardStats {
     }
     CardStats& withDeployDelay(int ticks) {
         initialCooldownTicks = ticks;
+        return *this;
+    }
+    CardStats& withFirstHit(int ticks) {
+        firstHitTicks = ticks;
         return *this;
     }
     CardStats& withHpTransform(float atFraction, int lifetimeTicks, bool becomesStationary) {

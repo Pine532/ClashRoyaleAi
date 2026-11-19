@@ -60,6 +60,14 @@ protected:
     static constexpr int TICKS_SINCE_ATTACK_NEVER = 1 << 20;
     int ticksSinceAttack = TICKS_SINCE_ATTACK_NEVER;
 
+    // First-hit wind-up state; plain members so snapshot()/deepCopy copy them.
+    // The wind-up runs in parallel with currentCooldown (an attack needs both
+    // at 0), so retargeting after a kill costs the larger of the two, matching
+    // load_after_retarget = false in cr-api-data.
+    int engagedTargetId = -1;
+    float windupTicksRemaining = 0.0f;
+    bool waiveNextWindup = false;
+
     // The freezes in force, each running its own duration (see applyFreeze).
     struct FreezeSlot { int ticks = 0; float factor = 1.0f; };
     static constexpr int FREEZE_SLOT_COUNT = 3;
@@ -462,6 +470,18 @@ public:
         abilitySlotCardId = 0;
     }
 
+    // First-hit time (CardStats::firstHitTicks): the wind-up before a unit's
+    // first attack on a target it has just started engaging. Source: RoyaleAPI
+    // cr-api-data, "First Hit = Hit Time - Load Time" (hit_speed / load_time),
+    // docs/LIVE_SYNC.md. 0 (the default) leaves behaviour untouched.
+    int firstHitTicks = 0;
+
+    // A perception-injected unit that is already on screen is presumed loaded
+    // and mid-fight: its next engagement skips the wind-up once
+    // (ClashEnv::inject with deploy_ticks == 0).
+    void waiveFirstWindup() { waiveNextWindup = true; }
+    float getWindupTicksRemaining() const { return windupTicksRemaining; }
+
     // Deploy delay before the first shot (X-Bow's slow lock-on). Called once
     // after spawn by CardFactories; the one seam onto the protected cooldown.
     void seedCooldown(int ticks) {
@@ -744,10 +764,40 @@ public:
             float dist = position.distanceTo(target->position);
             float effectiveAttackRange = effectiveRangeTo(target);
 
+            if (dist > effectiveAttackRange) {
+                // Out of range (approaching, knocked back, jumping, hooking):
+                // the engagement is over.
+                engagedTargetId = -1;
+                windupTicksRemaining = 0.0f;
+            }
+
             if (dist <= effectiveAttackRange) {
+                // First-hit wind-up. Armed only when an engagement starts (not
+                // between consecutive attacks on one target, so DPS is
+                // unchanged); a stun interrupts the attack and the next
+                // engagement winds up again. A slow stretches it like the
+                // cooldown. The arming tick does not count down, so an
+                // engagement armed on tick X fires on X + firstHitTicks.
+                if (stunned) {
+                    engagedTargetId = -1;
+                    windupTicksRemaining = 0.0f;
+                } else if (firstHitTicks > 0) {
+                    if (engagedTargetId != target->id) {
+                        engagedTargetId = target->id;
+                        if (waiveNextWindup) {
+                            waiveNextWindup = false;
+                            windupTicksRemaining = 0.0f;
+                        } else {
+                            windupTicksRemaining = static_cast<float>(firstHitTicks);
+                        }
+                    } else if (windupTicksRemaining > 0.0f) {
+                        windupTicksRemaining -= wasFrozen ? slowThisTick : 1.0f;
+                        if (windupTicksRemaining < 0.0f) windupTicksRemaining = 0.0f;
+                    }
+                }
                 // Not while stunned: a stun holds the cooldown still, and a
                 // unit that was already ready must not swing through it.
-                if (!stunned && currentCooldown == 0.0f) {
+                if (!stunned && currentCooldown == 0.0f && windupTicksRemaining == 0.0f) {
                     // Effects are applied by performAttack, since when they
                     // fire depends on when the damage lands (at once for a
                     // direct hit, on arrival for a projectile).
@@ -871,6 +921,12 @@ public:
         }
         // else: within the grace period with no target, hold the ramp stage for
         // a new target.
+
+        // No target: nothing is engaged, whatever the ramp grace period holds.
+        if (!target) {
+            engagedTargetId = -1;
+            windupTicksRemaining = 0.0f;
+        }
 
         clampPosition(board);
     }

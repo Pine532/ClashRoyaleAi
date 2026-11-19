@@ -614,6 +614,9 @@ public:
             if (deployTicks >= 0) {
                 if (auto* combat = dynamic_cast<CombatEntity*>(e.get())) {
                     combat->deployTicksRemaining = deployTicks;
+                    // Already on screen, so presumed loaded and engaged: no
+                    // first-hit wind-up on its first engagement.
+                    if (deployTicks == 0) combat->waiveFirstWindup();
                 }
             }
         }
