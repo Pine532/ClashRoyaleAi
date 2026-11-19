@@ -28,6 +28,8 @@ public:
     static constexpr int TOWER_PRINCESS_ID = -3;
     // Mirror's registered id; playCard special-cases it.
     static constexpr int MIRROR_CARD_ID = 164;
+    static constexpr int MIRROR_EVOLUTION_CARD_ID = 188;
+    static bool isMirrorCardId(int id) { return id == MIRROR_CARD_ID || id == MIRROR_EVOLUTION_CARD_ID; }
     // Spirit Empress's registered id; see SpiritEmpressForms.h.
     static constexpr int SPIRIT_EMPRESS_CARD_ID = 165;
 
@@ -498,7 +500,7 @@ public:
         // Mirror: legality, spawn and cost come from this team's last play (+1
         // elixir), reusing that card's own rules. Fails if nothing has been
         // played.
-        bool isMirror = (targetCardId == MIRROR_CARD_ID);
+        bool isMirror = isMirrorCardId(targetCardId);
         // Spirit Empress: the form and cost follow the current elixir at play
         // time (an approximation; see SpiritEmpressForms.h). Both forms share a
         // footprint, so legality needs no substitution.
@@ -526,7 +528,17 @@ public:
             if (isSpiritEmpress) {
                 bool flying = (costOverride >= 6.0f);
                 CardFactories::spawn(flying ? spiritEmpressFlyingStats() : spiritEmpressGroundStats(), x, y, team, board);
-            } else if (result.useEvolvedForm && effectiveDef->spawnEvolvedEntity) {
+            } else if (isMirror && result.useEvolvedForm) {
+                // Evolved Mirror (Supercell 2026-10-27 post): the copy is the
+                // Evolution of the last played card whether or not that card
+                // sits in an Evo slot. effectiveDef may itself be an Evolution
+                // def (lastPlayedCardId is the slot id).
+                int baseId = effectiveDef->isEvolution ? effectiveDef->evolvesFromId : effectiveDef->id;
+                int evoId = CardRegistry::getInstance().evolutionIdForBase(baseId);
+                const CardDefinition* evoDef = (evoId >= 0) ? CardRegistry::getInstance().getCard(evoId) : nullptr;
+                if (evoDef && evoDef->spawnEvolvedEntity) evoDef->spawnEvolvedEntity(x, y, team, board);
+                else effectiveDef->spawnEntity(x, y, team, board); // no Evolution: base Mirror result
+            } else if (!isMirror && result.useEvolvedForm && effectiveDef->spawnEvolvedEntity) {
                 effectiveDef->spawnEvolvedEntity(x, y, team, board);
             } else {
                 effectiveDef->spawnEntity(x, y, team, board);

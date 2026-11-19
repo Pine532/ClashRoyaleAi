@@ -1222,3 +1222,162 @@ TEST_CASE("Giant Evolution (187) slot cycles 1 un-evolved play then evolved",
     CHECK_FALSE(evolved[0]);
     CHECK(evolved[1]);
 }
+
+// ---------------- Mirror Evolution (188) ----------------
+
+namespace {
+// Deck with 188 in slot 0 and a plain card list behind it; hand and queue are
+// pinned (a Mirror left in the queue could be drawn and found by playCard).
+GameManager mirrorEvoGame(const std::vector<int>& deck) {
+    GameManager game(deck, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    game.playerAI.hand = { deck[0], deck[1], deck[2], deck[3] };
+    game.playerAI.deckQueue = { deck[4], deck[5], deck[6], deck[7] };
+    game.playerAI.elixir = 100.0f;
+    return game;
+}
+void chargeMirrorEvo(GameManager& g) { g.playerAI.evolutionState[188].cyclesUntilEvolved = 0; }
+void putInHand(GameManager& g, int slot, int id) {
+    g.playerAI.hand[slot] = id;
+    g.playerAI.handCooldownTicks[slot] = 0;
+}
+// Attack range of the first entity of `name` on team 0 beyond `skip` earlier ones.
+float rangeOf(GameManager& g, const std::string& name, int nth = 0) {
+    int seen = 0;
+    for (const auto& e : g.getBoard().getEntities())
+        if (e->name == name && e->team == 0 && seen++ == nth) {
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            return c ? c->getAttackRange() : -1.0f;
+        }
+    return -1.0f;
+}
+}
+
+TEST_CASE("Mirror Evolution (188) is registered as an Evolution stub of Mirror",
+          "[new_card][evo_mirror]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(188);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Mirror");
+    CHECK(def->cost == Catch::Approx(3.0f));
+    CHECK(def->isSpell); // spells need no sight range; the sight catalogue skips them
+    CHECK(def->isEvolution);
+    CHECK(def->evolutionCycleThreshold == 2);
+    CHECK(def->evolvedUsesGranted == 1);
+    CHECK(def->evolvesFromId == -1);
+}
+
+TEST_CASE("Mirror Evolution (188): evolutionIdForBase maps every Evolution from its base",
+          "[new_card][evo_mirror]") {
+    const auto& reg = CardRegistry::getInstance();
+    int checked = 0;
+    for (const auto& [id, def] : reg.getAllCards()) {
+        if (!def.isEvolution || def.evolvesFromId < 0) continue;
+        INFO("evolution " << id);
+        CHECK(reg.evolutionIdForBase(def.evolvesFromId) == id);
+        ++checked;
+    }
+    CHECK(checked >= 40);
+    CHECK(reg.evolutionIdForBase(83) == 123);
+    CHECK(reg.evolutionIdForBase(6) == 140);
+    CHECK(reg.evolutionIdForBase(1) == 128);
+    CHECK(reg.evolutionIdForBase(164) == -1);
+    CHECK(reg.evolutionIdForBase(166) == -1);
+    CHECK(reg.evolutionIdForBase(188) == -1);
+}
+
+TEST_CASE("Mirror Evolution (188) charged copies the last card evolved, at +1 elixir",
+          "[new_card][evo_mirror]") {
+    // Archers (1) sits in a plain slot: base range 5.0, Evolution 6.0.
+    GameManager game = mirrorEvoGame({ 188, 1, 2, 3, 4, 5, 6, 7 });
+    REQUIRE(game.playCard(0, 1, 9.0f, 10.0f));
+    game.step();
+    chargeMirrorEvo(game);
+    float before = game.getElixirAI();
+    putInHand(game, 0, 188);
+    REQUIRE(game.playCard(0, 188, 9.0f, 12.0f));
+    CHECK(game.getElixirAI() == Catch::Approx(before - 4.0f)); // 3 + 1
+    game.step();
+    CHECK(rangeOf(game, "Archers", 0) == Catch::Approx(5.0f));
+    CHECK(rangeOf(game, "Archers", 2) == Catch::Approx(6.0f)); // the copy
+}
+
+TEST_CASE("Mirror Evolution (188) works when the last card is an Evolution slot id",
+          "[new_card][evo_mirror]") {
+    // Slot id 128 is Archers' Evolution, played here un-evolved (base form).
+    GameManager game = mirrorEvoGame({ 188, 2, 128, 3, 4, 5, 6, 7 });
+    REQUIRE(game.playCard(0, 128, 9.0f, 10.0f));
+    game.step();
+    CHECK(rangeOf(game, "Archers", 0) == Catch::Approx(5.0f));
+    chargeMirrorEvo(game);
+    putInHand(game, 0, 188);
+    REQUIRE(game.playCard(0, 188, 9.0f, 12.0f));
+    game.step();
+    CHECK(rangeOf(game, "Archers", 2) == Catch::Approx(6.0f));
+}
+
+TEST_CASE("Mirror Evolution (188) copies the base form when the card has no Evolution",
+          "[new_card][evo_mirror]") {
+    // Mini PEKKA (5) has no Evolution; cost 4 so the copy costs 5.
+    REQUIRE(CardRegistry::getInstance().evolutionIdForBase(5) == -1);
+    GameManager game = mirrorEvoGame({ 188, 5, 2, 3, 4, 6, 7, 8 });
+    REQUIRE(game.playCard(0, 5, 9.0f, 10.0f));
+    chargeMirrorEvo(game);
+    float before = game.getElixirAI();
+    putInHand(game, 0, 188);
+    REQUIRE(game.playCard(0, 188, 9.0f, 12.0f));
+    CHECK(game.getElixirAI() == Catch::Approx(before - 5.0f));
+    game.step();
+    int knights = 0;
+    for (const auto& e : game.getBoard().getEntities())
+        if (e->name == "Mini PEKKA" && e->team == 0) ++knights;
+    CHECK(knights == 2);
+}
+
+TEST_CASE("Mirror Evolution (188) uncharged plays as base Mirror, charging over 2 plays",
+          "[new_card][evo_mirror]") {
+    GameManager game = mirrorEvoGame({ 188, 1, 2, 3, 4, 5, 6, 7 });
+    REQUIRE(game.playCard(0, 1, 9.0f, 10.0f));
+    for (int i = 0; i < 3; ++i) {
+        putInHand(game, 0, 188);
+        REQUIRE(game.playCard(0, 188, 9.0f, 12.0f));
+    }
+    game.step();
+    // Archers 0 = original, 2 = first copy (base), 4 = second copy (base),
+    // 6 = third copy (evolved).
+    CHECK(rangeOf(game, "Archers", 2) == Catch::Approx(5.0f));
+    CHECK(rangeOf(game, "Archers", 4) == Catch::Approx(5.0f));
+    CHECK(rangeOf(game, "Archers", 6) == Catch::Approx(6.0f));
+}
+
+TEST_CASE("Mirror Evolution (188) never starts in the opening hand", "[new_card][evo_mirror]") {
+    for (unsigned seed = 0; seed < 200; ++seed) {
+        PlayerState p;
+        std::mt19937 rng(seed);
+        p.initializeDeck({ 188, 1, 2, 3, 4, 5, 6, 7 }, rng);
+        for (int c : p.hand) REQUIRE(c != 188);
+    }
+}
+
+TEST_CASE("Mirror Evolution (188) fails with nothing played and never becomes the last card",
+          "[new_card][evo_mirror]") {
+    GameManager game = mirrorEvoGame({ 188, 1, 2, 3, 4, 5, 6, 7 });
+    putInHand(game, 0, 188);
+    float before = game.getElixirAI();
+    REQUIRE_FALSE(game.playCard(0, 188, 9.0f, 12.0f));
+    CHECK(game.getElixirAI() == Catch::Approx(before));
+
+    REQUIRE(game.playCard(0, 1, 9.0f, 10.0f));
+    putInHand(game, 0, 188);
+    REQUIRE(game.playCard(0, 188, 9.0f, 12.0f));
+    CHECK(game.playerAI.lastPlayedCardId == 1);
+    CHECK(game.getLastPlayedTick(0, 188) >= 0);
+}
+
+TEST_CASE("Mirror Evolution (188) leaves base Mirror (164) copying the base form",
+          "[new_card][evo_mirror]") {
+    GameManager game = mirrorEvoGame({ 164, 2, 128, 3, 4, 5, 6, 7 });
+    REQUIRE(game.playCard(0, 128, 9.0f, 10.0f));
+    putInHand(game, 0, 164);
+    REQUIRE(game.playCard(0, 164, 9.0f, 12.0f));
+    game.step();
+    CHECK(rangeOf(game, "Archers", 2) == Catch::Approx(5.0f));
+}

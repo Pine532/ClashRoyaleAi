@@ -155,6 +155,7 @@ TEST_CASE("Every currently-defined card resolves with id/name/cost/isSpell", "[c
         {185, "Hero Electro Wizard", 4.0f, false},
         {186, "Electro Giant", 7.0f, false}, // Evolution of id 84
         {187, "Giant", 5.0f, false}, // Evolution of id 2
+        {188, "Mirror", 3.0f, true}, // Mirror Evolution (stub)
     };
 
     const auto& registry = CardRegistry::getInstance();

@@ -98,7 +98,8 @@ public:
     // forming the hand. The deterministic overload above stays the default
     // because many tests assert its hand; GameManager::reset uses this one.
     //
-    // Elixir Collector (99) and Mirror (164) may not start in hand; one dealt
+    // Elixir Collector (99), Mirror (164) and Mirror Evolution (188; nothing to copy at
+    // match start) may not start in hand; one dealt
     // there is swapped with an eligible card from the queue. A legal deck holds
     // each at most once, so a swap always exists.
     void initializeDeck(const std::vector<int>& deckList, std::mt19937& rng) {
@@ -113,7 +114,7 @@ public:
         std::iota(order.begin(), order.end(), size_t{0});
         std::shuffle(order.begin(), order.end(), rng);
 
-        auto excludedFromOpeningHand = [](int cardId) { return cardId == 99 || cardId == 164; };
+        auto excludedFromOpeningHand = [](int cardId) { return cardId == 99 || cardId == 164 || cardId == 188; };
         for (size_t i = 0; i < 4 && i < order.size(); ++i) {
             if (!excludedFromOpeningHand(deckList[order[i]])) continue;
             for (size_t j = 4; j < order.size(); ++j) {

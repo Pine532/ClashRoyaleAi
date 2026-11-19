@@ -100,6 +100,9 @@ struct CardDefinition {
     bool isEvolution = false;
     int evolutionCycleThreshold = 0;
     int evolvedUsesGranted = 0;
+    // For an Evolution def: the base card's id (CardStats::id of the baseStats
+    // handed to addEvolution). -1 for every other card. Used by Evolved Mirror.
+    int evolvesFromId = -1;
     std::function<void(float x, float y, int team, Board& board)> spawnEvolvedEntity;
 };
 
@@ -116,6 +119,9 @@ inline constexpr int CARD_ID_COUNT = 256;
 class CardRegistry {
 private:
     std::unordered_map<int, CardDefinition> cards;
+    // base card id -> Evolution id, filled by addEvolution. Lookup only, never
+    // iterated, so determinism is untouched.
+    std::unordered_map<int, int> evolutionIdByBase;
 
     static CardStats troop(int id, std::string name, float cost, Archetype archetype,
         int hp, float speed, float attackRange, int damage, int attackCooldown, char symbol) {
@@ -509,6 +515,12 @@ private:
         def.spawnEvolvedEntity = [evolvedStats](float x, float y, int team, Board& board) {
             CardFactories::spawn(evolvedStats, x, y, team, board);
         };
+        // Mirror Evolution (188) is a stub whose "base" is itself: no base card
+        // maps to it, so it is left out of the lookup.
+        if (baseStats.id != evolutionId) {
+            def.evolvesFromId = baseStats.id;
+            evolutionIdByBase[baseStats.id] = evolutionId;
+        }
         cards[evolutionId] = std::move(def);
     }
 
@@ -1987,6 +1999,21 @@ private:
         // cost, flags and footprint are never read at play time.
         add(spell(164, "Mirror", 3.0f, 0.0f, 0, 0, '='));
 
+        // === Mirror Evolution ===
+        // Supercell 2026-10-27 King vs. King post: "Evolved Mirror copies the
+        // last card you played, but evolved, with 1 extra level." GameManager::
+        // playCard substitutes the copied card's Evolution, so this stub's own
+        // spawn and footprint are never read. The +1 level is a no-op (the
+        // engine has no levels; base Mirror models only the +1 elixir).
+        // Cycles-to-evolve 2: single source, timesaver.gg/blog/clash-royale-evo-mirror
+        // ("It charges in 2 cycles", citing the wiki); not contradicted.
+        // Evolved uses 1: NOT a sourced value (no source states it); 1 is the
+        // integer's structural minimum. Unresolved.
+        addEvolution(188,
+            spell(188, "Mirror", 3.0f, 0.0f, 0, 0, '='),
+            spell(188, "Mirror", 3.0f, 0.0f, 0, 0, '='),
+            2, 1);
+
         // === Spirit Empress ===
         // Registered at the ground form's cost (3.0) for the hand display and
         // placement; playCard always spawns from SpiritEmpressForms.h instead.
@@ -2293,6 +2320,13 @@ public:
     static CardRegistry& getInstance() {
         static CardRegistry instance;
         return instance;
+    }
+
+    // Evolution id for a base card id, or -1. Never keyed to specific ids: it
+    // is filled by addEvolution from baseStats.id.
+    int evolutionIdForBase(int baseId) const {
+        auto it = evolutionIdByBase.find(baseId);
+        return it == evolutionIdByBase.end() ? -1 : it->second;
     }
 
     const CardDefinition* getCard(int id) const {
