@@ -98,7 +98,7 @@ TEST_CASE("Goblinstein (121) spawns both the Monster (champion) and the Doctor",
     }
     REQUIRE(monster != nullptr);
     REQUIRE(doctor != nullptr);
-    REQUIRE(monster->hp == 2385);
+    REQUIRE(monster->hp == 2240);
     REQUIRE(doctor->hp == 721);
     REQUIRE(doctor->targetsAir);
 }

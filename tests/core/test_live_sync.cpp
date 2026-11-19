@@ -1348,3 +1348,29 @@ TEST_CASE("Void deals 294 per wave to 2-4 targets", "[live_sync][patch-2026-08-0
     p26dCastAndRun(board, 104, 9.0f, 9.0f);
     for (const auto& e : pair) REQUIRE(e->hp == 100000 - 3 * 294);
 }
+
+TEST_CASE("Archer Queen hits for 232 (2026-08-26 buff)", "[live_sync][patch-2026-08-26]") {
+    Board board;
+    auto queen = mainBody(board, 118);
+    REQUIRE(queen != nullptr);
+    REQUIRE(queen->getBaseDamage() == 232);
+}
+
+TEST_CASE("Electro Giant hits for 184 (2026-08-26 buff)", "[live_sync][patch-2026-08-26]") {
+    Board board;
+    auto giant = mainBody(board, 84);
+    REQUIRE(giant != nullptr);
+    REQUIRE(giant->getBaseDamage() == 184);
+}
+
+TEST_CASE("Goblinstein Monster has 2240 hp (2026-08-26 nerf)", "[live_sync][patch-2026-08-26]") {
+    Board board;
+    auto bodies = spawnBare(board, 121);
+    std::shared_ptr<CombatEntity> monster;
+    for (const auto& e : bodies) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->isChampion) monster = ce;
+    }
+    REQUIRE(monster != nullptr);
+    REQUIRE(monster->hp == 2240);
+}

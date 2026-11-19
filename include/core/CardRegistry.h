@@ -918,7 +918,7 @@ private:
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} })
             .withSplash(1.5f)
             .withDieAfterFirstHit().withSightRange(7.0f));
-        add(troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 163, 18, '|')
+        add(troop(84, "Electro Giant", 7.0f, Archetype::MeleeBuildingTargeter, 3952, SPEED_SLOW, 1.0f, 184, 18, '|') // 2026-08-26 final August balance update: damage 163 -> 184 (docs/LIVE_SYNC.md)
             .withSplash(1.5f)
             .withPeriodicEffect(50, std::make_shared<AreaStunEffect>(2.5f, 5)));
         // 2024-10-08 balance update: Bush speed 45 -> 60 = Medium (docs/LIVE_SYNC.md).
@@ -1133,7 +1133,7 @@ private:
 
         // Archer Queen's "Cloaking Cape": untargetable and ~2.8x attack speed
         // for 3.5 s.
-        add(troop(118, "Archer Queen", 5.0f, Archetype::RangedSquad, 1000, SPEED_MEDIUM, 5.0f, 225, 12, 'Q')
+        add(troop(118, "Archer Queen", 5.0f, Archetype::RangedSquad, 1000, SPEED_MEDIUM, 5.0f, 232, 12, 'Q') // 2026-08-26 final August balance update: damage 225 -> 232 (docs/LIVE_SYNC.md)
             .withTargetsAir()
             .withChampionAbility(1.0f, 170, std::make_shared<ArcherQueenCloakEffect>(35, 1.0f / 2.8f)));
 
@@ -1156,7 +1156,7 @@ private:
         // ability) plus the Doctor (secondary, 3 tiles behind at a fixed
         // offset, a brief stun on hit). "Lightning Link": see
         // GoblinsteinLightningLinkEffect.
-        add(troop(121, "Goblinstein", 5.0f, Archetype::MeleeBuildingTargeter, 2385, 0.5f, 1.2f, 128, 15, 'G')
+        add(troop(121, "Goblinstein", 5.0f, Archetype::MeleeBuildingTargeter, 2240, 0.5f, 1.2f, 128, 15, 'G') // 2026-08-26 final August balance update: Monster hp 2385 -> 2240 (docs/LIVE_SYNC.md)
             .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 94, 5, 40)) // 2026-08-04: 214 -> 188 damage per second = 94 per 5-tick pulse (docs/LIVE_SYNC.md)
             .withSecondaryUnit(
                 // 2026-08-04 balance update: Doctor damage 92 -> 135 (docs/LIVE_SYNC.md).
