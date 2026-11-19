@@ -42,6 +42,8 @@ size, so the first two items gate any training.
    documented cold start against the 16-deck pool, not the live sync, since `main` stalls
    identically. In the mirror (`CLASH_PHASE1_DECK_POOL=0`) the same net climbed 0.05 -> 0.48 in
    78 updates. Plan: run long in mirror mode, then switch the pool on with a resume.
+   `tools/mac_training_pool_switch.sh` does the switch at rung 4, while the run is still in
+   the mirror phase, which ends at rung 8.
    Observation is now 14403 floats (was 13977);
    `python_ai/tools/migrate_checkpoint_card_ids.py` migrates an old-layout checkpoint.
 2. ~~**Re-run the side null**~~ DONE 2026-11-18 on a random-init net: 0.482 over 300
