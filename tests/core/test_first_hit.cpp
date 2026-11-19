@@ -325,3 +325,38 @@ TEST_CASE("A Knight's first swing lands 0.5 s after he engages, then every 1.2 s
     CHECK(hitTicks[1] - hitTicks[0] == 12);   // continuous attacks keep the 1.2 s hit speed
     CHECK(hitTicks[2] - hitTicks[1] == 12);
 }
+
+TEST_CASE("inject with deploy_ticks 0: a unit still walking winds up on arrival", "[first_hit][inject]") {
+    // Only a unit engaging on its first active tick was mid-fight when the
+    // mirror was rebuilt. One that walks to its target winds up as usual, so
+    // deploy_ticks 0 saves exactly the deploy second (perception's
+    // test_deploy_ticks_zero_recovers_exactly_the_deploy_second).
+    constexpr int KNIGHT = 0;
+    const std::vector<int> deck = { 15, 6, 25, 40, 24, 72, 33, 7 };
+    auto firstHitTick = [&](int deployTicks) {
+        ClashEnv env(deck, deck, 100);
+        env.reset();
+        env.inject(KNIGHT, 9.0f, 10.0f, 0, -1.0f, deployTicks);
+        Board& board = env.debugGame().getBoard();
+        board.commitPendingEntities(0);
+        auto target = std::make_shared<StationaryCombatant>(board.allocateId(), 9.0f, 13.0f, 100000, 1, 0.5f, 0, 1000);
+        spawn(board, target);
+        std::shared_ptr<CombatEntity> mine;
+        for (const auto& e : board.getEntities()) {
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (c && !c->isTower() && c->cardId == KNIGHT) mine = c;
+        }
+        REQUIRE(mine);
+        REQUIRE(mine->firstHitTicks > 0);
+        for (int t = 0; t < 80; ++t) {
+            board.currentTick = t;
+            mine->update(board);
+            if (target->hp < 100000) return t;
+        }
+        return -1;
+    };
+    const int deployed = firstHitTick(0);
+    const int fresh = firstHitTick(-1);
+    REQUIRE(deployed > 0);
+    REQUIRE(fresh - deployed == DEPLOY_TIME_TICKS);
+}

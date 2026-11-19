@@ -476,9 +476,9 @@ public:
     // docs/LIVE_SYNC.md. 0 (the default) leaves behaviour untouched.
     int firstHitTicks = 0;
 
-    // A perception-injected unit that is already on screen is presumed loaded
-    // and mid-fight: its next engagement skips the wind-up once
-    // (ClashEnv::inject with deploy_ticks == 0).
+    // A perception-injected unit that is already on screen and in range of its
+    // target is presumed loaded and mid-fight: an engagement on its first active
+    // tick skips the wind-up (ClashEnv::inject with deploy_ticks == 0).
     void waiveFirstWindup() { waiveNextWindup = true; }
     float getWindupTicksRemaining() const { return windupTicksRemaining; }
 
@@ -927,6 +927,11 @@ public:
             engagedTargetId = -1;
             windupTicksRemaining = 0.0f;
         }
+        // The inject waiver covers only a unit engaging on its first active
+        // tick, i.e. one already in range when the mirror was rebuilt
+        // (mid-fight). A re-injected unit still walking winds up on arrival,
+        // so deploy_ticks = 0 recovers exactly the deploy second.
+        waiveNextWindup = false;
 
         clampPosition(board);
     }
