@@ -682,7 +682,7 @@ TEST_CASE("Redeploying the same Champion tracks the newest instance for ability 
     REQUIRE(firstInstance->abilityCooldownRemaining == 0); // the original, no-longer-tracked instance is untouched
 }
 
-TEST_CASE("A Champion's ability cooldown persists across death and redeploy of the same slot", "[game_manager][champion][multi]") {
+TEST_CASE("A Champion's ability is ready again after death and redeploy of the same slot (live sync: new Champion resets cooldown)", "[game_manager][champion][multi]") {
     GameManager game({ 1, 122, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
     game.playerAI.elixir = 100.0f;
     game.playerAI.hand[1] = 122; // force into hand: the opening hand is random
@@ -701,10 +701,10 @@ TEST_CASE("A Champion's ability cooldown persists across death and redeploy of t
     game.playerAI.hand[1] = 122;
     game.playerAI.handCooldownTicks[1] = 0; // skip the cycle-in delay
     game.playerAI.elixir = 100.0f;
-    game.playCard(0, 122, 9.0f, 10.0f); // redeploy -- should seed from the persisted cooldown, not start at 0
+    game.playCard(0, 122, 9.0f, 10.0f); // redeploy -- a new Champion's ability is ready (cooldown reset)
     game.step();
 
-    REQUIRE_FALSE(game.isChampionAbilityReady(0, 1)); // still cooling down, not freshly ready
+    REQUIRE(game.isChampionAbilityReady(0, 1)); // pin updated: was REQUIRE_FALSE under the old persist-on-redeploy rule
 }
 
 TEST_CASE("A cloned Champion can never activate the ability, even after the original dies", "[game_manager][champion][multi]") {
@@ -886,4 +886,48 @@ TEST_CASE("the elixir phase composes with the curriculum's opponent multiplier",
     // ...and the handicap never reaches the AI's own bar.
     REQUIRE(oppIncomeOver(GameManager::DOUBLE_ELIXIR_TICK, 20, 1.5f).second
             == Catch::Approx(1.40f).margin(0.01f));
+}
+
+// Live sync (values-lookup-results.md, section B, single-source:
+// clashroyale.fandom.com/wiki/Cards "Resets instantly (ability ready)"): placing a
+// new Champion makes its ability ready; the old cooldown is not inherited.
+TEST_CASE("A newly placed Boss Bandit has its ability ready despite a cooldown on the dead one", "[live_sync_values][champion_cooldown]") {
+    GameManager game({ 1, 122, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
+    game.playerAI.elixir = 100.0f;
+    game.playerAI.hand[1] = 122;
+    game.playCard(0, 122, 9.0f, 10.0f);
+    game.step();
+
+    REQUIRE(game.activateChampionAbility(0, 1));
+    game.step(); // persisted cooldown synced while alive
+    game.step();
+    REQUIRE_FALSE(game.isChampionAbilityReady(0, 1));
+
+    for (const auto& e : game.getBoard().getEntities()) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && ce->isChampion) { ce->takeDamage(ce->hp); break; }
+    }
+    game.step();
+
+    game.playerAI.hand[1] = 122;
+    game.playerAI.handCooldownTicks[1] = 0;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, 122, 9.0f, 10.0f);
+    game.step();
+
+    REQUIRE(game.isChampionAbilityReady(0, 1));
+}
+
+TEST_CASE("Control: without a new placement the Boss Bandit cooldown still counts down", "[live_sync_values][champion_cooldown]") {
+    GameManager game({ 1, 122, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
+    game.playerAI.elixir = 100.0f;
+    game.playerAI.hand[1] = 122;
+    game.playCard(0, 122, 9.0f, 10.0f);
+    game.step();
+
+    REQUIRE(game.activateChampionAbility(0, 1));
+    game.step();
+    REQUIRE_FALSE(game.isChampionAbilityReady(0, 1));
+    game.step();
+    REQUIRE_FALSE(game.isChampionAbilityReady(0, 1));
 }

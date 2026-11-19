@@ -119,8 +119,8 @@ private:
     }
 
     // Once per tick per team: copies the tracked Champion's live cooldown into
-    // persistedCooldownRemaining. After it dies the last value stays, so a
-    // redeploy continues the timer.
+    // persistedCooldownRemaining. After it dies the last value stays (it is
+    // not inherited by a newly placed Champion: see trackSlotEntities).
     void syncChampionCooldowns(int team) {
         PlayerState& player = (team == 0) ? playerAI : playerOpponent;
         const std::vector<int>& deckConfig = (team == 0) ? aiDeckConfig : oppDeckConfig;
@@ -599,7 +599,14 @@ public:
                 const int slotCard = (ce->abilitySlotCardId != 0) ? ce->abilitySlotCardId : ce->cardId;
                 if (slotCard != deckConfig[slot]) continue;
                 PlayerState::ChampionSlotState& slotState = player.championSlots[slot];
-                ce->abilityCooldownRemaining = slotState.persistedCooldownRemaining;
+                // A newly placed Champion's ability is ready: the cooldown of a
+                // previous body is not inherited. Source (single-source):
+                // https://clashroyale.fandom.com/wiki/Cards ("Resets instantly
+                // (ability ready)"); the official 2025-09-25 post says only that
+                // cooldowns reset as each new Champion is placed. Matters for
+                // Boss Bandit (122), the one multi-use ability.
+                ce->abilityCooldownRemaining = 0;
+                slotState.persistedCooldownRemaining = 0;
                 slotState.trackedEntityId = ce->id;
                 break;
             }
