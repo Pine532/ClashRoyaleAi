@@ -519,7 +519,9 @@ def run_torch_mode(args, led):
           f"params={sum(p.numel() for p in net.parameters()):,}  stubbed={stubbed}")
 
     import clash_royale_env as E
-    n_obs = E.ClashRoyaleEnv().observation_size()
+    # The constructor needs both decks (the deck does not change the size);
+    # the stub accepts any arguments.
+    n_obs = E.ClashRoyaleEnv([1] * 8, [1] * 8, 100).observation_size()
     obs = torch.randn(B, n_obs)
     hx = torch.zeros(B, net.LSTM_HIDDEN if hasattr(net, "LSTM_HIDDEN") else 256)
     cx = torch.zeros_like(hx)
