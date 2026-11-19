@@ -83,6 +83,17 @@ size, so the first two items gate any training.
     MPS is not numerically equal to CPU (critic loss 0.00085 vs 0.00102 on one batch).
     Needs `python_ai/rl/base_trainer.py:106` to pick MPS, plus a check that
     `Loss/Ratio_Dev_First_Minibatch` stays ~0 and the side null holds.
+    **Checked 2026-11-19: MPS gives wrong results; training stays on CPU.**
+    - Same batch, same weights, one full-batch update at lr 0 (the live checkpoint at
+      episode 92,392). CPU critic loss 0.220 vs MPS 4.58; MPS log-probs against the
+      CPU-sampled ones give max |ratio - 1| = 56; gradient cosine 0.46.
+    - Controls: CPU vs CPU agrees exactly, and 1% weight noise fails the gradient criteria.
+    - Cause: torch 2.13's MPS `Conv2d` mis-computes a non-contiguous input. `net.py:577`
+      passes a strided view (`obs[:, :spatial_size].view(...)`, whose rows skip the scalar
+      tail). A synthetic conv on such a view is off by 1.13; with `.contiguous()` it agrees
+      to 5e-6. The scalar branch agrees to 2e-6.
+    - Option, needs a yes (policy code): `.contiguous()` at `net.py:577`, then rerun the
+      check for any other strided op. On that batch the MPS update took 0.7 s vs 4.4 s on CPU.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's
@@ -102,6 +113,10 @@ size, so the first two items gate any training.
     10-16% of card attempts were refused (on `main` too). The mask now follows
     `get_hand_cooldown_ticks`, stored for the update. Upstream draft:
     `docs/upstream_drafts/bug_hand_slot_lock_mask.md`.
+17. ~~**A restart could leave no copy of the state before it.**~~ FIXED 2026-11-19
+    (`6b2a487`, `d38b257`). The deck-pool switch's later saves overwrote the only rung-4
+    mirror checkpoint. Saves now keep the last `CLASH_KEEP_CHECKPOINTS` (default 5) full
+    checkpoints in `<weights>_history/`, and the pool switch copies the checkpoint first.
 15. **`profile_training.py`'s no-engine stub is broken** (pre-existing, since 2026-08-27
     `3d698d0`; found in review). `_engine_constants_from_header` cannot parse
     `NUM_CARD_IDS = CARD_ID_COUNT`. The stub's `observation_size()` and boundary mode's

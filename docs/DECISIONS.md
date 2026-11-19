@@ -8212,3 +8212,30 @@ Calls made while applying it:
   drew an unseeded scenario. Under a no-op defence, 13 of 200 draws on the old engine (7 of 200 on
   the new) were pushes that really kill the King, which correctly report `terminated`. The test
   now pins its draw.
+
+## 2026-11-19: the deck pool after the mirror, and MPS
+
+**The pool switch at rung 4.** The long run cleared rungs 0-3 in the mirror in about 70
+minutes. The watcher then turned the 16-deck pool on at rung 4 (02:11).
+- Against the pool it fell to 0.02-0.04 at rung 4, and the 10% catastrophe floor demoted it
+  4 -> 3 -> 2 -> 1, and once to 0.
+- It then climbed back on plateau advances (no gate clear against the pool yet) and has spent
+  the afternoon between rungs 3 and 4.
+- Rung-matched win rates over about 83,000 pool episodes:
+
+| Rung | Early | Latest |
+|---|---|---|
+| 3 | 0.18-0.23 | 0.32-0.34 |
+| 4 | 0.06-0.10 | 0.16-0.17 |
+
+- 15:28: rung 3, 0.45 on the last 100.
+- The user's rule for this point was: if rung 1 passed about 0.40 or the run was promoted
+  again, keep the full pool; if it sat at 0.2-0.3, phase the pool in, hardest decks last.
+  It was promoted again, so the full pool stays.
+
+**MPS.** At the next pause (episode 92,392) the user's CPU-vs-MPS check ran on one batch.
+MPS failed by orders of magnitude, so training stays on CPU. The cause is a torch 2.13 MPS
+`Conv2d` bug on strided input; the details and the one-line option are in TODO L11.
+
+**Checkpoint history.** Every save now keeps the last five full checkpoints (TODO L17).
+
