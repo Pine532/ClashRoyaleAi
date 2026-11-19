@@ -153,3 +153,29 @@ Not yet separated: both changes touch this deck. The Cannon and the Skeletons ga
 wind-ups, and the mask removes about 20% of this policy's card attempts, which it was trained
 with. Either could account for it, and so could noise: with 100 games per reading the standard
 error is about 0.03-0.04.
+
+## The 25-minute recheck: it climbs, and the long run is started (2026-11-19)
+
+First, the user asked for a consistency check of the mask fix. It was clean:
+- In one real rollout (4,000 rows), the masks the update rebuilds equal the masks applied at
+  sampling on every row.
+- At the start of an update, max |ratio - 1| was 6.7e-6 over all 1,879 decision rows, the same
+  level as the old code (7.6e-6).
+- An independent audit of both phases found no defect.
+
+The final code (`e05f785`) then ran for 25 minutes from the same checkpoint in mirror mode.
+`Win_Rate_100` at matched updates:
+
+| Update | 12 | 24 | 36 | 48 | 60 | 72 | 78 |
+|---|---|---|---|---|---|---|---|
+| Final code | 0.08 | 0.16 | 0.21 | 0.20 | 0.17 | 0.47 | **0.61** |
+| Mirror test (old code) | 0.11 | 0.20 | 0.17 | 0.24 | 0.20 | 0.36 | 0.49 |
+
+- 0.61 at update 78 is in the user's proceed band (>= 0.30).
+- The 10-minute check's 0.10 at update 36 was run-to-run variance: this run read 0.21 at the same
+  point, from the same checkpoint.
+
+The long run was started at 01:01 from the real checkpoint (episode 3,387) in mirror mode, with
+`tools/mac_training_pool_switch.sh` armed for rung 4. The episode-3,387 checkpoint is frozen as
+`runs/checkpoints/livesync.pth.armsource`, so the values-only and mask-only arms can still be run
+from it.
