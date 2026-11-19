@@ -94,6 +94,25 @@ size, so the first two items gate any training.
       to 5e-6. The scalar branch agrees to 2e-6.
     - Option, needs a yes (policy code): `.contiguous()` at `net.py:577`, then rerun the
       check for any other strided op. On that batch the MPS update took 0.7 s vs 4.4 s on CPU.
+    **2026-11-19, later: the fix is in (`fd325ed`, user-approved); MPS still blocked.**
+    - CPU is bit-identical before and after on one batch: 149 outputs (features, every loss
+      and gradient at lr 0, the weights after a full live-config update). A 1-ulp change
+      fails the comparison, so the comparison can see one.
+    - The update check now passes: losses within 2.4e-7, gradient cosine 1.0000000, and MPS
+      log-probs against the CPU-sampled ones give max |ratio - 1| = 4.8e-5.
+    - `CLASH_DEVICE` (auto/cpu/cuda/mps) exists now (`1f6de35`). The trainer still crashes on
+      MPS, on device mixing outside the network. A scratch copy needed four one-line fixes:
+      - `advisors/advisor_target.py:195`: `.numpy()` on a device tensor.
+      - `advisors/advisor_target.py:231`: slot weights built on CPU.
+      - `rl/base_trainer.py:481`: `torch.full` on CPU, concatenated with device hand ids.
+      - `rl/base_trainer.py:487-488`: advisor targets stored on CPU.
+    - With those four, a scratch MPS run trained cleanly: `Ratio_Dev_First_Minibatch`
+      1.5e-5 to 3.1e-5, no non-finite skips, losses in line with the CPU run. They need a
+      yes (trainer and advisor code). Then the 10-minute timing at a pause: CPU measured
+      182 updates/h (19-21 s each, rung 3).
+    - `net.py:615` (`hires_features`) still feeds the trunk a strided view and is wrong on
+      MPS (off by 1.79). Training never reaches it (the rollout and the update pass the map
+      from `extract_features_hires`); `search/search.py:119` does.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's
