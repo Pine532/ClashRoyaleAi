@@ -151,3 +151,61 @@ TEST_CASE("Hero Dark Prince (177) hits for double damage once it has charged 2.5
     CHECK(firstHit(5.0f) == 532); // travel passes 2.5 tiles before contact
     CHECK(firstHit(1.5f) == 266); // control: too close to charge
 }
+
+// ---------------- Hero Bowler (178) ----------------
+
+TEST_CASE("Hero Bowler (178) is registered as a Hero with the base Bowler's body",
+          "[new_card][hero_bowler]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(178);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Hero Bowler");
+    CHECK(def->cost == Catch::Approx(5.0f));
+    CHECK(def->isHero);
+    CHECK_FALSE(def->isChampion);
+    CHECK_FALSE(def->isSpell);
+
+    Board board;
+    auto body = live_sync::mainBody(board, 178);
+    REQUIRE(body != nullptr);
+    CHECK(body->hp == 2081);
+    CHECK(body->getBaseDamage() == 289);
+    CHECK(body->getAttackCooldown() == 25);
+    CHECK(body->getAttackRange() == Catch::Approx(4.0f));
+    CHECK(body->sightRange == Catch::Approx(4.0f));
+    CHECK(body->firstHitTicks == 5);
+    CHECK(body->isHero);
+    CHECK(body->splashRadius == Catch::Approx(1.8f));
+    CHECK(body->lineSplash);
+    CHECK(body->lineSplashRange == Catch::Approx(11.0f));
+}
+
+TEST_CASE("Hero Bowler (178) matches base Bowler (22) stat for stat",
+          "[new_card][hero_bowler]") {
+    Board a, b;
+    auto base = live_sync::mainBody(a, 22);
+    auto hero = live_sync::mainBody(b, 178);
+    REQUIRE(base != nullptr);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->hp == base->hp);
+    CHECK(hero->getBaseDamage() == base->getBaseDamage());
+    CHECK(hero->getAttackCooldown() == base->getAttackCooldown());
+    CHECK(hero->firstHitTicks == base->firstHitTicks);
+}
+
+TEST_CASE("Hero Bowler (178) is flagged ability-pending and is never dealt in random decks",
+          "[new_card][hero_bowler]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(178);
+    REQUIRE(def != nullptr);
+    CHECK(def->abilityPending);
+
+    std::mt19937 rng(777);
+    int withBowler = 0, withIceGolem = 0;
+    for (int i = 0; i < 4000; ++i) {
+        for (int id : sampleRandomDeck(rng)) {
+            if (id == 178) ++withBowler;
+            if (id == 175) ++withIceGolem;
+        }
+    }
+    CHECK(withIceGolem > 0);
+    CHECK(withBowler == 0);
+}

@@ -335,6 +335,7 @@ const SightRow SIGHT_CATALOG[] = {
         { 175, "Hero Ice Golem", 7.0f },
         { 176, "Hero Balloon", 7.7f },
         { 177, "Hero Dark Prince", 5.5f },
+        { 178, "Hero Bowler", 4.0f },
 };
 } // namespace
 

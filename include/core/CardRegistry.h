@@ -2076,6 +2076,26 @@ private:
             markAbilityPending(177);
         }
 
+        // Hero Bowler (base: id 22; body restated from the base registration:
+        // hp 2081, 289 damage, 25 ticks, range 4.0, first hit 0.5 s, splash 1.8,
+        // piercing line 11.0 = 4.0 + 7.0 after the 2026-08-04 7.5 -> 7 tile
+        // projectile range cut; the hero's own body values are unpublished and
+        // whether the Hero inherits the range cut is unconfirmed). Cost 5:
+        // single source, DeckShop (https://deckshop.pro/card/detail/hero-bowler); not contradicted.
+        // "Stone Swish" (plants his feet for 7.3 s, official June 2026 post; single
+        // use) is NOT modelled: the longer reach, wind-up and per-shot damage have
+        // no source, and a bare root with no extra shots would be strictly worse
+        // than not activating. isHero is set by hand since withHeroAbility needs
+        // an effect; abilityPending keeps random decks from dealing it.
+        {
+            CardStats heroBowler = troop(178, "Hero Bowler", 5.0f, Archetype::RangedSquad, 2081, SPEED_SLOW, 4.0f, 289, 25, 'w')
+                .withFirstHit(5)
+                .withSplash(1.8f).withLineSplash(11.0f).withSightRange(4.0f);
+            heroBowler.isHero = true;
+            add(heroBowler);
+            markAbilityPending(178);
+        }
+
     }
 
 public:

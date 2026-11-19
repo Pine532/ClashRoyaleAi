@@ -145,6 +145,7 @@ TEST_CASE("Every currently-defined card resolves with id/name/cost/isSpell", "[c
         {172, "Hero Goblins", 2.0f, false},
         {176, "Hero Balloon", 5.0f, false},
         {177, "Hero Dark Prince", 4.0f, false},
+        {178, "Hero Bowler", 5.0f, false},
     };
 
     const auto& registry = CardRegistry::getInstance();
