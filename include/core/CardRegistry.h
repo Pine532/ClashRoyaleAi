@@ -1355,11 +1355,19 @@ private:
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withChampionAbility(1.0f, 170, std::make_shared<ArcherQueenCloakEffect>(35, 1.0f / 2.8f), 1));
 
-        // Monk: his 3-hit combo is flat damage here. "Pensive Protection" (65%
-        // damage reduction for 4 s): see MonkDeflectEffect.
+        // Monk: every third consecutive attack deals 422 instead of 140, via
+        // the burst-every-Nth mechanism (3, 422/140 -> 3.015 so int(140*m) is
+        // 422). Source: https://liquipedia.net/clashroyale/Monk and
+        // https://timesaver.gg/blog/clash-royale-monk (two sources). That third
+        // hit also knocks the target back 1.8 tiles: single-source (timesaver
+        // only; Liquipedia does not state it). Modelling choice (unsourced):
+        // the count is per Monk across targets, not reset on a target switch.
+        // Buildings and Crown Towers are never moved (pushAway). "Pensive
+        // Protection" (65% damage reduction for 4 s): see MonkDeflectEffect.
         // Cost 5 elixir (DeckShop; cr-api-data's 4 predates the live value).
         // First hit 0.2 s: RoyaleAPI cr-api-data, hit_speed 800 - load_time 600 ms (docs/LIVE_SYNC.md).
         add(troop(119, "Monk", 5.0f, Archetype::MeleeSquad, 2214, SPEED_MEDIUM, 1.2f, 140, 8, 'M').withFirstHit(2)
+            .withBurstAttack(3, 3.015f).withBurstKnockback(1.8f)
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withChampionAbility(1.0f, 170, std::make_shared<MonkDeflectEffect>(0.35f, 40), 1));
 

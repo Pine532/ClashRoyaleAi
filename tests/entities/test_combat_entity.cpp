@@ -5,6 +5,64 @@
 #include "PoisonOnHit.h"
 #include "Building.h"
 #include "Tower.h"
+#include "CardRegistry.h"
+
+// ---------------- Monk third-hit combo ----------------
+// values-lookup-results.md: section A (Liquipedia + timesaver) third hit 422;
+// section B (single-source, timesaver) third hit knocks back 1.8 tiles.
+
+namespace {
+// Steps `monk` until `target` loses hp; returns the damage taken (0 if none in
+// `maxTicks`).
+int monkNextHit(Board& board, const std::shared_ptr<Entity>& monk, const std::shared_ptr<Entity>& target,
+                int maxTicks = 100) {
+    int before = target->hp;
+    for (int i = 0; i < maxTicks && target->hp == before; ++i) monk->update(board);
+    return before - target->hp;
+}
+
+std::shared_ptr<Entity> spawnMonk(Board& board) {
+    CardRegistry::getInstance().getCard(119)->spawnEntity(9.0f, 10.0f, 0, board);
+    board.commitPendingEntities();
+    std::shared_ptr<Entity> monk;
+    for (const auto& e : board.getEntities()) if (e->cardId == 119) monk = e;
+    return monk;
+}
+} // namespace
+
+TEST_CASE("Monk: hits 1 and 2 deal 140, hit 3 deals 422 and knocks a troop back 1.8 tiles",
+          "[live_sync_values][monk_combo]") {
+    Board board;
+    auto target = std::make_shared<DummyEntity>(1, 9.0f, 10.8f, 100000, 1);
+    spawn(board, target);
+    auto monk = spawnMonk(board);
+    REQUIRE(monk);
+    advancePastDeploy(monk, board);
+
+    REQUIRE(monkNextHit(board, monk, target) == 140);
+    REQUIRE(monkNextHit(board, monk, target) == 140);
+    float yBefore = target->position.y;
+    REQUIRE(monkNextHit(board, monk, target) == 422);
+    // Pushed directly away (+y, the Monk is below it) by exactly 1.8 tiles.
+    REQUIRE(target->position.y - yBefore == Catch::Approx(1.8f).margin(0.05f));
+    // The counter restarts: the next hit is a normal one.
+    REQUIRE(monkNextHit(board, monk, target, 200) == 140);
+}
+
+TEST_CASE("Monk: the third-hit knockback never moves a building", "[live_sync_values][monk_combo]") {
+    Board board;
+    auto tower = std::make_shared<Building>(1, 9.0f, 10.8f, 100000, 1, 'C', 0.1f, 0, 1000);
+    spawn(board, tower);
+    auto monk = spawnMonk(board);
+    REQUIRE(monk);
+    advancePastDeploy(monk, board);
+
+    monkNextHit(board, monk, tower);
+    monkNextHit(board, monk, tower);
+    REQUIRE(monkNextHit(board, monk, tower) == 422);
+    REQUIRE(tower->position.x == Catch::Approx(9.0f));
+    REQUIRE(tower->position.y == Catch::Approx(10.8f));
+}
 
 // StationaryCombatant: attackRange, no movement, no decay -- isolates
 // CombatEntity::update()'s targeting/attack/cooldown/freeze logic.
