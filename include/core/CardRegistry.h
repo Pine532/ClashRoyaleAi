@@ -668,19 +668,29 @@ private:
             .withDamageRamp(20, 40, 0.05f, 0.1875f).withSightRange(6.0f));
 
         // === Spells ===
-        // Arrows: 3 volleys of 123, not one 369 hit.
-        add(spell(3, "Arrows", 3.0f, 3.5f, 123, 10, '*').withRepeats(3, 2));
+        // Arrows: 3 volleys of 123, not one 369 hit. A Crown Tower takes 25 per
+        // volley (75 in all): June 2026 balance update, 93 -> 75 total, per
+        // volley being 75 / 3 (docs/LIVE_SYNC.md; UPSTREAM_REQUESTS.md item 29).
+        add(spell(3, "Arrows", 3.0f, 3.5f, 123, 10, '*').withRepeats(3, 2)
+            .withCrownTowerDamage(25));
+        // Fireball: a Crown Tower takes 159 (2026-09-08 balance update: Crown
+        // Tower Damage 172 -> 159; docs/LIVE_SYNC.md; UPSTREAM item 29).
         add(spell(7, "Fireball", 4.0f, 2.5f, 689, 10, 'O')
+            .withCrownTowerDamage(159)
             .withKnockback(1.0f));
-        add(spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z'));
+        // Crown Tower damage per application: 48 (official June 2026 notes, Zap 58 -> 48;
+        // UPSTREAM_REQUESTS.md item 29).
+        add(spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z').withCrownTowerDamage(48));
+        // Crown Tower damage 342 (official June 2026 notes, Rocket 371 -> 342; item 29).
         add(spell(30, "Rocket", 6.0f, 2.0f, 1485, 15, 'r')
-            .withKnockback(1.0f));
+            .withKnockback(1.0f).withCrownTowerDamage(342));
         // Lightning: strikes only the 3 enemies with the most hitpoints in the
         // radius (cr-api-data card description: "up to three enemy troops or
         // buildings with the most hitpoints in the target area"; the official
         // Sep 2025 / Sep 2026 notes presuppose it). Same mechanism as Vines.
+        // Crown Tower damage 265 per strike (official June 2026 notes, Lightning 286 -> 265; item 29).
         add(spell(31, "Lightning", 6.0f, 3.5f, 1057, 5, 'j')
-            .withSpellTopHpTargets(3));
+            .withSpellTopHpTargets(3).withCrownTowerDamage(265));
         // Poison: 92 damage every second for 8 s; whoever stands in it takes
         // each pulse. A Crown Tower takes 21 per pulse (168 in all: official
         // June 2026 notes, fixed in game on 26 Aug), and enemy troops inside
@@ -698,7 +708,9 @@ private:
         // 2025-09-01 "New Season: Back to Drool": damage 266 -> 268 (docs/LIVE_SYNC.md).
         add(spell(33, "The Log", 2.0f, 3.9f, 268, 8, 'o')
             .withGroundOnly()
-            .withRollingSweep(10.1f, 3.9f, 1.0f, 0.8f));
+            .withRollingSweep(10.1f, 3.9f, 1.0f, 0.8f)
+            // Crown Tower damage 35 (official June 2026 notes, The Log 41 -> 35; item 29).
+            .withCrownTowerDamage(35));
 
         // --- the 2026 roster expansion (ids 46+) ---
         // Every remaining non-Champion, non-Evolution, non-Tower-Troop card,
@@ -1034,7 +1046,10 @@ private:
         // Evolution's 4 s "standardizing the slow duration with its unevolved
         // form" (supercell.com May balance changes 2026; Fandom wiki lists 3 s
         // for the base). Was 15 ticks, unsourced (docs/LIVE_SYNC.md).
+        // A Crown Tower takes 45 (June 2026 balance update: 54 -> 45;
+        // docs/LIVE_SYNC.md; UPSTREAM item 29).
         add(spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
+            .withCrownTowerDamage(45)
             .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.70f))
             .withKnockback(1.0f));
         // Barbarian Barrel: rolls 4.5 tiles at width 2.6 (published), and its
@@ -1055,11 +1070,17 @@ private:
         // (6 -> 10 per second) is the separate spell-vs-tower item.
         // 2026-08-04 balance update: enemies inside move 15% slower (movement
         // only, refreshed by each pulse, as Poison; docs/LIVE_SYNC.md).
+        // Crown Tower damage 10 per application (official Sept 2025 notes, "Crown
+        // Tower Damage/Sec: 6 -> 10"; the engine applies once a second; item 29).
         add(spell(102, "Goblin Curse", 2.0f, 3.0f, 35, 8, '$').withRepeats(6, 10)
+            .withCrownTowerDamage(10)
             .withSpellOnHit(std::make_shared<MoveSlowOnHit>(10, 0.85f)));
         // Earthquake: ground-only damage over time with the 50% movement slow.
-        // The real 3.5x damage against buildings is not modelled.
+        // The real 3.5x damage against buildings is not modelled. A Crown Tower
+        // takes 49 per wave (147 in all: June 2026 balance update, 159 -> 147,
+        // per wave being 147 / 3; docs/LIVE_SYNC.md; UPSTREAM item 29).
         add(spell(103, "Earthquake", 3.0f, 3.5f, 82, 8, '%').withRepeats(3, 10).withGroundOnly()
+            .withCrownTowerDamage(49)
             .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.5f)));
         // Void: three damage tiers, once per wave. 2026-08-04 balance update
         // (docs/LIVE_SYNC.md): 5 elixir (was 3), 696 per hit on 1 target
@@ -1084,7 +1105,10 @@ private:
         // 2025 balance notes, 115 -> 148, level 11: supercell.com
         // /clashroyale/blog/release-notes/december-balance-changes/). Crown Tower
         // damage is the separate June 2026 reduction (see withCrownTowerDamage).
+        // A Crown Tower takes 37 (June 2026 balance update: 45 -> 37;
+        // docs/LIVE_SYNC.md; UPSTREAM item 29).
         add(spell(107, "Freeze", 4.0f, 3.0f, 148, 8, '~')
+            .withCrownTowerDamage(37)
             .withSpellOnHit(std::make_shared<FreezeOnHit>(35, 0.0f)));
         // Rage: buffs allied damage in radius. Boost 30% (2025-10-06 balance
         // update, 35% -> 30%; docs/LIVE_SYNC.md); the duration is not sourced.
@@ -1245,8 +1269,9 @@ private:
         // growing radius between zaps is not modelled; the 3-tick gap is not
         // sourced ("the spell takes less time" has no number).
         addEvolution(124,
-            spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z'),
-            spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z').withRepeats(2, 3),
+            spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z').withCrownTowerDamage(48),
+            // 48 per zap, as the base card: the notes do not state the Evolution's separately.
+            spell(29, "Zap", 2.0f, 2.5f, 192, 3, 'Z').withRepeats(2, 3).withCrownTowerDamage(48),
             2, 1);
 
         // Skeletons ("Never-ending Horde"): see evolvedSkeletonChildStats.
@@ -1658,10 +1683,12 @@ private:
         // not modelled.
         addEvolution(158,
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
+                .withCrownTowerDamage(45) // June 2026 balance update, as the base card
                 // Base half: 3 s slow, as the base card above (2026-05-04).
                 .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.70f)) // 2025-10-06: base slow 30%
                 .withKnockback(1.0f),
             spell(100, "Giant Snowball", 2.0f, 2.5f, 179, 8, '!')
+                .withCrownTowerDamage(45) // June 2026 balance update, as the base card
                 // 2026-05-04 balance update: slow 4 s -> 3 s (30 ticks) to
                 // match the base form (docs/LIVE_SYNC.md). Factor 0.7 unchanged.
                 .withSpellOnHit(std::make_shared<FreezeOnHit>(30, 0.7f))

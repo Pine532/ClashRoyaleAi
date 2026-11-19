@@ -1863,3 +1863,95 @@ TEST_CASE("Monk costs 5 elixir", "[live_sync][patch-undated]") {
     REQUIRE(def != nullptr);
     REQUIRE(def->cost == Catch::Approx(5.0f));
 }
+
+// ---- Crown Tower damage (patch-crown-tower-damage; UPSTREAM_REQUESTS.md item 29) ----
+namespace {
+// Total damage a spell of team 0, cast on team 1's left Princess Tower, deals to it.
+int crownTowerHit(int cardId, bool evolved = false) {
+    Match m;
+    std::shared_ptr<Tower> princess;
+    for (const auto& e : m.board().getEntities())
+        if (auto t = std::dynamic_pointer_cast<Tower>(e))
+            if (t->team == 1 && t->symbol != 'R' && t->position.x < 9.0f) princess = t;
+    REQUIRE(princess);
+    m.spawnCard(cardId, princess->position.x, princess->position.y, 0, evolved);
+    m.step(60);
+    return m.rec->totalTo(princess->id);
+}
+}
+
+TEST_CASE("Arrows deal 25 per volley, 75 in all, to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(crownTowerHit(3) == 75);
+}
+
+TEST_CASE("Earthquake deals 49 per wave, 147 in all, to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(crownTowerHit(103) == 147);
+}
+
+TEST_CASE("Fireball deals 159 to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(crownTowerHit(7) == 159);
+}
+
+TEST_CASE("Freeze deals 37 to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(crownTowerHit(107) == 37);
+}
+
+TEST_CASE("Giant Snowball deals 45 to a Crown Tower, base and Evolution",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(crownTowerHit(100) == 45);
+    REQUIRE(crownTowerHit(158, true) == 45);
+}
+// ===== Crown Tower damage (UPSTREAM_REQUESTS.md item 29), chunk PCTb =====
+// Each case casts the spell on an enemy Princess Tower in a real match and
+// reads what the tower actually lost.
+namespace {
+std::shared_ptr<Tower> enemyPrincess(Match& m) {
+    for (const auto& e : m.board().getEntities()) {
+        auto t = std::dynamic_pointer_cast<Tower>(e);
+        if (t && t->team == 1 && e->position.x < 8.0f) return t; // left Princess Tower
+    }
+    return nullptr;
+}
+
+int towerDamageFromCast(int cardId, bool evolved, bool roll) {
+    Match m;
+    auto tower = enemyPrincess(m);
+    REQUIRE(tower != nullptr);
+    // A roller starts behind the tower and sweeps toward it.
+    const float y = roll ? tower->position.y - 6.0f : tower->position.y;
+    m.spawnCard(cardId, tower->position.x, y, 0, evolved);
+    m.step(120);
+    return m.rec->totalTo(tower->id);
+}
+} // namespace
+
+TEST_CASE("Goblin Curse deals 10 per application to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    // 6 applications, 1 s apart: 6 x 10 (Sept 2025 notes: 6 -> 10 per second).
+    REQUIRE(towerDamageFromCast(102, false, false) == 60);
+}
+
+TEST_CASE("Lightning deals 265 to a Crown Tower per strike",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(towerDamageFromCast(31, false, false) == 265);
+}
+
+TEST_CASE("Rocket deals 342 to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(towerDamageFromCast(30, false, false) == 342);
+}
+
+TEST_CASE("The Log deals 35 to a Crown Tower",
+          "[live_sync][patch-crown-tower-damage]") {
+    REQUIRE(towerDamageFromCast(33, false, true) == 35);
+}
+
+TEST_CASE("Zap deals 48 to a Crown Tower; its Evolution 48 per zap",
+          "[live_sync][patch-crown-tower-damage]") {
+    SECTION("base") { REQUIRE(towerDamageFromCast(29, false, false) == 48); }
+    SECTION("Evolution, two zaps (2024-10-08: three -> two)") { REQUIRE(towerDamageFromCast(124, true, false) == 96); }
+}
