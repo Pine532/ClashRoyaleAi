@@ -528,3 +528,14 @@ TEST_CASE("Dart Goblin (20, 131) first hit 0.35 s rounds to 4 ticks (nearest, ti
     checkAll(bodyFirstHits(131, false), 4);
     checkAll(bodyFirstHits(131, true), 4);
 }
+
+// Skeleton Barrel's death drop (values-lookup-results.md section A): 7 Skeletons.
+TEST_CASE("Skeleton Barrel (89) drops 7 Skeletons on death, as its Evolution does",
+          "[live_sync_values][live_sync_barrel_drop]") {
+    // https://royaleapi.com/blog/evo-skeleton-barrel-2025-july ("Skeletons per Barrel: 7 (same)")
+    CHECK(effectChildFirstHits(89, Fire::Death).size() == 7);
+    CHECK(effectChildFirstHits(134, Fire::Death, false).size() == 7);
+    CHECK(effectChildFirstHits(134, Fire::Death, true).size() == 7);
+    // Tombstone's periodic spawn is a different effect and keeps its own count (2 per pulse).
+    CHECK(effectChildFirstHits(96, Fire::Periodic).size() == 2);
+}

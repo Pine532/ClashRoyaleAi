@@ -196,6 +196,15 @@ private:
         return troop(-11, "Skeletons", 0.0f, Archetype::MeleeSquad, 81, SPEED_FAST, 0.5f, 81, 11, 'k').withFirstHit(5)
             .withOffsets({ {-0.4f, 0.0f}, {0.4f, 0.0f} });
     }
+    // Skeleton Barrel's death drop: 7 Skeletons (the Skeletons helper with a
+    // 7-cell offset pattern). Sources: https://royaleapi.com/blog/evo-skeleton-barrel-2025-july
+    // ("Skeletons per Barrel: 7 (same)") ; https://devtrackers.gg/clash-royale/p/984af3e5-daily-card-discussion-4-9-4-10-skeleton-barrel-a-skele-party-in-the-sky
+    // (7 since April 2018). Shared by the base card and both halves of Evolution 134.
+    static CardStats skeletonBarrelDropStats() {
+        return skeletonBarrelSkeletonStats().withOffsets({
+            {-0.6f,0.0f},{0.6f,0.0f},{-0.3f,0.3f},{0.3f,0.3f},{-0.3f,-0.3f},{0.3f,-0.3f},{0.0f,0.0f}
+        });
+    }
     // The death spawn is one Bat, not three.
     static CardStats nightWitchBatStats() {
         // SPEED_VERY_FAST, matching playable card 78 (the same unit).
@@ -1078,10 +1087,10 @@ private:
         // First hit 0.8 s: RoyaleAPI cr-api-data, hit_speed 1500 - load_time 700 ms (docs/LIVE_SYNC.md).
         add(troop(88, "Goblin Giant", 6.0f, Archetype::MeleeBuildingTargeter, 3110, SPEED_MEDIUM, 1.2f, 176, 15, '`').withFirstHit(8)
             .withSecondaryUnit(goblinGiantSpearGoblinsStats()).withSightRange(7.5f)); // carried Spear Goblins, independently targeting
-        // Skeleton Barrel releases 2 Skeletons on death.
+        // Skeleton Barrel releases 7 Skeletons on death (skeletonBarrelDropStats; was 2).
         add(troop(89, "Skeleton Barrel", 3.0f, Archetype::MeleeBuildingTargeter, 532, SPEED_FAST, 1.0f, 81, 10, ',')
             .withFlying()
-            .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonBarrelSkeletonStats())).withSightRange(7.7f));
+            .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonBarrelDropStats())).withSightRange(7.7f));
         // The split chain: Golem -> 2 Golemites (each -> 2 Blobs), with elixir
         // to the opponent at each tier (see elixirGolemiteStats,
         // elixirBlobStats).
@@ -1535,12 +1544,10 @@ private:
         addEvolution(134,
             troop(89, "Skeleton Barrel", 3.0f, Archetype::MeleeBuildingTargeter, 532, SPEED_FAST, 1.0f, 81, 10, ',')
                 .withFlying()
-                .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonBarrelSkeletonStats())).withSightRange(7.7f),
+                .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonBarrelDropStats())).withSightRange(7.7f),
             troop(89, "Skeleton Barrel", 3.0f, Archetype::MeleeBuildingTargeter, 665, SPEED_FAST, 1.0f, 81, 10, ',')
                 .withFlying()
-                .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonBarrelSkeletonStats().withOffsets({
-                    {-0.6f,0.0f},{0.6f,0.0f},{-0.3f,0.3f},{0.3f,0.3f},{-0.3f,-0.3f},{0.3f,-0.3f},{0.0f,0.0f}
-                }))).withSightRange(7.7f),
+                .withDeathEffect(std::make_shared<SpawnOnDeath>(skeletonBarrelDropStats())).withSightRange(7.7f),
             2, 1);
 
         // Knight: the real shield (60% less damage while approaching) is a flat
