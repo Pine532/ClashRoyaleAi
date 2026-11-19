@@ -77,7 +77,8 @@ size, so the first two items gate any training.
 10. **Perception for the new cards.** `card_map` rows exist (6820f16) and need review
     flags confirmed against the recorded build; detector labels, hand templates and
     the deck pools (`meta_decks.json`) do not cover the 13 new entries yet.
-11. **Decision: MPS for training.** Measured 2026-11-18 on Apple Silicon (torch 2.13):
+11. ~~**Decision: MPS for training.**~~ DONE 2026-11-19: the live run trains on MPS (2.14x;
+    details at the end of this item). Measured 2026-11-18 on Apple Silicon (torch 2.13):
     a live-size PPO update takes 9.18 s on CPU and 4.06 s on MPS, about 55% of a 16.7 s
     cycle, so roughly 1.4x end to end; rollout inference is no faster (1.38 vs 1.30 ms).
     MPS is not numerically equal to CPU (critic loss 0.00085 vs 0.00102 on one batch).
@@ -113,6 +114,18 @@ size, so the first two items gate any training.
     - `net.py:615` (`hires_features`) still feeds the trunk a strided view and is wrong on
       MPS (off by 1.79). Training never reaches it (the rollout and the update pass the map
       from `extract_features_hires`); `search/search.py:119` does.
+    **Resolved 2026-11-19 (user-approved):** the four device fixes (`82a5c1b`) and
+    `hires_features` (`de95494`), each with tests.
+    - CPU stays bit-identical. Function level: 2,514 outputs over all 500 steps of a real
+      rollout match, including the RNG state after each coverage draw. Update level: 149
+      outputs match. A 1-ulp control fires. A full rollout cannot be compared: seeded
+      rollouts differ run to run (unseeded teacher draw).
+    - Timing, same checkpoint, rung 3, full pool, 10 minutes each with the machine to
+      itself: CPU 184.3 updates/h, MPS 394.6 (2.14x, against the 1.10x the user required).
+      The first 6 MPS updates: ratio self-check max 4.6e-5, no non-finite skip, losses
+      inside the CPU window's range.
+    - Live run switched at episode 102,047. `tools/mac_training.sh` now defaults to MPS
+      where available.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's

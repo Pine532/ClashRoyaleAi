@@ -8239,3 +8239,10 @@ MPS failed by orders of magnitude, so training stays on CPU. The cause is a torc
 
 **Checkpoint history.** Every save now keeps the last five full checkpoints (TODO L17).
 
+**MPS, later the same day.** The user approved `.contiguous()` at `net.py:577`, then the four
+device fixes the trainer needed outside the network and the same fix at `net.py:615`. CPU stayed
+bit-identical through each. MPS then ran 2.14x faster end to end (394.6 vs 184.3 updates/h), with
+the ratio self-check and loss levels in line with CPU, so the live run moved to MPS at episode
+102,047 (TODO L11). The win-rate history carries on: the device moves numbers by float32
+roundoff, not what is learned.
+
