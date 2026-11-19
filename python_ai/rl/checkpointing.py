@@ -9,6 +9,7 @@ so extra files there would change what self-play samples. Every destination is
 anchored, never cwd-relative, via `weights_path` and `run_path`.
 """
 import os
+import re
 import tempfile
 import time
 
@@ -72,6 +73,61 @@ def atomic_save(payload, path, keep_previous=False):
     return path
 
 
+#: Full checkpoints (model, optimizer and training state) kept besides the live
+#: file, newest first. CLASH_KEEP_CHECKPOINTS overrides it; 0 turns it off.
+#: The live file is replaced on every save and `.prev` is one generation (a
+#: few minutes) deep, so without these a restart or a bad stretch leaves no
+#: earlier state to go back to. 2026-11-19: a deck-pool switch restarted a run
+#: and the saves after it overwrote the only checkpoint from before it.
+KEEP_CHECKPOINTS_DEFAULT = 5
+
+_GENERATION = re.compile(r"ep\d{8}\.pth")
+
+
+def keep_checkpoints(environ=None):
+    env = os.environ if environ is None else environ
+    return max(0, int(env.get("CLASH_KEEP_CHECKPOINTS", KEEP_CHECKPOINTS_DEFAULT)))
+
+
+def history_dir(path):
+    """`runs/checkpoints/livesync.pth` -> `runs/checkpoints/livesync_history`.
+
+    A directory of its own, so nothing that globs `*.pth` beside the live file
+    picks the generations up.
+    """
+    stem, _ = os.path.splitext(os.path.abspath(path))
+    return stem + "_history"
+
+
+def keep_in_history(path, episodes_completed, keep):
+    """Keep the checkpoint just written at `path` as `ep<episodes>.pth` in
+    `history_dir(path)`, then delete all but the newest `keep` generations.
+
+    A hard link, not a copy: `atomic_save` replaces `path` with a new file, so
+    the link goes on holding this generation at no extra cost. Falls back to a
+    copy where links are unsupported. Newest is by save time, not episode, so a
+    run restarted from an older checkpoint keeps its latest saves.
+    """
+    if keep <= 0:
+        return []
+    directory = history_dir(path)
+    os.makedirs(directory, exist_ok=True)
+    dst = os.path.join(directory, f"ep{episodes_completed:08d}.pth")
+    if os.path.exists(dst):
+        os.unlink(dst)
+    try:
+        os.link(path, dst)
+    except OSError:
+        import shutil
+        shutil.copy2(path, dst)
+    generations = [os.path.join(directory, f) for f in os.listdir(directory)
+                   if _GENERATION.fullmatch(f)]
+    generations.sort(key=lambda p: (os.stat(p).st_mtime_ns, p), reverse=True)
+    for old in generations[keep:]:
+        os.unlink(old)
+    return generations[:keep]
+
+
 def weights_path(name):
     """A `.pth` destination, anchored on the package directory.
 
@@ -99,7 +155,7 @@ def run_path(name):
 # flagged.
 OPERATIONAL_SETTINGS = frozenset({
     "CLASH_WEIGHTS", "CLASH_LOGDIR", "CLASH_SAVE_EVERY", "CLASH_SEED",
-    "CLASH_NUM_ENVS",
+    "CLASH_NUM_ENVS", "CLASH_KEEP_CHECKPOINTS",
 })
 #: Compared on its resolved value in BaseTrainer.restore_common: names and ids
 #: spell the same deck differently.

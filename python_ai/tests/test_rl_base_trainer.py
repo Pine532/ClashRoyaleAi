@@ -229,6 +229,25 @@ def test_the_final_save_carries_the_SAME_keys_as_the_periodic_one(workdir):
     assert final["ent_coef_place"] == pytest.approx(0.0242)
 
 
+@pytest.mark.slow
+def test_the_trainer_keeps_its_last_few_checkpoints(workdir, monkeypatch):
+    """Every save also lands in `<weights>_history/`, newest CLASH_KEEP_CHECKPOINTS
+    kept, each a full resumable checkpoint (optimizer and training state too)."""
+    monkeypatch.setenv("CLASH_KEEP_CHECKPOINTS", "2")
+    trainer = _phase1()
+    for extra in (1, 2):
+        trainer.episodes_completed += extra
+        trainer.save_checkpoint(verbose=False)
+    hist = workdir / "model_weights_history"
+    names = sorted(os.listdir(hist))
+    assert len(names) == 2
+    newest = torch.load(hist / names[-1], map_location="cpu", weights_only=False)
+    live = torch.load(workdir / "model_weights.pth", map_location="cpu",
+                      weights_only=False)
+    assert newest["episodes_completed"] == live["episodes_completed"]
+    assert {"model", "optimizer", "episodes_completed"} <= set(newest)
+
+
 # --- what counts as a truncation ---
 # `truncateds` is the authoritative "the world continues" flag, not the
 # reward's magnitude. A timeout decided by TimeoutRules pays +/-1, but an exact

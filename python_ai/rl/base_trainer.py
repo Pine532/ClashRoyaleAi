@@ -46,8 +46,8 @@ from python_ai.rl.buffer import (
 from python_ai.rl.config import aux_warmup_scale
 from python_ai.rl.checkpointing import (
     HISTORICAL_CHECKPOINT_DIR, HISTORICAL_CHECKPOINT_INTERVAL_EPISODES,
-    atomic_save, clash_settings, run_path, save_historical_snapshot,
-    settings_drift, weights_path,
+    atomic_save, clash_settings, keep_checkpoints, keep_in_history, run_path,
+    save_historical_snapshot, settings_drift, weights_path,
 )
 from python_ai.rl.config import PPOConfig
 from python_ai.rl.coverage import PLACEMENT_COVERAGE_COEF, placement_coverage_slots
@@ -731,6 +731,13 @@ class BaseTrainer:
         payload.update(self.entropy.state_dict())
         payload.update(self.checkpoint_payload())
         atomic_save(payload, self.weight_path, keep_previous=True)
+        try:
+            keep_in_history(self.weight_path, self.episodes_completed,
+                            keep_checkpoints())
+        except OSError as exc:
+            # A backup, not the save: the live file is already written, and a
+            # full disk must not end a multi-day run here.
+            print(f">>> WARNING: could not keep checkpoint history: {exc}")
         if verbose:
             print(f">>> Checkpoint saved to {self.weight_path} "
                   f"(episode {self.episodes_completed})")

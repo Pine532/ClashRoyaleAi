@@ -43,6 +43,52 @@ def test_a_save_keeps_the_previous_generation(tmp_path):
     assert torch.load(str(path) + ".prev")["gen"] == 1
 
 
+def _save_generations(path, n, keep):
+    for gen in range(1, n + 1):
+        CK.atomic_save({"gen": gen}, str(path), keep_previous=True)
+        CK.keep_in_history(str(path), gen * 250, keep)
+
+
+def test_the_last_few_saves_are_kept_as_full_checkpoints(tmp_path):
+    # 2026-11-19: a deck-pool switch restarted the run and later periodic
+    # saves overwrote the only checkpoint from before it; `.prev` holds one
+    # generation, a few minutes deep.
+    path = tmp_path / "livesync.pth"
+    _save_generations(path, 7, keep=3)
+    hist = tmp_path / "livesync_history"
+    assert sorted(os.listdir(hist)) == [
+        "ep00001250.pth", "ep00001500.pth", "ep00001750.pth"]
+    # Each generation keeps its own content after the live file moved on.
+    for gen in (5, 6, 7):
+        assert torch.load(hist / f"ep{gen * 250:08d}.pth")["gen"] == gen
+    assert torch.load(path)["gen"] == 7
+
+
+def test_keeping_none_writes_no_history(tmp_path):
+    path = tmp_path / "w.pth"
+    _save_generations(path, 3, keep=0)
+    assert not (tmp_path / "w_history").exists()
+
+
+def test_a_second_save_at_the_same_episode_replaces_that_generation(tmp_path):
+    # The stop save can land on the episode of the last periodic one.
+    path = tmp_path / "w.pth"
+    CK.atomic_save({"gen": 1}, str(path))
+    CK.keep_in_history(str(path), 500, 3)
+    CK.atomic_save({"gen": 2}, str(path))
+    CK.keep_in_history(str(path), 500, 3)
+    assert os.listdir(tmp_path / "w_history") == ["ep00000500.pth"]
+    assert torch.load(tmp_path / "w_history" / "ep00000500.pth")["gen"] == 2
+
+
+def test_the_history_depth_is_a_setting():
+    assert CK.keep_checkpoints({}) == CK.KEEP_CHECKPOINTS_DEFAULT
+    assert CK.keep_checkpoints({"CLASH_KEEP_CHECKPOINTS": "0"}) == 0
+    assert CK.keep_checkpoints({"CLASH_KEEP_CHECKPOINTS": "12"}) == 12
+    # Where a run writes, not what it learns: a change is not a drift.
+    assert "CLASH_KEEP_CHECKPOINTS" in CK.OPERATIONAL_SETTINGS
+
+
 # --- curriculum tracking survives a resume ---
 
 def _mgr():

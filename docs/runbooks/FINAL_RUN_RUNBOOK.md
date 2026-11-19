@@ -225,7 +225,10 @@ What survives a crash now: weights, Adam, episode count, entropy coefficients,
 rung, phase and budget, deck-pool estimates, the plateau/regression tracker, the
 lineage start (so the opponent pool stays this run's), and the deck (a different
 `CLASH_DECK` on resume prints a loud warning). Each save keeps the previous
-checkpoint as `model_weights.pth.prev`. Ctrl-C saves before exiting. Worst case
+checkpoint as `model_weights.pth.prev`, and the last `CLASH_KEEP_CHECKPOINTS` saves
+(default 5, full checkpoints) stay in `model_weights_history/` as `ep<episodes>.pth`; to go
+back to one, copy it over the live file while the trainer is stopped. Ctrl-C saves before
+exiting. Worst case
 on a hard kill at `CLASH_SAVE_EVERY=250` is ~16 minutes.
 
 A resume that hits an error now **crashes** instead of moving the checkpoint
