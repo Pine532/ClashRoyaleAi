@@ -50,7 +50,9 @@ inline void applyCardMetadata(const std::shared_ptr<CombatEntity>& entity, const
     entity->revealTicksAfterAttack = stats.revealTicksAfterAttack;
     entity->periodicEffect = stats.periodicEffect;
     entity->periodicIntervalTicks = stats.periodicIntervalTicks;
-    entity->periodicTicksUntilNext = stats.periodicIntervalTicks; // first fire after one full interval
+    // First fire after one full interval unless the card sets its own delay.
+    entity->periodicTicksUntilNext = stats.periodicFirstDelayTicks >= 0
+        ? stats.periodicFirstDelayTicks : stats.periodicIntervalTicks;
     entity->periodicHotIntervalTicks = stats.periodicHotIntervalTicks;
     entity->periodicSideOffset = stats.periodicSideOffset;
     entity->auraRadius = stats.auraRadius;
@@ -204,7 +206,7 @@ inline void spawnRangedBuildingTargeter(const CardStats& stats, float x, float y
 inline void spawnDefensiveBuilding(const CardStats& stats, float x, float y, int team, Board& board) {
     auto building = std::make_shared<Building>(
         board.allocateId(), x, y, stats.hp, team, stats.symbol,
-        stats.attackRange, stats.damage, stats.attackCooldown);
+        stats.attackRange, stats.damage, stats.attackCooldown, stats.lifetimeTicks);
     applyCardMetadata(building, stats);
     board.addEntity(building);
     // Every other factory fires the deploy burst; this one did not until

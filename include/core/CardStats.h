@@ -220,6 +220,13 @@ struct CardStats {
     // interval.
     std::shared_ptr<IPeriodicEffect> periodicEffect;
     int periodicIntervalTicks = 0;
+    // Active ticks (after deploy time) until the FIRST periodic fire. -1 keeps
+    // the default of one full interval (withPeriodicFirstDelay sets it).
+    int periodicFirstDelayTicks = -1;
+    // How long a Building lives before it expires, in ticks. 300 is the
+    // engine's long-standing default (Building's own default); withLifetime
+    // sets a per-card value. Ignored by non-buildings.
+    int lifetimeTicks = 300;
     // A faster interval used only while attacking (Evolved Furnace's "Hot
     // Spawning"). 0 disables it.
     int periodicHotIntervalTicks = 0;
@@ -551,6 +558,14 @@ struct CardStats {
     }
     CardStats& withDeployDelay(int ticks) {
         initialCooldownTicks = ticks;
+        return *this;
+    }
+    CardStats& withLifetime(int ticks) {
+        lifetimeTicks = ticks;
+        return *this;
+    }
+    CardStats& withPeriodicFirstDelay(int ticks) {
+        periodicFirstDelayTicks = ticks;
         return *this;
     }
     CardStats& withFirstHit(int ticks) {

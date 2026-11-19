@@ -1158,13 +1158,19 @@ private:
             .withDeathEffect(std::make_shared<SpawnOnDeath>(witchSkeletonStats())));
         // Goblin Cage: its whole function is releasing a Goblin Brawler on
         // death.
+        // Lifetime 20 s (200 ticks): https://liquipedia.net/clashroyale/Goblin_Cage ;
+        // https://clashroyale.fandom.com/wiki/Goblin_Cage (docs/live_sync/values-lookup-results.md, section A).
         add(building(97, "Goblin Cage", 4.0f, 780, '6', 0.0f, 0, 100)
+            .withLifetime(200)
             .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinCageBrawlerStats())));
         // Goblin Drill: a one-time 360-degree emergence burst (the spawn
         // effect; knockback not modelled), periodic Goblins, and 2 Goblins on
         // death. A Crown Tower takes 20 from the burst (2026-10-06 balance
         // update: "Crown Tower Spawn Damage: 0 -> 20"; docs/LIVE_SYNC.md).
+        // Lifetime 10 s (100 ticks): https://liquipedia.net/clashroyale/Goblin_Drill ;
+        // https://clashroyale.fandom.com/wiki/Goblin_Drill (docs/live_sync/values-lookup-results.md, section A).
         add(building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
+            .withLifetime(100)
             .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
             .withDeployAnywhere()
             .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20)
@@ -1610,9 +1616,12 @@ private:
         // Goblin Cage: the real pull-and-hold is a hook plus a damage-over-time
         // mark; there is no hold mechanism.
         addEvolution(139,
+            // Both halves: lifetime 20 s (200 ticks), sources as the base Cage.
             building(97, "Goblin Cage", 4.0f, 780, '6', 0.0f, 0, 100)
+                .withLifetime(200)
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinCageBrawlerStats())),
             building(97, "Goblin Cage", 4.0f, 780, '6', 3.0f, 40, 20)
+                .withLifetime(200)
                 .withHook(3.0f)
                 .withOnHit(std::make_shared<PoisonOnHit>(30, 40, 10))
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinCageBrawlerStats())),
@@ -1808,11 +1817,13 @@ private:
         // each time) is approximated as more Goblins on death.
         addEvolution(153,
             building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
+                .withLifetime(100) // 10 s, as the base Drill (same sources)
                 .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
                 .withDeployAnywhere()
                 .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20) // as the base card
                 .withDeathEffect(std::make_shared<SpawnOnDeath>(goblinDrillDeathGoblinStats())),
             building(98, "Goblin Drill", 4.0f, 1313, '7', 0.0f, 0, 100)
+                .withLifetime(100) // 10 s, as the base Drill (same sources)
                 .withPeriodicEffect(30, std::make_shared<PeriodicSpawnEffect>(goblinDrillGoblinStats()))
                 .withDeployAnywhere()
                 .withSpawnEffect(2.0f, 84).withSpawnEffectCrownTowerDamage(20) // as the base card
