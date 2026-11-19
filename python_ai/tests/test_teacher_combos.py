@@ -397,9 +397,14 @@ def test_the_teacher_actually_executes_a_planned_pair_end_to_end():
 
     Staged, because real matches choose a combo too rarely for a stable
     assertion; `eval/prove_combos.py` measures the rate.
+
+    Staged at 8 elixir. Since the 2026-11 live sync, at 9-10 elixir the teacher
+    re-plans on the next decision: Skeletons on the Ice Golem's bridge cell now,
+    Hog Rider 3 s later. That is a sensible supported push, but it is not what
+    this case tests. At 8 the planned Hog is the next action (4 of 4 seeds).
     """
     env = _env()
-    _stage_hand(env, 0, [ICE_GOLEM, HOG, CANNON, SKELETONS], 10.0)
+    _stage_hand(env, 0, [ICE_GOLEM, HOG, CANNON, SKELETONS], 8.0)
     t = _teacher(horizon=50)
     spent0 = env.get_elixir_spent(0)
 
