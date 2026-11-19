@@ -411,6 +411,114 @@ def test_an_interrupt_saves_before_it_exits(workdir, monkeypatch):
 
 
 @pytest.mark.slow
+def test_an_interrupt_that_also_killed_the_workers_still_saves(workdir, monkeypatch):
+    """A terminal Ctrl-C reaches the env workers too, and gymnasium re-raises a
+    dead worker's KeyboardInterrupt from the save's own `envs.call`. That used
+    to abort the save: measured 2026-11-18, no checkpoint was written when the
+    Ctrl-C landed in the rollout. The test above interrupts the main process
+    only, so it never saw this.
+    """
+    from python_ai.trainers import train
+    if not train.PHASE1_DECK_POOL:
+        pytest.skip("the save reads the workers only with the deck pool on")
+    calls, dead = {"n": 0}, {"v": False}
+    real_collect = train.Phase1Trainer.collect_rollout
+    real_call = gym.vector.SyncVectorEnv.call
+
+    def interrupt_second(self):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            # Only the exit save may write the checkpoint from here on.
+            for f in ("model_weights.pth", "model_weights.pth.prev"):
+                if os.path.exists(workdir / f):
+                    os.remove(workdir / f)
+            dead["v"] = True
+            raise KeyboardInterrupt
+        return real_collect(self)
+
+    def call(self, name, *args, **kwargs):
+        if dead["v"]:
+            raise KeyboardInterrupt  # what AsyncVectorEnv re-raises from a dead worker
+        return real_call(self, name, *args, **kwargs)
+
+    monkeypatch.setattr(train.Phase1Trainer, "collect_rollout", interrupt_second)
+    monkeypatch.setattr(gym.vector.SyncVectorEnv, "call", call)
+    with pytest.raises(KeyboardInterrupt):
+        _phase1(updates=5)
+    ck = torch.load(workdir / "model_weights.pth", map_location="cpu", weights_only=False)
+    assert ck["episodes_completed"] >= 0
+
+
+def _read_in_exit_save(read):
+    # An escaping KeyboardInterrupt would abort the whole pytest session
+    # rather than fail this test.
+    try:
+        return read()
+    except KeyboardInterrupt:
+        pytest.fail("a dead worker's KeyboardInterrupt escaped the exit save's read")
+
+
+class _DyingEnvs:
+    """`envs.call` answers until `dead`, then raises what a dead worker does."""
+
+    def __init__(self, answers):
+        self.answers, self.dead = answers, False
+
+    def call(self, name):
+        if self.dead:
+            raise KeyboardInterrupt
+        return self.answers[name]
+
+
+def test_dead_workers_keep_the_last_deck_pool_estimates_but_never_swallow_a_stop():
+    from python_ai.trainers import train
+    if not train.PHASE1_DECK_POOL:
+        pytest.skip("the deck pool is off")
+    t = train.Phase1Trainer.__new__(train.Phase1Trainer)
+    t.envs = _DyingEnvs({"get_deck_pool_stats": [{"d": 0.4}, {"d": 0.6}],
+                         "get_deck_pool_counts": [{"d": 10}, {"d": 30}]})
+    assert t._merged_deck_pool() == ({"d": 0.5}, {"d": 20})
+    t.envs.dead = True
+    with pytest.raises(KeyboardInterrupt):  # outside the exit save, a stop stops
+        t._merged_deck_pool()
+    t._interrupted = True                   # set by BaseTrainer.run's handler
+    assert _read_in_exit_save(t._merged_deck_pool) == ({"d": 0.5}, {"d": 20})
+
+
+def test_a_resumed_run_keeps_its_restored_estimates_through_a_dead_worker_save():
+    """Resume, then Ctrl-C before the first periodic save: no read has
+    succeeded in this process, so the fallback must be what was restored, or
+    the exit save overwrites the checkpoint's estimates with nothing."""
+    from python_ai.trainers import train
+    from python_ai.trainers.train_selfplay import Phase2Trainer
+    if train.PHASE1_DECK_POOL:
+        t1 = train.Phase1Trainer.__new__(train.Phase1Trainer)
+        t1._restored_deck_stats, t1._restored_deck_counts = {"d": 0.3}, {"d": 12}
+        t1.envs = _DyingEnvs({})
+        t1.envs.dead, t1._interrupted = True, True
+        assert _read_in_exit_save(t1._merged_deck_pool) == ({"d": 0.3}, {"d": 12})
+
+    t2 = Phase2Trainer.__new__(Phase2Trainer)
+    t2.envs = None
+    t2._seed_pfsp({"pfsp_stats": {"a": 0.7}, "pfsp_counts": {"a": 9}})
+    t2.envs = _DyingEnvs({})
+    t2.envs.dead, t2._interrupted = True, True
+    assert _read_in_exit_save(t2._merged_pfsp) == ({"a": 0.7}, {"a": 9})
+
+
+def test_dead_workers_keep_the_last_pfsp_estimates_but_never_swallow_a_stop():
+    from python_ai.trainers.train_selfplay import Phase2Trainer
+    t = Phase2Trainer.__new__(Phase2Trainer)
+    t.envs = _DyingEnvs({"get_pfsp_stats": [({"a": 0.25}, {"a": 4}), ({"a": 0.75}, {"a": 4})]})
+    assert t._merged_pfsp() == ({"a": 0.5}, {"a": 8})
+    t.envs.dead = True
+    with pytest.raises(KeyboardInterrupt):
+        t._merged_pfsp()
+    t._interrupted = True
+    assert _read_in_exit_save(t._merged_pfsp) == ({"a": 0.5}, {"a": 8})
+
+
+@pytest.mark.slow
 def test_placement_modal_share_is_fed_from_the_real_rollout(workdir):
     """The window must receive this run's placements, or the collapse detector is
     silently absent.

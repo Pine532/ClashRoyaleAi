@@ -8102,3 +8102,44 @@ the last periodic save, and the resume picked up the same episode.
   is fixed. The 4 failures:
   - the 3 arm64 bit-exactness cases in `test_rl_ppo_compaction.py`;
   - the flaky `test_placement_hires` single-column case, which passed 3 of 3 reruns alone.
+
+## 2026-11-18 (evening): the user's follow-up decisions
+
+**Partly built entries are flagged unfinished (`5ef1efe`).** Elite Barbarians Evolution (182),
+Hero Ice Wizard (184) and Electro Giant Evolution (186) now carry `abilityPending`, the flag
+that already kept the five body-only Heroes out of random decks. The user chose this over
+filtering in `selfplay_env.py` so that one switch controls every unfinished entry. The flag's
+only reader is `sampleRandomDeck`, so combat is unchanged; phase 2's scripted opponents are
+the training path it reaches. An independent review found no other reader and no slot pool
+that can run empty.
+
+**A terminal Ctrl-C lost the exit save, sometimes.** Reproduced by sending SIGINT to the
+whole process group at four points in the rollout. When the interrupt landed in the PPO
+update, or just as a step returned, the save went through. When it landed during the
+rollout's model inference, no checkpoint was written.
+
+The stack showed the cause:
+1. The handler's `save_checkpoint` reached `_merged_deck_pool`.
+2. That function calls `envs.call` on workers the same Ctrl-C had killed.
+3. gymnasium's `_raise_if_errors` re-raises a dead worker's exception type in the main
+   process, so it raised `KeyboardInterrupt`, which is not an `Exception`.
+4. The save aborted.
+
+Phase 2's `_merged_pfsp` has the same shape.
+
+The fix: the run handler sets `_interrupted`. During that save only, both reads absorb the
+re-raised interrupt and fall back to the last pooled estimates. Outside the exit save a
+`KeyboardInterrupt` still stops the run, so a stop that lands during a periodic save is
+never swallowed.
+
+The review caught a hole in the first version. A resumed run that is interrupted before its
+first successful read had no fallback, so the exit save would have overwritten the
+checkpoint's estimates with nothing. The fallback now starts from the estimates the run
+resumed with.
+
+Known and accepted: a second Ctrl-C that lands inside that read during the exit save is
+absorbed once.
+
+**`profile_training.py --mode torch`** called `ClashRoyaleEnv()` with no decks (`4d95722`). The
+review found that its no-engine stub has been broken since 2026-08-27 for unrelated reasons;
+that is recorded as TODO L15, not fixed (outside the approved scope).

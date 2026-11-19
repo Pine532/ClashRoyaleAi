@@ -263,12 +263,20 @@ class Phase2Trainer(BaseTrainer):
         """Pooled PFSP estimates, or (None, None) if the workers cannot say."""
         if self.envs is None:
             return None, None
+        last = getattr(self, "_last_pfsp", (None, None))
         try:
             per_worker = self.envs.call("get_pfsp_stats")
         except Exception:        # noqa: BLE001 -- must never break a checkpoint
-            return None, None
+            return last
+        except KeyboardInterrupt:
+            # A terminal Ctrl-C kills the workers too; see
+            # Phase1Trainer._merged_deck_pool.
+            if not getattr(self, "_interrupted", False):
+                raise
+            return last
         stats, counts = self.merge_pfsp(per_worker)
-        return (stats or None), (counts or None)
+        self._last_pfsp = (stats or None), (counts or None)
+        return self._last_pfsp
 
     def _seed_pfsp(self, checkpoint):
         """Push a resumed checkpoint's pooled estimates into every worker, each
@@ -276,9 +284,14 @@ class Phase2Trainer(BaseTrainer):
         checkpoint.
         """
         stats = checkpoint.get("pfsp_stats") or {}
-        if not stats or self.envs is None:
+        if not stats:
             return
         counts = checkpoint.get("pfsp_counts") or {}
+        # _merged_pfsp's fallback until the first read, so a save the workers
+        # cannot answer does not overwrite these estimates with nothing.
+        self._last_pfsp = (stats, counts or None)
+        if self.envs is None:
+            return
         share = {k: max(1, int(n) // max(1, self.cfg.num_envs))
                  for k, n in counts.items()}
         self.envs.call("set_pfsp_stats", stats, share)

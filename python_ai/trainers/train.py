@@ -240,19 +240,33 @@ class Phase1Trainer(BaseTrainer):
         """
         if not PHASE1_DECK_POOL or self.envs is None:
             return None, None
+        # Fallback when the workers cannot answer: the last pooled read, else
+        # the estimates this process resumed with, so a save before the first
+        # read does not overwrite the checkpoint's estimates with nothing.
+        last = getattr(self, "_last_deck_pool", None) or (
+            getattr(self, "_restored_deck_stats", None) or None,
+            getattr(self, "_restored_deck_counts", None) or None)
         try:
             rates = self.envs.call("get_deck_pool_stats")
             counts = self.envs.call("get_deck_pool_counts")
         except Exception:
-            return None, None       # a worker that cannot answer must not
+            return last             # a worker that cannot answer must not
                                     # break checkpointing
+        except KeyboardInterrupt:
+            # A terminal Ctrl-C kills the workers too, and gymnasium re-raises
+            # a dead worker's KeyboardInterrupt here. During the exit save that
+            # used to abort the save; keep the last pooled estimates instead.
+            if not getattr(self, "_interrupted", False):
+                raise
+            return last
         def _avg(dicts, cast):
             merged = {}
             for d in dicts:
                 for k, v in (d or {}).items():
                     merged.setdefault(k, []).append(v)
             return {k: cast(sum(v) / len(v)) for k, v in merged.items()} or None
-        return _avg(rates, float), _avg(counts, int)
+        self._last_deck_pool = (_avg(rates, float), _avg(counts, int))
+        return self._last_deck_pool
 
     def checkpoint_payload(self):
         payload = self.curriculum.state_dict()

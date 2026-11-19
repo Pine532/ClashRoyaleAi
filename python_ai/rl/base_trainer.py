@@ -266,6 +266,12 @@ class BaseTrainer:
             # discarded.
             print(">>> Interrupted -- saving the checkpoint before exiting.")
             self.buffer.clear()
+            # A terminal Ctrl-C also kills the env workers. During this save
+            # only, the worker reads that feed the checkpoint may then absorb
+            # the KeyboardInterrupt gymnasium re-raises from a dead worker
+            # (_merged_deck_pool, _merged_pfsp); anywhere else it must stop
+            # the run.
+            self._interrupted = True
             self.save_checkpoint()
             raise
         self.on_finish()

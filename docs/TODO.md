@@ -84,13 +84,17 @@ size, so the first two items gate any training.
     the partly implemented Evo Elite Barbarians (182), Hero Ice Wizard (184) and Evo
     Electro Giant (186) (about 1.4-3.3% of decks each). Phase 1's pool contains none.
     Options: accept, filter in `selfplay_env.py`, or mark them `abilityPending`.
-13. **A terminal Ctrl-C can lose the exit save.** It reaches the AsyncVectorEnv workers
-    too; observed: "Interrupted -- saving" with no "Checkpoint saved", and the resume came
-    back at the last periodic save. Suspected cause: `train.py` `_merged_deck_pool` calls
-    the dead workers. `tools/mac_training.sh stop` signals the main process only (verified
-    to save).
-14. **`python_ai/tools/profile_training.py --mode torch` crashes**: it calls
-    `ClashRoyaleEnv()` with no decks (the constructor needs `ai_deck`, `opp_deck`).
+13. ~~**A terminal Ctrl-C can lose the exit save.**~~ FIXED 2026-11-18 (user-approved).
+    Cause, reproduced: the Ctrl-C kills the AsyncVectorEnv workers too, and the save's
+    `envs.call` (`_merged_deck_pool`, phase 2 `_merged_pfsp`) got the dead worker's
+    KeyboardInterrupt re-raised by gymnasium, past `except Exception`. Lost in 2 of 4
+    real-process trials before the fix; saved in all trials after.
+14. ~~**`profile_training.py --mode torch` crashes**~~ FIXED 2026-11-18 (`4d95722`).
+15. **`profile_training.py`'s no-engine stub is broken** (pre-existing, since 2026-08-27
+    `3d698d0`; found in review). `_engine_constants_from_header` cannot parse
+    `NUM_CARD_IDS = CARD_ID_COUNT`. The stub's `observation_size()` and boundary mode's
+    no-engine fallback also omit the two opponent-cycle blocks (13891 instead of 14403),
+    and the boundary default `n = 13606` is stale. Only affects a box with no built engine.
 
 ---
 
