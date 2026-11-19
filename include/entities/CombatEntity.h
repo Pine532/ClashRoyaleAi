@@ -410,6 +410,17 @@ public:
     int flightPulseDamage = 0;
     float flightPulsePullDistance = 0.0f;
 
+    // Hero Berserker's Savage Survival window (HeroBerserkerSavageSurvivalEffect).
+    // While abilityHpFloorTicksRemaining > 0 hp cannot drop below 1; while
+    // abilityHitCooldownTicksRemaining > 0 every swing re-arms at
+    // abilityHitCooldownTicks; hits she lands on a Crown Tower are scaled by
+    // towerDamageDealtMultiplier while towerDamageDealtTicksRemaining > 0.
+    int abilityHpFloorTicksRemaining = 0;
+    int abilityHitCooldownTicks = 0;
+    int abilityHitCooldownTicksRemaining = 0;
+    float towerDamageDealtMultiplier = 1.0f;
+    int towerDamageDealtTicksRemaining = 0;
+
     // Hero Valkyrie's Wild Whirlwind spin (HeroValkyrieWhirlwindEffect).
     int whirlTicksRemaining = 0;
     int whirlElapsedTicks = 0;
@@ -518,6 +529,9 @@ public:
         }
         if (amount > 0) {
             Entity::takeDamage(amount);
+            // Savage Survival: "unbeatable", the damage still lands but hp stops
+            // at 1. Here, not in the callers, so DoT, spells and towers all floor.
+            if (abilityHpFloorTicksRemaining > 0 && hp < 1) hp = 1;
             if (onDamageTakenEffect) onDamageTakenEffect->apply(*this);
         }
     }
@@ -687,6 +701,9 @@ public:
         if (abilityCooldownRemaining > 0) abilityCooldownRemaining--;
         if (temporaryInvisibilityTicksRemaining > 0) temporaryInvisibilityTicksRemaining--;
         if (selfHasteTicksRemaining > 0) selfHasteTicksRemaining--;
+        if (abilityHpFloorTicksRemaining > 0) abilityHpFloorTicksRemaining--;
+        if (abilityHitCooldownTicksRemaining > 0) abilityHitCooldownTicksRemaining--;
+        if (towerDamageDealtTicksRemaining > 0) towerDamageDealtTicksRemaining--;
         if (temporaryFlightTicksRemaining > 0) {
             temporaryFlightTicksRemaining--;
             if (temporaryFlightTicksRemaining == 0) isFlying = false;
@@ -877,6 +894,9 @@ public:
                         selfHasteTicksRemaining = selfHasteDurationTicks;
                         currentCooldown *= selfHasteCooldownMultiplier;
                     }
+                    // Savage Survival's hit speed, last so it is the final value: an
+                    // absolute tick count avoids float rounding of 0.2 / 0.6.
+                    if (abilityHitCooldownTicksRemaining > 0) currentCooldown = static_cast<float>(abilityHitCooldownTicks);
                     // Ally auras (Rune Giant's buff, Battle Healer's heal).
                     if (healAllyAmount > 0) {
                         applyAreaHeal(board, position, auraRadius, id, team, healAllyAmount);

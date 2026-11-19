@@ -43,6 +43,7 @@
 #include "HeroIceGolemSnowstormEffect.h"
 #include "HeroBarbarianBarrelRerollEffect.h"
 #include "HeroValkyrieWhirlwindEffect.h"
+#include "HeroBerserkerSavageSurvivalEffect.h"
 
 // A registered card. spawnEntity is one of the archetype factories in
 // CardFactories.h bound to the card's CardStats.
@@ -2135,6 +2136,25 @@ private:
                 /*dashRange=*/5.5f, /*spinTicks=*/35, /*radius=*/2.5f,
                 /*hitIntervalHalfTicks=*/5, /*damage=*/97,
                 /*selfDamageTakenMultiplier=*/0.85f, /*towerDamageMultiplier=*/0.5f), 1));
+
+        // Hero Berserker (base: id 51; no live-sync row changes base Berserker, so
+        // the body restates it: 896 hp / 102 dmg / 0.6 s / Fast / Melee: Short).
+        // "Savage Survival" (ONE use per deployment: official 2026-08-04 post): for
+        // 3.5 s she swings every 0.2 s, her hp cannot fall below 1, and she deals
+        // 75% less damage to Crown Towers (HeroBerserkerSavageSurvivalEffect).
+        // Duration 35 ticks: official, supercell.com/en/games/clashroyale/blog/news/final-august-balance-changes-826/
+        //   (Balance Update - August 26th: Ability Duration 4sec -> 3.5sec).
+        // Cost 3, hit speed 0.2 s (2 ticks), hp floor 1, x0.25 to Crown Towers:
+        //   single source, https://trophycoach.com/heroes/hero-berserker (and its
+        //   guide); not contradicted ("increasing her hit speed and becoming
+        //   unbeatable" is the official wording).
+        // Not modelled: the "Ultra Fast" movement during the ability (no numeric
+        //   speed published), the 2026-09-07 elixir refund when she is defeated
+        //   before activating (no such mechanic engine-wide, amount unstated), and
+        //   any "+64% damage" (one unverified claim). Sight is the 5.5 default.
+        add(troop(181, "Hero Berserker", 2.0f, Archetype::MeleeSquad, 896, SPEED_FAST, 0.8f, 102, 6, 'v')
+            .withHeroAbility(3.0f, 0, std::make_shared<HeroBerserkerSavageSurvivalEffect>(
+                /*durationTicks=*/35, /*hitCooldownTicks=*/2, /*towerDamageMultiplier=*/0.25f), 1));
 
     }
 

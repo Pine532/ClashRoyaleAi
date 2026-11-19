@@ -437,3 +437,185 @@ TEST_CASE("A deck with Hero Valkyrie (180) passes validateDeckSlots in slot 1",
     CHECK(validateDeckSlots({ 1, 180, 2, 3, 4, 5, 6, 7 }).empty());
     CHECK(countHeroes({ 180, 1, 2, 3, 4, 5, 6, 7 }) == 1);
 }
+
+// ---------------- Hero Berserker (181) ----------------
+
+namespace {
+
+struct BerserkRig {
+    Board board;
+    std::shared_ptr<CombatEntity> hero;
+    std::shared_ptr<CombatEntity> foe;
+    std::shared_ptr<live_sync::DamageRecorder> rec = std::make_shared<live_sync::DamageRecorder>();
+
+    BerserkRig() {
+        board.statsEvents.subscribe(rec);
+        hero = live_sync::firstCombat(live_sync::spawnBare(board, 181, 9.0f, 10.0f, 0));
+        hero->deployTicksRemaining = 0; // the ability is usable once deployed
+        foe = live_sync::firstCombat(live_sync::spawnBare(board, 0, 9.0f, 10.8f, 1));
+        foe->hp = 100000; // a damage sponge: hits are never clipped by death
+    }
+    void tick() { board.currentTick++; hero->update(board); }
+    // Ticks at which the foe took damage over the next n ticks.
+    std::vector<int> hitTicks(int n, int startTick) {
+        std::vector<int> out;
+        int last = rec->totalTo(foe->id);
+        for (int t = 0; t < n; ++t) {
+            tick();
+            const int now = rec->totalTo(foe->id);
+            if (now != last) out.push_back(startTick + t);
+            last = now;
+        }
+        return out;
+    }
+};
+
+} // namespace
+
+TEST_CASE("Hero Berserker (181) is registered with base Berserker's body and a one-use Savage Survival",
+          "[new_card][hero_berserker]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(181);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Hero Berserker");
+    CHECK(def->cost == Catch::Approx(2.0f));
+    CHECK(def->isHero);
+    CHECK_FALSE(def->isChampion);
+    CHECK_FALSE(def->abilityPending);
+
+    Board a, b;
+    auto base = live_sync::mainBody(a, 51);
+    auto hero = live_sync::mainBody(b, 181);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->hp == 896);
+    CHECK(hero->getBaseDamage() == 102);
+    CHECK(hero->getAttackCooldown() == 6);
+    CHECK(hero->getAttackRange() == Catch::Approx(0.8f));
+    CHECK(std::dynamic_pointer_cast<Troop>(hero)->getSpeed()
+          == Catch::Approx(std::dynamic_pointer_cast<Troop>(base)->getSpeed()));
+    CHECK(hero->sightRange == Catch::Approx(5.5f));
+    CHECK(hero->abilityElixirCost == Catch::Approx(3.0f));
+    CHECK(hero->abilityCooldownTicks == 0);
+    CHECK(hero->abilityUsesRemaining == 1);
+}
+
+TEST_CASE("Hero Berserker (181) swings every 2 ticks for 35 ticks after Savage Survival, then every 6",
+          "[new_card][hero_berserker]") {
+    BerserkRig r;
+    const auto before = r.hitTicks(30, 0);
+    REQUIRE(before.size() >= 3);
+    for (size_t i = 1; i < before.size(); ++i) CHECK(before[i] - before[i - 1] == 6);
+
+    REQUIRE(r.hero->activateAbility(r.board));
+    const auto during = r.hitTicks(35, 100);
+    REQUIRE(during.size() >= 10);
+    // The swing in progress finishes on its old cooldown; every one after it is 2 ticks.
+    for (size_t i = 2; i < during.size(); ++i) CHECK(during[i] - during[i - 1] == 2);
+    CHECK(r.hero->abilityHitCooldownTicksRemaining == 0); // window length: 35 ticks
+    const auto after = r.hitTicks(30, 200);
+    REQUIRE(after.size() >= 3);
+    for (size_t i = 2; i < after.size(); ++i) CHECK(after[i] - after[i - 1] == 6);
+}
+
+TEST_CASE("Hero Berserker (181) window is exactly 35 ticks long",
+          "[new_card][hero_berserker]") {
+    BerserkRig r;
+    REQUIRE(r.hero->activateAbility(r.board));
+    for (int t = 0; t < 34; ++t) r.tick();
+    CHECK(r.hero->abilityHpFloorTicksRemaining == 1); // still active at 34
+    r.tick();
+    CHECK(r.hero->abilityHpFloorTicksRemaining == 0);
+}
+
+TEST_CASE("Hero Berserker (181) cannot be reduced below 1 hp during Savage Survival",
+          "[new_card][hero_berserker]") {
+    {
+        BerserkRig r;
+        REQUIRE(r.hero->activateAbility(r.board));
+        r.hero->takeDamage(5000);
+        CHECK(r.hero->hp == 1);
+        CHECK(r.hero->isAlive());
+    }
+    {
+        BerserkRig r; // control: without the ability the same hit kills
+        r.hero->takeDamage(5000);
+        CHECK_FALSE(r.hero->isAlive());
+    }
+    {
+        BerserkRig r; // after the window the floor is gone
+        REQUIRE(r.hero->activateAbility(r.board));
+        for (int t = 0; t < 35; ++t) r.tick();
+        r.hero->takeDamage(5000);
+        CHECK_FALSE(r.hero->isAlive());
+    }
+}
+
+TEST_CASE("Hero Berserker (181) survives damage over time during Savage Survival",
+          "[new_card][hero_berserker]") {
+    for (bool active : { true, false }) {
+        BerserkRig r;
+        r.foe->hp = 100000;
+        if (active) REQUIRE(r.hero->activateAbility(r.board));
+        r.hero->applyDot(2000, 3, 1);
+        for (int t = 0; t < 5; ++t) r.tick();
+        CHECK(r.hero->isAlive() == active); // control: the DoT kills her without it
+    }
+}
+
+TEST_CASE("Hero Berserker (181) Savage Survival costs 3 elixir, is refused at 2.9 and is single-use",
+          "[new_card][hero_berserker]") {
+    GameManager game({ 1, 181, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    game.playerAI.hand[1] = 181;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, 181, 9.0f, 10.0f);
+    for (int i = 0; i < 12; ++i) game.step(); // deployed
+    game.playerAI.elixir = 2.9f;
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+    game.playerAI.elixir = 10.0f;
+    REQUIRE(game.activateChampionAbility(0, 1));
+    CHECK(game.getElixirAI() == Catch::Approx(7.0f));
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+    CHECK(game.getElixirAI() == Catch::Approx(7.0f));
+}
+
+TEST_CASE("Hero Berserker (181) deals 25 to a Crown Tower during Savage Survival and 102 otherwise",
+          "[new_card][hero_berserker]") {
+    auto towerHit = [](bool active) {
+        live_sync::Match m;
+        std::shared_ptr<Entity> tower;
+        for (const auto& e : m.board().getEntities())
+            if (e->isTower() && e->team == 1) { tower = e; break; }
+        auto hero = live_sync::firstCombat(m.spawnCard(181, tower->position.x, tower->position.y - 1.5f, 0));
+        hero->deployTicksRemaining = 0;
+        if (active) hero->activateAbility(m.board());
+        for (int t = 0; t < 40 && m.rec->totalTo(tower->id) == 0; ++t) hero->update(m.board());
+        return m.rec->totalTo(tower->id);
+    };
+    CHECK(towerHit(true) == 25);   // 102 * 0.25, truncated
+    CHECK(towerHit(false) == 102); // control: the penalty is only inside the window
+}
+
+TEST_CASE("Hero Berserker (181) deals full damage to a non-tower during Savage Survival",
+          "[new_card][hero_berserker]") {
+    BerserkRig r;
+    REQUIRE(r.hero->activateAbility(r.board));
+    for (int t = 0; t < 12; ++t) r.tick();
+    const int total = r.rec->totalTo(r.foe->id);
+    REQUIRE(total > 0);
+    CHECK(total % 102 == 0); // every hit 102, none scaled
+}
+
+TEST_CASE("Hero Berserker (181) Savage Survival does not change her movement speed",
+          "[new_card][hero_berserker]") {
+    // Pins the omission: "Ultra Fast" has no published numeric speed. Remove when one is sourced.
+    BerserkRig r;
+    auto troop = std::dynamic_pointer_cast<Troop>(r.hero);
+    const float before = troop->getSpeed();
+    REQUIRE(r.hero->activateAbility(r.board));
+    CHECK(troop->getSpeed() == Catch::Approx(before));
+}
+
+TEST_CASE("A deck with Hero Berserker (181) passes validateDeckSlots in slot 1",
+          "[new_card][hero_berserker]") {
+    CHECK(validateDeckSlots({ 1, 181, 2, 3, 4, 5, 6, 7 }).empty());
+    CHECK(countHeroes({ 181, 1, 2, 3, 4, 5, 6, 7 }) == 1);
+}

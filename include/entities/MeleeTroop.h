@@ -22,6 +22,10 @@ public:
 protected:
     void performAttack(Board& board, std::shared_ptr<Entity> target) override {
         int dealt = getCurrentDamage();
+        // Hero Berserker's Savage Survival: 75% less damage to Crown Towers
+        // (truncated, the engine convention; the real rounding is unpublished).
+        if (target->isTower() && towerDamageDealtTicksRemaining > 0)
+            dealt = static_cast<int>(dealt * towerDamageDealtMultiplier);
         target->takeDamage(dealt);
         board.statsEvents.notifyDamageDealt(
             { id, team, cardId, target->id, target->cardId, target->team, dealt, board.currentTick, target->isTower() });
