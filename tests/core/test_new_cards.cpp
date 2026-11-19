@@ -824,3 +824,156 @@ TEST_CASE("Minion Giant (183) takes damage from Archers but none from a Knight i
     CHECK(damageTaken(0) == 0);   // Knight: ground only
     CHECK(damageTaken(1) > 0);    // Archers: hit air
 }
+
+// ---------------- Hero Ice Wizard (184) ----------------
+
+namespace {
+
+struct FrostyRig {
+    Board board;
+    std::shared_ptr<CombatEntity> hero;
+    int nextId = 9000;
+
+    FrostyRig() {
+        hero = live_sync::firstCombat(live_sync::spawnBare(board, 184, 5.0f, 5.0f, 0));
+        hero->deployTicksRemaining = 0;
+    }
+    std::shared_ptr<StationaryCombatant> unit(float x, float y, int team, int hp = 500, bool slowed = false) {
+        auto u = std::make_shared<StationaryCombatant>(nextId++, x, y, hp, team, 0.0f, 0, 1000);
+        board.addEntity(u);
+        board.commitPendingEntities();
+        if (slowed) u->applyFreeze(30, 0.70f);
+        return u;
+    }
+    // Cast, then run the blast (an AreaSpell with no delay) for one update.
+    void cast() {
+        REQUIRE(hero->activateAbility(board));
+        board.commitPendingEntities();
+        for (const auto& e : board.getEntities())
+            if (auto a = std::dynamic_pointer_cast<AreaSpell>(e)) a->update(board);
+    }
+    size_t count() { return board.getEntities().size(); }
+};
+
+} // namespace
+
+TEST_CASE("Hero Ice Wizard (184) is registered with base Ice Wizard's body and a one-use Frosty Fella",
+          "[new_card][hero_ice_wizard]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(184);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Hero Ice Wizard");
+    CHECK(def->cost == Catch::Approx(3.0f));
+    CHECK(def->isHero);
+    CHECK_FALSE(def->abilityPending);
+
+    Board a, b;
+    auto base = live_sync::mainBody(a, 34);
+    auto hero = live_sync::mainBody(b, 184);
+    REQUIRE(base != nullptr);
+    REQUIRE(hero != nullptr);
+    CHECK(hero->hp == 689);
+    CHECK(hero->getBaseDamage() == 90);
+    CHECK(hero->getAttackCooldown() == 17);
+    CHECK(hero->getAttackRange() == Catch::Approx(5.5f));
+    CHECK(hero->splashRadius == Catch::Approx(1.5f));
+    CHECK(hero->firstHitTicks == base->firstHitTicks);
+    CHECK(hero->targetsAir);
+    CHECK(hero->abilityElixirCost == Catch::Approx(2.0f));
+    CHECK(hero->abilityCooldownTicks == 0);
+    CHECK(hero->abilityUsesRemaining == 1);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella damages 46 and freezes 50 ticks around the nearest slowed troop",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto a = r.unit(5.0f, 10.0f, 1, 500, true);
+    auto b = r.unit(5.0f, 12.0f, 1);   // 2.0 from A, unslowed
+    auto c = r.unit(5.0f, 13.0f, 1);   // 3.0 from A, outside 2.5
+    r.cast();
+    CHECK(a->hp == 500 - 46);
+    CHECK(b->hp == 500 - 46);
+    CHECK(c->hp == 500);
+    CHECK(a->freezeTicks == 50);
+    CHECK(b->freezeTicks == 50);
+    CHECK(b->freezeSlow == Catch::Approx(0.0f));
+    CHECK(c->freezeTicks == 0);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella centres on the nearest slowed troop to the hero",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto far = r.unit(12.0f, 14.0f, 1, 500, true);
+    auto farNeighbour = r.unit(12.0f, 15.0f, 1);
+    auto near = r.unit(5.0f, 9.0f, 1, 500, true);
+    auto nearNeighbour = r.unit(5.0f, 10.0f, 1);
+    r.cast();
+    CHECK(near->freezeTicks == 50);
+    CHECK(nearNeighbour->freezeTicks == 50);
+    CHECK(far->hp == 500);
+    CHECK(farNeighbour->freezeTicks == 0);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella ignores friendly and unslowed troops and adds no blast",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto friendlySlowed = r.unit(5.0f, 9.0f, 0, 500, true);
+    auto enemyPlain = r.unit(5.0f, 10.0f, 1);
+    const size_t before = r.count();
+    REQUIRE(r.hero->activateAbility(r.board));
+    r.board.commitPendingEntities();
+    CHECK(r.count() == before);
+    CHECK(friendlySlowed->hp == 500);
+    CHECK(enemyPlain->hp == 500);
+    CHECK(enemyPlain->freezeTicks == 0);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella no longer kills 81 hp Skeletons or Bats",
+          "[new_card][hero_ice_wizard]") {
+    // Official 2026-10-06: 89 -> 46 so the freeze stops killing Skeletons/Bats.
+    FrostyRig r;
+    auto decoy = r.unit(5.0f, 10.0f, 1, 500, true);
+    auto skel = r.unit(5.0f, 11.0f, 1, 81);
+    auto bat = r.unit(6.0f, 10.0f, 1, 81);
+    r.cast();
+    CHECK(skel->isAlive());
+    CHECK(skel->hp == 35);
+    CHECK(bat->hp == 35);
+    // Control: the launch value 89 kills them with the same setup.
+    Board board;
+    auto s = std::make_shared<StationaryCombatant>(1, 5.0f, 11.0f, 81, 1, 0.0f, 0, 1000);
+    board.addEntity(s);
+    board.commitPendingEntities();
+    auto blast = std::make_shared<AreaSpell>(board.allocateId(), 5.0f, 10.0f, 0, 2.5f, 89, 0, '*',
+                                             std::make_shared<FreezeOnHit>(50, 0.0f));
+    board.addEntity(blast);
+    board.commitPendingEntities();
+    blast->update(board);
+    CHECK(s->hp <= 0);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella costs 2 elixir and is single-use through GameManager",
+          "[new_card][hero_ice_wizard]") {
+    GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    game.playerAI.hand[1] = 184;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, 184, 9.0f, 10.0f);
+    for (int i = 0; i < 12; ++i) game.step();
+    game.playerAI.elixir = 1.9f;
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+    game.playerAI.elixir = 10.0f;
+    REQUIRE(game.activateChampionAbility(0, 1));
+    CHECK(game.getElixirAI() == Catch::Approx(8.0f));
+    REQUIRE_FALSE(game.activateChampionAbility(0, 1));
+}
+
+TEST_CASE("Hero Ice Wizard (184) freeze lasts exactly 50 ticks",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto a = r.unit(5.0f, 10.0f, 1, 500, true);
+    r.cast();
+    REQUIRE(a->freezeTicks == 50);
+    for (int i = 0; i < 49; ++i) a->update(r.board);
+    CHECK(a->freezeTicks > 0);
+    a->update(r.board);
+    CHECK(a->freezeTicks == 0);
+}

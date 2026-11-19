@@ -44,6 +44,7 @@
 #include "HeroBarbarianBarrelRerollEffect.h"
 #include "HeroValkyrieWhirlwindEffect.h"
 #include "HeroBerserkerSavageSurvivalEffect.h"
+#include "HeroIceWizardFrostyFellaEffect.h"
 #include "EliteBarbarianSpearEffect.h"
 
 // A registered card. spawnEntity is one of the archetype factories in
@@ -2194,6 +2195,28 @@ private:
         add(troop(181, "Hero Berserker", 2.0f, Archetype::MeleeSquad, 896, SPEED_FAST, 0.8f, 102, 6, 'v')
             .withHeroAbility(3.0f, 0, std::make_shared<HeroBerserkerSavageSurvivalEffect>(
                 /*durationTicks=*/35, /*hitCooldownTicks=*/2, /*towerDamageMultiplier=*/0.25f), 1));
+
+        // Hero Ice Wizard (base: id 34), released 2026-09-07
+        // (https://supercell.com/en/games/clashroyale/blog/news/new-season-k-h-a-o-s/).
+        // Restates the base card's live body (hp 689, damage 90, 1.7 s, 5.5 range,
+        // Medium, first hit 0.5 s, splash 1.5, slow 0.70 for 3 s). Hero-specific
+        // stats are unpublished; Supercell says base changes also affect Hero
+        // forms and nothing contradicts, so base figures are used (single source
+        // for the base figures: trophycoach.com/heroes/hero-ice-wizard). The 3 s
+        // slow duration is the engine's existing base value, not in any official
+        // post. "Frosty Fella": 2 elixir (trophycoach, timesaver.gg, ldplayer.net;
+        // not official, not contradicted), single use (official 2026-08-04),
+        // 46 damage (official 2026-10-06, 89 -> 46), 5 s freeze (official
+        // 2026-09-16, 7 s -> 5 s), radius ~2.5 tiles (ldplayer.net and
+        // timesaver.gg, community-measured; unofficial, not contradicted).
+        // Not modelled: the Snowman (hp contradicted: ~425 timesaver vs 266
+        // ldplayer), its "behind the troop" offset, the freeze ending when it
+        // dies, a separate Crown Tower damage figure (unpublished, so 100%), and
+        // the 2026-10-27 elixir refund when defeated before the projectile lands.
+        add(troop(184, "Hero Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i').withFirstHit(5)
+            .withTargetsAir().withSplash(1.5f).withSightRange(5.5f)
+            .withOnHit(std::make_shared<FreezeOnHit>(30, 0.70f))
+            .withHeroAbility(2.0f, 0, std::make_shared<HeroIceWizardFrostyFellaEffect>(2.5f, 46, 50), 1));
 
     }
 
