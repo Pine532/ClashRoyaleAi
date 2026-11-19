@@ -40,7 +40,7 @@ TEST_CASE("Hero Mini P.E.K.K.A. (170) is registered with base Mini PEKKA's stats
     REQUIRE(hero->abilityUsesRemaining == 1);
 }
 
-TEST_CASE("Hero Musketeer (168) is registered with base Musketeer's stats and a repeating-cooldown ability",
+TEST_CASE("Hero Musketeer (168) is registered with base Musketeer's stats and a single-use ability",
         "[card_registry][hero]") {
     Board board;
     const CardDefinition* def = CardRegistry::getInstance().getCard(168);
@@ -56,7 +56,7 @@ TEST_CASE("Hero Musketeer (168) is registered with base Musketeer's stats and a 
     REQUIRE(hero->sightRange == Catch::Approx(6.0f));
     REQUIRE(hero->abilityElixirCost == Catch::Approx(3.0f));
     REQUIRE(hero->abilityCooldownTicks == 220);
-    REQUIRE(hero->abilityUsesRemaining == -1); // unlimited, gated by cooldown and elixir
+    REQUIRE(hero->abilityUsesRemaining == 1); // single-use since the 2026-08-04 balance update
 }
 
 // ---------------- HeroMiniPekkaBoostEffect ----------------

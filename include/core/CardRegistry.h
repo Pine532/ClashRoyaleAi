@@ -1167,7 +1167,8 @@ private:
         add(troop(115, "Mighty Miner", 4.0f, Archetype::MeleeSquad, 2250, SPEED_MEDIUM, 1.6f, 409, 4, '\'')
             // 2026-08-04 balance update (final August changes, supercell.com): base damage 40 -> 43.
             .withDamageRamp(20, 40, 43.0f / 409.0f, 204.0f / 409.0f)
-            .withChampionAbility(1.0f, 130, std::make_shared<MightyMinerEscapeEffect>(2.5f, 332, 10, 1.8f)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withChampionAbility(1.0f, 130, std::make_shared<MightyMinerEscapeEffect>(2.5f, 332, 10, 1.8f), 1));
 
         // Golden Knight's "Dashing Dash": up to 10 dashes to the nearest enemy
         // within 5.0 tiles, stopping at a Crown Tower (GoldenKnightDashEffect).
@@ -1175,7 +1176,8 @@ private:
         // tiles (docs/LIVE_SYNC.md); the live range is measured to the target's
         // edge, the engine's to its centre.
         add(troop(116, "Golden Knight", 4.0f, Archetype::MeleeSquad, 1799, SPEED_MEDIUM, 1.2f, 168, 9, 'k')
-            .withChampionAbility(1.0f, 120, std::make_shared<GoldenKnightDashEffect>(335, 5.0f, 10)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withChampionAbility(1.0f, 120, std::make_shared<GoldenKnightDashEffect>(335, 5.0f, 10), 1));
 
         // Skeleton King: collects up to 10 souls from any death within
         // soulCollectionRadius (not sourced); "Soul Summoning" spawns 6 + 1 per
@@ -1184,19 +1186,22 @@ private:
             .withSplash(1.3f)
             .withSoulCollection(5.0f, 10)
             .withChampionAbility(2.0f, 200,
-                std::make_shared<SkeletonKingSoulSummonEffect>(skeletonKingSummonedSkeletonStats(), 6, 3.5f)));
+                std::make_shared<SkeletonKingSoulSummonEffect>(skeletonKingSummonedSkeletonStats(), 6, 3.5f),
+                1)); // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
 
         // Archer Queen's "Cloaking Cape": untargetable and ~2.8x attack speed
         // for 3.5 s.
         add(troop(118, "Archer Queen", 5.0f, Archetype::RangedSquad, 1000, SPEED_MEDIUM, 5.0f, 232, 12, 'Q') // 2026-08-26 final August balance update: damage 225 -> 232 (docs/LIVE_SYNC.md)
             .withTargetsAir()
-            .withChampionAbility(1.0f, 170, std::make_shared<ArcherQueenCloakEffect>(35, 1.0f / 2.8f)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withChampionAbility(1.0f, 170, std::make_shared<ArcherQueenCloakEffect>(35, 1.0f / 2.8f), 1));
 
         // Monk: his 3-hit combo is flat damage here. "Pensive Protection" (65%
         // damage reduction for 4 s): see MonkDeflectEffect.
         // Cost 5 elixir (DeckShop; cr-api-data's 4 predates the live value).
         add(troop(119, "Monk", 5.0f, Archetype::MeleeSquad, 2214, SPEED_MEDIUM, 1.2f, 140, 8, 'M')
-            .withChampionAbility(1.0f, 170, std::make_shared<MonkDeflectEffect>(0.35f, 40)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withChampionAbility(1.0f, 170, std::make_shared<MonkDeflectEffect>(0.35f, 40), 1));
 
         // Little Prince: hit speed ramps 1.2 s -> 0.8 s -> 0.4 s on one target
         // (3 attacks per stage, as tick thresholds). "Royal Rescue" summons the
@@ -1206,7 +1211,8 @@ private:
             .withTargetsAir()
             .withHitSpeedRamp(36, 60, 8.0f / 12.0f, 4.0f / 12.0f)
             .withRampGracePeriod(3)
-            .withChampionAbility(3.0f, 300, std::make_shared<SpawnOnAbility>(guardienneStats())));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withChampionAbility(3.0f, 300, std::make_shared<SpawnOnAbility>(guardienneStats()), 1));
 
         // Goblinstein: the Monster (front, building-only tank, carries the
         // ability) plus the Doctor (secondary, 3 tiles behind at a fixed
@@ -1215,7 +1221,8 @@ private:
         // 4 s -> 3.5 s (2026-09-16 balance update, Supercell release notes;
         // docs/LIVE_SYNC.md): 35 ticks = 7 hits at the 5-tick interval.
         add(troop(121, "Goblinstein", 5.0f, Archetype::MeleeBuildingTargeter, 2240, 0.5f, 1.2f, 128, 15, 'G') // 2026-08-26 final August balance update: Monster hp 2385 -> 2240 (docs/LIVE_SYNC.md)
-            .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 94, 5, 35)) // 2026-08-04: 214 -> 188 damage per second = 94 per 5-tick pulse (docs/LIVE_SYNC.md)
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withChampionAbility(2.0f, 170, std::make_shared<GoblinsteinLightningLinkEffect>(2.0f, 94, 5, 35), 1) // 2026-08-04: 214 -> 188 damage per second = 94 per 5-tick pulse (docs/LIVE_SYNC.md)
             .withSecondaryUnit(
                 // 2026-08-04 balance update: Doctor damage 92 -> 135 (docs/LIVE_SYNC.md).
                 troop(-40, "Goblinstein", 0.0f, Archetype::RangedSquad, 721, 0.5f, 5.5f, 135, 18, 'D')
@@ -1794,7 +1801,8 @@ private:
         // with a 10 s lifetime (heroMusketeerTurretStats).
         add(troop(168, "Hero Musketeer", 4.0f, Archetype::RangedSquad, 721, SPEED_MEDIUM, 6.0f, 217, 10, 'U')
             .withTargetsAir().withSightRange(6.0f)
-            .withHeroAbility(3.0f, 220, std::make_shared<SpawnOnAbility>(heroMusketeerTurretStats())));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withHeroAbility(3.0f, 220, std::make_shared<SpawnOnAbility>(heroMusketeerTurretStats()), 1));
 
         // Hero Goblins (base: id 4). "Banner Brigade" (1 elixir, one use,
         // within 5 s of the last goblin dying; 7 s before the 2026-02-23
@@ -1815,7 +1823,8 @@ private:
         // 5 s (HeroKnightTauntEffect). 2026-07-06 balance update: shield 768 ->
         // 512 hp (docs/LIVE_SYNC.md).
         add(troop(166, "Hero Knight", 3.0f, Archetype::MeleeSquad, 1766, SPEED_MEDIUM, 1.2f, 202, 12, 'K')
-            .withHeroAbility(2.0f, 250, std::make_shared<HeroKnightTauntEffect>(512, 50, 6.5f)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withHeroAbility(2.0f, 250, std::make_shared<HeroKnightTauntEffect>(512, 50, 6.5f), 1));
 
         // Hero Wizard (base: id 11). "Fiery Flight" (1 elixir, 20 s cooldown):
         // flies for 3.5 s (2026-09-08 balance update, down from 5 s; docs/LIVE_SYNC.md),
@@ -1825,14 +1834,16 @@ private:
         // 2024-08-06 balance update: Wizard hp 720 -> 754 (Supercell august-balance-changes; docs/LIVE_SYNC.md).
         add(troop(167, "Hero Wizard", 5.0f, Archetype::RangedSquad, 754, SPEED_MEDIUM, 5.5f, 304, 14, 'W')
             .withTargetsAir().withSplash(1.5f)
-            .withHeroAbility(1.0f, 200, std::make_shared<HeroWizardFieryFlightEffect>(35, 4.0f, 20, 0.5f)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withHeroAbility(1.0f, 200, std::make_shared<HeroWizardFieryFlightEffect>(35, 4.0f, 20, 0.5f), 1));
 
         // Hero Giant (base: id 2). "Heroic Hurl" (2 elixir, 14 s cooldown):
         // throws the highest-HP enemy troop within 3.0 tiles (not sourced) to
         // the other lane and stuns it 2 s (HeroGiantHurlEffect).
         add(troop(169, "Hero Giant", 5.0f, Archetype::MeleeBuildingTargeter, 3968, SPEED_SLOW, 1.2f, 253, 15, 'G')
             .withSightRange(7.5f)
-            .withHeroAbility(2.0f, 140, std::make_shared<HeroGiantHurlEffect>(3.0f, 20)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withHeroAbility(2.0f, 140, std::make_shared<HeroGiantHurlEffect>(3.0f, 20), 1));
 
         // Hero Mega Minion (base: id 43). "Wounding Warp" (2 elixir, one use,
         // locked for the first 1.5 s): teleports to the lowest-HP enemy
@@ -1853,7 +1864,7 @@ private:
             .withTargetsAir()
             .withSplash(0.25f).withLineSplash(11.0f).withSightRange(7.5f)
             .withHeroAbility(2.0f, 250, std::make_shared<HeroMagicArcherTripleThreatEffect>(
-                3.5f, heroMagicArcherDecoyStats(), 70)));
+                3.5f, heroMagicArcherDecoyStats(), 70), 1)); // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
 
         // Hero Ice Golem (base: id 40, including the slow on its death
         // explosion; 1228 hp and 25-tick slow as of 2026-09-08, docs/LIVE_SYNC.md). "Snowstorm" (2 elixir, 17 s cooldown): three staggered
@@ -1865,7 +1876,8 @@ private:
         add(troop(175, "Hero Ice Golem", 2.0f, Archetype::MeleeBuildingTargeter, 1228, SPEED_SLOW, 0.75f, 84, 25, 'c')
             .withDeathEffect(std::make_shared<AreaDamageOnDeath>(
                 2.0f, 84, std::make_shared<FreezeOnHit>(25, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%; 2026-09-08: 1228 hp, 2.5 s
-            .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 69, 0.0f, 20, 0.6f, 15)));
+            // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
+            .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 69, 0.0f, 20, 0.6f, 15), 1));
 
         // Hero Barbarian Barrel (base: id 101). The ability lives on the
         // spawned Barbarian (heroBarbarianBarrelBarbarianStats), since the

@@ -579,10 +579,11 @@ TEST_CASE("activateChampionAbility fails while still on cooldown", "[game_manage
     REQUIRE_FALSE(game.activateChampionAbility(0));
 }
 
-TEST_CASE("activateChampionAbility is ready again once its full cooldown elapses via step()", "[game_manager][champion]") {
-    GameManager game({ 1, 115, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
-    game.playerAI.hand[1] = 115;
-    game.playCard(0, 115, 9.0f, 10.0f);
+TEST_CASE("activateChampionAbility is ready again once its full cooldown elapses via step() (Boss Bandit: the one ability that is not single-use)", "[game_manager][champion]") {
+    GameManager game({ 1, 122, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
+    game.playerAI.hand[1] = 122;
+    game.playerAI.elixir = 100.0f; // Boss Bandit costs 6
+    game.playCard(0, 122, 9.0f, 10.0f);
     game.step(); // commit, so the Champion is visible
     game.playerAI.elixir = 10.0f;
     REQUIRE(game.activateChampionAbility(0));
@@ -681,25 +682,25 @@ TEST_CASE("Redeploying the same Champion tracks the newest instance for ability 
 }
 
 TEST_CASE("A Champion's ability cooldown persists across death and redeploy of the same slot", "[game_manager][champion][multi]") {
-    GameManager game({ 1, 115, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
+    GameManager game({ 1, 122, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
     game.playerAI.elixir = 100.0f;
-    game.playerAI.hand[1] = 115; // force into hand: the opening hand is random
-    game.playCard(0, 115, 9.0f, 10.0f);
+    game.playerAI.hand[1] = 122; // force into hand: the opening hand is random
+    game.playCard(0, 122, 9.0f, 10.0f);
     game.step();
 
-    REQUIRE(game.activateChampionAbility(0, 1)); // cooldown set to 130 on the live entity
-    game.step(); // synced into persistedCooldownRemaining (129) while still alive
+    REQUIRE(game.activateChampionAbility(0, 1)); // cooldown set to 30 on the live entity
+    game.step(); // synced into persistedCooldownRemaining (29) while still alive
 
     for (const auto& e : game.getBoard().getEntities()) {
         auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
         if (ce && ce->isChampion) { ce->takeDamage(ce->hp); break; }
     }
-    game.step(); // this tick's sync sees it already dead, leaves the persisted value at 129; cleans the corpse up
+    game.step(); // this tick's sync sees it already dead, leaves the persisted value at 29; cleans the corpse up
 
-    game.playerAI.hand[1] = 115;
+    game.playerAI.hand[1] = 122;
     game.playerAI.handCooldownTicks[1] = 0; // skip the cycle-in delay
     game.playerAI.elixir = 100.0f;
-    game.playCard(0, 115, 9.0f, 10.0f); // redeploy -- should seed from the persisted cooldown, not start at 0
+    game.playCard(0, 122, 9.0f, 10.0f); // redeploy -- should seed from the persisted cooldown, not start at 0
     game.step();
 
     REQUIRE_FALSE(game.isChampionAbilityReady(0, 1)); // still cooling down, not freshly ready

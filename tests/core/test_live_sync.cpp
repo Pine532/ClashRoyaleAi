@@ -1955,3 +1955,57 @@ TEST_CASE("Zap deals 48 to a Crown Tower; its Evolution 48 per zap",
     SECTION("base") { REQUIRE(towerDamageFromCast(29, false, false) == 48); }
     SECTION("Evolution, two zaps (2024-10-08: three -> two)") { REQUIRE(towerDamageFromCast(124, true, false) == 96); }
 }
+
+// ---------------------------------------------------------------------------
+// Single-use Champion / Hero abilities (2026-08-04 "final August balance
+// changes": "Abilities: Cooldown -> Single-Use", all except Boss Bandit).
+// ---------------------------------------------------------------------------
+namespace psingle {
+
+// Deploys `cardId` in slot 1, then tries its ability twice, clearing the
+// cooldown between the attempts so only the uses limit can refuse the second.
+struct TwoActivations { bool first; bool second; int usesAfterFirst; };
+
+inline TwoActivations activateTwice(int cardId) {
+    GameManager game({ 1, cardId, 2, 3, 4, 5, 6, 7 }, { 0,1,2,3,4,5,6,7 });
+    game.playerAI.hand[1] = cardId;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, cardId, 9.0f, 10.0f);
+    game.step(); // commit, so the ability can find the unit
+    game.playerAI.elixir = 100.0f;
+    TwoActivations r{ false, false, -2 };
+    r.first = game.activateChampionAbility(0, 1);
+    for (const auto& e : game.getBoard().getEntities()) {
+        auto ce = std::dynamic_pointer_cast<CombatEntity>(e);
+        if (ce && (ce->isChampion || ce->isHero) && ce->abilityEffect) {
+            r.usesAfterFirst = ce->abilityUsesRemaining;
+            ce->abilityCooldownRemaining = 0;
+        }
+    }
+    game.playerAI.elixir = 100.0f;
+    r.second = game.activateChampionAbility(0, 1);
+    return r;
+}
+
+} // namespace psingle
+
+TEST_CASE("Single-use abilities: every Champion except Boss Bandit and every alive-path Hero fires once per deployment",
+          "[live_sync][patch-single-use-abilities]") {
+    const int ids[] = { 115, 116, 117, 118, 119, 120, 121, 166, 167, 168, 169, 170, 171, 173, 175 };
+    for (int id : ids) {
+        DYNAMIC_SECTION("id " << id) {
+            auto r = psingle::activateTwice(id);
+            REQUIRE(r.first);
+            REQUIRE(r.usesAfterFirst == 0);
+            REQUIRE_FALSE(r.second);
+        }
+    }
+}
+
+TEST_CASE("Single-use abilities: Boss Bandit keeps two uses (control)",
+          "[live_sync][patch-single-use-abilities]") {
+    auto r = psingle::activateTwice(122);
+    REQUIRE(r.first);
+    REQUIRE(r.usesAfterFirst == 1);
+    REQUIRE(r.second); // the exempt card must still refire once its cooldown is clear
+}
