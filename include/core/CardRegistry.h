@@ -72,6 +72,11 @@ struct CardDefinition {
     bool isChampion;
     // Champion-slot code checks `isChampion || isHero` throughout.
     bool isHero = false;
+    // A Hero registered with its body only, because the numbers its ability
+    // needs have no source (no invented values). sampleRandomDeck never deals
+    // such a card, so random-deck training does not field a Hero that cannot
+    // use its ability. Set by CardRegistry::markAbilityPending.
+    bool abilityPending = false;
     // At registry level because Hero Goblins' post-death ability fires when
     // nothing is alive to read them from. 0 / nullptr for every card without a
     // post-death ability.
@@ -459,6 +464,10 @@ private:
         };
         cards[stats.id] = std::move(def);
     }
+
+    // Flags an already-added card as a Hero whose ability is not modelled yet
+    // (CardDefinition::abilityPending).
+    void markAbilityPending(int id) { cards.at(id).abilityPending = true; }
 
     // Registers an Evolution slot: `evolutionId` is what a deck holds instead
     // of the base card's id. Cost, spell/building flags, footprint and
@@ -2004,6 +2013,26 @@ private:
                 2.0f, 84, std::make_shared<FreezeOnHit>(25, 0.70f))).withSightRange(7.0f) // 2025-10-06: slow 30%; 2026-09-08: 1228 hp, 2.5 s
             // 2026-08-04 balance update: single-use per deployment (Supercell, Final August balance changes; docs/LIVE_SYNC.md). Cooldown is moot.
             .withHeroAbility(2.0f, 170, std::make_shared<HeroIceGolemSnowstormEffect>(4.0f, 69, 0.0f, 20, 0.6f, 15), 1));
+
+        // Hero Balloon (base: id 45; body restated from the base registration
+        // above, hp 1676 per the 2026-02-02 balance post; the hero's own body
+        // values are unpublished, so the base card's are used, first hit
+        // included). "Coffin Cadets" (Supercell 2026-04-06: Skeletroopers launch
+        // off the Balloon, crash onto the nearest target for landing damage,
+        // then fight on foot; landing 230 per 2026-09-08, Skeletrooper damage
+        // 204 / hit speed 1.1 s per 2026-07-06; single-use per 2026-08-04) is
+        // NOT modelled: no source states the ability's elixir cost (2 on one
+        // third-party page, 1 elsewhere), nor the Skeletrooper's hp, count,
+        // speed, range or sight. isHero is set by hand since withHeroAbility
+        // needs a cost; abilityPending keeps random decks from dealing it.
+        {
+            CardStats heroBalloon = troop(176, "Hero Balloon", 5.0f, Archetype::MeleeBuildingTargeter, 1676, SPEED_MEDIUM, 0.1f, 640, 20, 'a').withFirstHit(2)
+                .withFlying()
+                .withDeathEffect(std::make_shared<AreaDamageOnDeath>(1.5f, 240)).withSightRange(7.7f);
+            heroBalloon.isHero = true;
+            add(heroBalloon);
+            markAbilityPending(176);
+        }
 
         // Hero Barbarian Barrel (base: id 101). The ability lives on the
         // spawned Barbarian (heroBarbarianBarrelBarbarianStats), since the

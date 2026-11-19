@@ -295,7 +295,7 @@ TEST_CASE("RoyaleAPI-derived first-hit values reach the spawned units", "[first_
         {150, true, 5}, {154, false, 4}, {154, true, 4}, {156, false, 4}, {156, true, 4},
         {159, false, 8}, {159, true, 8}, {160, false, 5}, {160, true, 5}, {162, false, 4},
         {162, true, 4}, {166, false, 5}, {169, false, 5}, {170, false, 5}, {173, false, 4},
-        {175, false, 10},
+        {175, false, 10}, {176, false, 2},
     };
     for (const auto& r : rows) {
         INFO("card " << r.id << (r.evolved ? " (evolved)" : ""));
