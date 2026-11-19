@@ -229,7 +229,8 @@ public:
             if (knockback != 0.0f) {
                 if (knockback > 0.0f) {
                     pushAway(*entity, position, knockback);
-                } else {
+                } else if (!entity->knockbackImmune) {
+                    // A spell's negative knockback (Tornado) is knockback too.
                     pullToward(*entity, position, -knockback);
                 }
             }

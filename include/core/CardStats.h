@@ -340,6 +340,10 @@ struct CardStats {
     // A burst every Nth attack (Dagger Duchess, some Evolutions).
     int burstEveryNAttacks = 0;
     float burstDamageMultiplier = 1.0f;
+    // Tiles the burst hit's target is pushed away (pushAway; 0 = none).
+    float burstKnockback = 0.0f;
+    // Immune to every knockback source (see Entity::knockbackImmune).
+    bool knockbackImmune = false;
 
     // An effect on taking damage (some Evolutions, e.g. Barbarians).
     std::shared_ptr<IOnDamageTakenEffect> onDamageTaken;
@@ -667,6 +671,16 @@ struct CardStats {
     CardStats& withBurstAttack(int everyNAttacks, float multiplier) {
         burstEveryNAttacks = everyNAttacks;
         burstDamageMultiplier = multiplier;
+        return *this;
+    }
+    // The burst hit (withBurstAttack) also knocks its target back `distance`
+    // tiles. Buildings and Crown Towers are never moved (pushAway guards).
+    CardStats& withBurstKnockback(float distance) {
+        burstKnockback = distance;
+        return *this;
+    }
+    CardStats& withKnockbackImmunity() {
+        knockbackImmune = true;
         return *this;
     }
     CardStats& withOnDamageTaken(std::shared_ptr<IOnDamageTakenEffect> effect) {

@@ -102,6 +102,8 @@ inline void applyCardMetadata(const std::shared_ptr<CombatEntity>& entity, const
     entity->hitSpeedRampFullFraction = stats.hitSpeedRampFullFraction;
     entity->burstEveryNAttacks = stats.burstEveryNAttacks;
     entity->burstDamageMultiplier = stats.burstDamageMultiplier;
+    entity->burstKnockback = stats.burstKnockback;
+    entity->knockbackImmune = stats.knockbackImmune;
     entity->onDamageTakenEffect = stats.onDamageTaken;
     entity->healOnHitAmount = stats.healOnHitAmount;
     entity->healOnHitMaxHp = stats.healOnHitMaxHp;

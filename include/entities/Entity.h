@@ -40,6 +40,11 @@ public:
     // tight loops.
     bool isFlying = false;
 
+    // Immune to knockback (pushAway, pushAlong, and a spell's negative-knockback
+    // pull). Set from CardStats::knockbackImmune. Hooks and other pulls are not
+    // knockback and are unaffected.
+    bool knockbackImmune = false;
+
     Entity(int id, float x, float y, int hp, int team, char symbol = '?')
         : id(id), position{ x, y }, hp(hp), team(team), symbol(symbol) {}
 
@@ -154,7 +159,7 @@ inline void mirrorToOppositeLane(Entity& entity, int boardWidth) {
 // Moves `entity` exactly `distance` tiles directly away from `point`
 // (knockback).
 inline void pushAway(Entity& entity, const Vector2D& point, float distance) {
-    if (exemptFromForcedMovement(entity)) return;
+    if (exemptFromForcedMovement(entity) || entity.knockbackImmune) return;
     if (distance <= 0.0f) return; // see pullToward
     float dist = entity.position.distanceTo(point);
     if (dist <= 0.01f) return; // coincident: no direction
@@ -167,7 +172,7 @@ inline void pushAway(Entity& entity, const Vector2D& point, float distance) {
 // the corridor decides its direction, which a radial push from the log's centre
 // cannot express. The direction need not be normalised; zero length is a no-op.
 inline void pushAlong(Entity& entity, float dirX, float dirY, float distance) {
-    if (exemptFromForcedMovement(entity)) return;
+    if (exemptFromForcedMovement(entity) || entity.knockbackImmune) return;
     if (distance <= 0.0f) return; // see pullToward
     float len = std::sqrt(dirX * dirX + dirY * dirY);
     if (len <= 0.0001f) return; // no direction

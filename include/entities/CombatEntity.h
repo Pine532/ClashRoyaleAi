@@ -253,6 +253,8 @@ public:
     // performAttack and read by getCurrentDamage().
     int burstEveryNAttacks = 0;
     float burstDamageMultiplier = 1.0f;
+    // The burst hit also pushes its (single) target this far; see pushAway.
+    float burstKnockback = 0.0f;
     int attacksSinceBurst = 0;
     bool currentHitIsBurst = false;
 
@@ -890,6 +892,9 @@ public:
                     if (maxSplitTargets <= 1) {
                         currentHitCount = 1;
                         performAttack(board, target);
+                        if (currentHitIsBurst && burstKnockback > 0.0f) {
+                            pushAway(*target, position, burstKnockback);
+                        }
                     } else {
                         auto targets = findSplitTargets(board, maxSplitTargets);
                         currentHitCount = static_cast<int>(targets.size());

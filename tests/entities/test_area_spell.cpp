@@ -549,3 +549,61 @@ TEST_CASE("the registry gives The Log and Barbarian Barrel their real corridors"
     REQUIRE(fireball != nullptr);
     REQUIRE(fireball->rollRange == Catch::Approx(0.0f));
 }
+
+// ---------------- knockback immunity ----------------
+// Minion Giant (183) is knockback immune (values-lookup-results.md section A),
+// but the card is not registered yet, so the flag is exercised on a bare entity.
+
+TEST_CASE("knockbackImmune: a Fireball damages but does not move an immune unit, a control unit is moved",
+          "[live_sync_values][knockback_immunity]") {
+    Board board;
+    auto control = std::make_shared<DummyEntity>(1, 6.0f, 5.0f, 1000, 1);
+    auto immune = std::make_shared<DummyEntity>(2, 4.0f, 5.0f, 1000, 1);
+    immune->knockbackImmune = true;
+    spawn(board, control);
+    spawn(board, immune);
+
+    AreaSpell spell(3, 5.0f, 5.0f, 0, 2.5f, 100, 0, '*', nullptr, false, 1, 0, false, 1.0f, 0, 1.0f);
+    spell.update(board);
+
+    REQUIRE(control->hp == 900);
+    REQUIRE(control->position.x == Catch::Approx(7.0f));
+    REQUIRE(immune->hp == 900);
+    REQUIRE(immune->position.x == Catch::Approx(4.0f));
+    REQUIRE(immune->position.y == Catch::Approx(5.0f));
+}
+
+TEST_CASE("knockbackImmune: Tornado-style spell pull (negative knockback) is also refused",
+          "[live_sync_values][knockback_immunity]") {
+    Board board;
+    auto control = std::make_shared<DummyEntity>(1, 8.0f, 5.0f, 1000, 1);
+    auto immune = std::make_shared<DummyEntity>(2, 2.0f, 5.0f, 1000, 1);
+    immune->knockbackImmune = true;
+    spawn(board, control);
+    spawn(board, immune);
+
+    AreaSpell spell(3, 5.0f, 5.0f, 0, 5.5f, 100, 0, '*', nullptr, false, 1, 0, false, 1.0f, 0, -1.5f);
+    spell.update(board);
+
+    REQUIRE(control->position.x == Catch::Approx(6.5f));
+    REQUIRE(immune->position.x == Catch::Approx(2.0f));
+}
+
+TEST_CASE("knockbackImmune: The Log's throw does not move an immune unit, a control unit is moved",
+          "[live_sync_values][knockback_immunity]") {
+    Board board;
+    auto control = std::make_shared<DummyEntity>(1, 9.0f, 14.0f, 1000, 1);
+    auto immune = std::make_shared<DummyEntity>(2, 9.0f, 14.0f, 1000, 1);
+    immune->knockbackImmune = true;
+    spawn(board, control);
+    spawn(board, immune);
+
+    AreaSpell log = makeRoller(4, 9.0f, 10.0f, 0, 100, 8.0f, 3.9f, 1.0f, 1.0f);
+    for (int i = 0; i < 8; ++i) log.update(board);
+
+    REQUIRE(control->hp == 900);
+    REQUIRE(control->position.y == Catch::Approx(15.0f));
+    REQUIRE(immune->hp == 900);
+    REQUIRE(immune->position.y == Catch::Approx(14.0f));
+    REQUIRE(immune->position.x == Catch::Approx(9.0f));
+}
