@@ -150,6 +150,7 @@ TEST_CASE("Every currently-defined card resolves with id/name/cost/isSpell", "[c
         {180, "Hero Valkyrie", 4.0f, false},
         {181, "Hero Berserker", 2.0f, false},
         {182, "Elite Barbarians", 6.0f, false}, // Evolution of id 17
+        {183, "Minion Giant", 4.0f, false},
     };
 
     const auto& registry = CardRegistry::getInstance();

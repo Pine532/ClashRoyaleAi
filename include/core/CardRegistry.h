@@ -1070,6 +1070,21 @@ private:
             .withFlying()
             .withDeathEffect(std::make_shared<SpawnOnDeath>(lavaHoundPupStats())));
 
+        // Minion Giant (new card, season 87, 2026-09-07). Flying ranged building
+        // targeter, like Lava Hound; a building targeter never considers air, so no
+        // withTargetsAir. Damage 153 (official: Sep 16 189->168, Oct 19 168->153) and
+        // hit speed 1.7 s (official, Oct 6, from 1.5 s).
+        // 1817 hp, 4.0 range, 6.5 sight, SPEED_MEDIUM: single source, LDPlayer guide
+        // (https://www.ldplayer.net/blog/clash-royale-minion-giant-guide.html, HP also
+        // relayed from RoyaleAPI by After Strategy); nothing contradicts them.
+        // Deploy time is the engine default and no first-hit delay is set (neither is
+        // published); projectile speed is the RangedBuildingTargeter constant.
+        // Symbol 'Y' is Royal Giant's (symbols are not unique); 'j' is Lightning's and
+        // src/main.cpp hides it from the spawn log.
+        add(troop(183, "Minion Giant", 4.0f, Archetype::RangedBuildingTargeter, 1817, SPEED_MEDIUM, 4.0f, 153, 17, 'Y')
+            .withFlying()
+            .withSightRange(6.5f));
+
         // === Defensive structures (expansion) ===
         // X-Bow: the default 30 s building lifetime matches the real card;
         // withDeployDelay adds the ~3.5 s lock-on.

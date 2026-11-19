@@ -732,3 +732,95 @@ TEST_CASE("Elite Barbarians Evolution (182) throws through update() once per int
     CHECK(foe->hp == 100000 - 2 * 220);
     for (auto& c : bs) CHECK(c->periodicTicksUntilNext == 50);
 }
+
+// ---------------- Minion Giant (183) ----------------
+
+TEST_CASE("Minion Giant (183) resolves as a 4-elixir troop with the live level-11 stats",
+          "[new_card][minion_giant]") {
+    const CardDefinition* def = CardRegistry::getInstance().getCard(183);
+    REQUIRE(def != nullptr);
+    CHECK(def->name == "Minion Giant");
+    CHECK(def->cost == Catch::Approx(4.0f));
+    CHECK_FALSE(def->isSpell);
+    CHECK_FALSE(def->isBuilding);
+    CHECK(def->isFlying);
+
+    Board board;
+    auto body = live_sync::mainBody(board, 183);
+    REQUIRE(body != nullptr);
+    CHECK(body->hp == 1817);
+    CHECK(body->getBaseDamage() == 153);
+    CHECK(body->getAttackCooldown() == 17);
+    CHECK(body->getAttackRange() == Catch::Approx(4.0f));
+    CHECK(body->symbol == 'Y');
+    CHECK(body->isFlying);
+    CHECK_FALSE(body->targetsAir);
+    CHECK(std::dynamic_pointer_cast<RangedBuildingTargeter>(body) != nullptr);
+}
+
+TEST_CASE("Minion Giant (183) ignores troops and hits a tower for 153 every 17 ticks",
+          "[new_card][minion_giant]") {
+    live_sync::Match m;
+    std::shared_ptr<Entity> tower;
+    for (const auto& e : m.board().getEntities())
+        if (e->isTower() && e->team == 1) { tower = e; break; }
+    REQUIRE(tower != nullptr);
+    auto giant = live_sync::firstCombat(m.spawnCard(183, tower->position.x, tower->position.y - 3.0f, 0));
+    REQUIRE(giant != nullptr);
+    // A troop right beside it must be ignored by a building targeter.
+    auto knight = live_sync::firstCombat(m.spawnCard(0, tower->position.x + 1.0f, tower->position.y - 3.0f, 1));
+    REQUIRE(knight != nullptr);
+    giant->deployTicksRemaining = 0;
+    const int knightHp = knight->hp;
+    std::vector<int> hitTicks;
+    int last = 0;
+    for (int t = 0; t < 60; ++t) {
+        m.step();
+        const int now = m.rec->totalTo(tower->id);
+        if (now != last) {
+            CHECK((now - last) == 153);
+            hitTicks.push_back(t);
+            last = now;
+        }
+    }
+    REQUIRE(hitTicks.size() >= 3);
+    for (size_t i = 1; i < hitTicks.size(); ++i) CHECK(hitTicks[i] - hitTicks[i - 1] == 17);
+    CHECK(m.rec->totalTo(knight->id) == 0);
+}
+
+TEST_CASE("Minion Giant (183) is hit by an air-targeting unit but not by a ground-only one",
+          "[new_card][minion_giant]") {
+    Board board;
+    auto giant = live_sync::firstCombat(live_sync::spawnBare(board, 183, 9.0f, 10.0f, 1));
+    auto knight = live_sync::firstCombat(live_sync::spawnBare(board, 0, 9.0f, 11.0f, 0));
+    auto archers = live_sync::spawnBare(board, 1, 9.0f, 12.0f, 0);
+    REQUIRE(giant != nullptr);
+    REQUIRE(knight != nullptr);
+    CHECK_FALSE(knight->targetsAir);
+    bool anyAir = false;
+    for (const auto& e : archers)
+        if (auto c = std::dynamic_pointer_cast<CombatEntity>(e)) anyAir = anyAir || c->targetsAir;
+    CHECK(anyAir);
+}
+
+TEST_CASE("Minion Giant (183) takes damage from Archers but none from a Knight in melee range",
+          "[new_card][minion_giant]") {
+    // Behavioural check of the flying rule: same setup, only the attacker differs.
+    auto damageTaken = [](int attackerId) {
+        live_sync::Match m;
+        auto giant = live_sync::firstCombat(m.spawnCard(183, 9.0f, 12.0f, 1));
+        auto foe = live_sync::firstCombat(m.spawnCard(attackerId, 9.0f, 13.0f, 0));
+        REQUIRE(giant != nullptr);
+        REQUIRE(foe != nullptr);
+        giant->deployTicksRemaining = 0;
+        foe->deployTicksRemaining = 0;
+        m.step(40);
+        // Count only the placed attacker; a tower may also fire at the giant.
+        int sum = 0;
+        for (const auto& e : m.rec->damage)
+            if (e.targetId == giant->id && e.attackerCardId == attackerId) sum += e.amount;
+        return sum;
+    };
+    CHECK(damageTaken(0) == 0);   // Knight: ground only
+    CHECK(damageTaken(1) > 0);    // Archers: hit air
+}
