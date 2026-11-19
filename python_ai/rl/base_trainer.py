@@ -479,13 +479,15 @@ class BaseTrainer:
         if advisor_target.enabled():
             slot_ids = torch.cat(
                 [hand_ids, torch.full((self.cfg.num_envs, 1), -1,
-                                      dtype=torch.long)], dim=1)
+                                      dtype=torch.long, device=hand_ids.device)],
+                dim=1)
             cov_ids = slot_ids.gather(1, slot.view(-1, 1)).squeeze(1)
             tgt, has = advisor_target.targets_for_batch(
                 obs_tensor.cpu().numpy(), cov_ids.cpu().numpy(),
                 self.advisor_legal)
-            out["target"] = torch.from_numpy(tgt)
-            out["has"] = torch.from_numpy(has.astype(np.float32))
+            # Stored with the rollout for the update, on the net's device.
+            out["target"] = torch.from_numpy(tgt).to(obs_tensor.device)
+            out["has"] = torch.from_numpy(has.astype(np.float32)).to(obs_tensor.device)
         return out
 
     def _truncation_bootstrap(self, dones, raw_rewards, next_obs, truncateds):

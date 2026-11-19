@@ -192,7 +192,7 @@ def target_cards():
 
 def build_legal_table(net):
     """{card_id: (612,) bool} for every card any target source covers."""
-    return {cid: net._placement_legal[cid].numpy().astype(bool)
+    return {cid: net._placement_legal[cid].cpu().numpy().astype(bool)
             for cid in sorted(target_cards())}
 
 
@@ -228,7 +228,7 @@ def slot_weights_for(hand_ids):
     # Every card with any target source. With the prior on, all deck cards
     # qualify and the draw is uniform again; with it off this reduces to the
     # rule cards.
-    w = torch.ones(hand_ids.shape, dtype=torch.float32)
+    w = torch.ones(hand_ids.shape, dtype=torch.float32, device=hand_ids.device)
     for cid in target_cards():
         w[hand_ids == cid] = ADVISOR_SLOT_WEIGHT
     return w
