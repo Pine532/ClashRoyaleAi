@@ -1,12 +1,381 @@
 # Live-game sync ledger
 
-*As of 2026-11-18. Research for the `update/live-sync` branch. Nothing in this file has been applied to the engine yet.*
+*As of 2026-11-18. Research for the `update/live-sync` branch. The ledger sections below describe the engine as it stood before any change; what has since been applied is in "Implementation status", and the numbers still to look up are in "Values to look up".*
 
 This ledger compares the engine against Clash Royale as it is played today. It lists every balance change, card, Hero and Evolution the engine is missing, each traced to a public source. Values are in engine conventions: level-11 cards, level-9 Crown Towers, 10 ticks = 1 s, ranges in tiles (attack range surface-to-surface, sight centre-to-centre), speeds as tiers. Sources are Supercell's official posts first, then RoyaleAPI, DeckShop, the Fandom wiki and StatsRoyale. No value comes from the game client.
 
+## Implementation status (2026-11-18)
+
+Applied on branch `update/live-sync` after the ledger below was written (commit `c2f3284`). Everything in sections 1 to 6 describes the engine as it stood at `9ab9b45`; the counts there are not updated. Source of this section: `git log`, the per-patch specs and review notes kept with the work, and the commit messages (each lists its values and its tests). Final test results are in the last subsection.
+
+### Value patches
+
+One commit per patch date, oldest first. "Items" is the number of ledger items that commit applied. Each item has a case tagged `[live_sync]` in `tests/core/test_live_sync.cpp` that fails without it. Older (2024-2025) items were audited against `DECISIONS.md`, `CLAUDE.full.md`, `UPSTREAM_REQUESTS.md` and units before being applied; the Tornado line was the worked example (the official "84x2 -> 84" is a 168 -> 84 total, and the engine's single 154 hit matched neither, so it became one hit of 84).
+
+| Patch date | Commit | Items |
+|---|---|---:|
+| 2024-08-06 | `25130bb` | 3 |
+| 2024-10-08 | `3d89011` | 3 |
+| 2024-11-14 | `398964a` | 1 |
+| 2025-01-07 | `d5d1165` | 2 |
+| 2025-02-04 | `6744199` | 1 |
+| 2025-03-04 | `7cdd996` | 2 |
+| 2025-04-09 | `d6de60c` | 1 |
+| 2025-06-02 | `10a2f53` | 1 |
+| 2025-07-07 | `1b6ed2b` | 1 |
+| 2025-08-06 | `18740ef` | 2 |
+| 2025-09-01 | `27b25b8` | 2 |
+| 2025-09-25 | `901d09a` | 2 |
+| 2025-10-06 | `7542a6a` | 5 |
+| 2025-10-24 | `4cb63a1` | 4 |
+| 2025-11-03 | `0e260cc` | 1 |
+| 2025-12-01 | `0d473c5` | 3 |
+| 2026-01-12 | `a87cf6a` | 1 |
+| 2026-02-02 | `615275b` | 1 |
+| 2026-02-23 | `bb00184` | 1 |
+| 2026-03-02 | `a0e76a3` | 3 |
+| 2026-04-06 | `536aabe` | 3 |
+| 2026-05-04 | `99cc47d` | 3 |
+| 2026-06-01 | `8fe698d` | 3 |
+| 2026-07-06 | `a3d00cc` | 5 |
+| 2026-08-04 | `fdd5c99` | 31 |
+| 2026-08-26 | `2645028` | 3 |
+| 2026-09-01 | `f7ec3ac` | 3 |
+| 2026-09-08 | `a956280` | 13 |
+| 2026-09-16 | `4744bf9` | 1 |
+| 2026-10-06 | `c49f441` | 12 |
+| 2026-10-19 | `febf4f5` | 4 |
+| 2025-05-05 | none | 0 (its only item was skipped, below) |
+| undated (long-standing) | `fd7fa90` | 2 |
+
+The undated commit `fd7fa90` makes Lightning hit the 3 highest-hp targets and raises Monk's cost 4 -> 5. Several later patches were re-anchored onto lines earlier patches had changed; tests from an earlier patch that over-pinned a value a later patch changed were narrowed in the later patch's commit.
+
+### Skipped value items
+
+- 2025-05-05: Cannon Evolution barrage radius 2.5 -> 2.0. Buildings never run deploy effects (`CardFactories::spawnDefensiveBuilding` never calls `spawnDeployEffect`), so the barrage never fires and the value is dead data.
+- 2026-05-04: Tesla Evolution pulse damage 100 -> 148. Same cause.
+- 2026-10-06: Cannon Evolution barrage damage 281 -> 261. Same cause.
+- 2026-08-04: Minion Horde Evolution hit-speed slowdown 50% -> 33%. The engine never modelled the 50%; it needs a mechanic.
+
+The first three are an engine bug found, not fixed: a Cannon Evolution or Tesla Evolution never fires its deploy effect.
+
+### Crown Tower damage of spells (UPSTREAM item 29), `6cd86d0`
+
+Each spell now carries its published Crown Tower damage. Values: Arrows 123 -> 25 per volley (75 total, 3 volleys); Earthquake 82 -> 49 per wave (147 total); Fireball 689 -> 159; Freeze 0 -> 37; Giant Snowball 179 -> 45 (base and both Evolution halves); Goblin Curse 43 -> 10 per application (6 applications, 1 s apart); Lightning 1057 -> 265 per strike; Rocket 1485 -> 342; The Log 269 -> 35; Zap 192 -> 48 per zap (base, and the Evolution's 3 zaps). Gameplay-affecting: tower damage from spells falls a lot, so win rates from before this commit are not comparable.
+
+### Single-use Heroes and Champions (2026-08-04), `acf8281`
+
+Ability `usesLimit` -1 -> 1 for Hero Giant, Goblinstein, Hero Ice Golem, Golden Knight, Hero Knight, Little Prince, Hero Magic Archer, Mighty Miner, Monk, Hero Musketeer, Skeleton King, Hero Wizard and the rest of the 12 items in the commit. Boss Bandit is excepted.
+
+### First-hit time, `e2661e6`, `40bf461`, `22c59e1`, `fa191b5`
+
+- **Mechanism (`e2661e6`).** A wind-up (`CardStats::firstHitTicks`, `withFirstHit(ticks)`) is armed when an engagement starts, meaning a new target in attack range, and never between consecutive attacks on one target, so DPS is unchanged. It runs in parallel with the cooldown (retargeting after a kill costs the larger of the two). A stun, leaving range or losing the target ends the engagement; a slow stretches the wind-up like the cooldown. With `firstHitTicks = 0` behaviour is bit-identical to before. 9 cases tagged `[first_hit]`; 7 fail with the gate disabled. Existing tests that assumed an instant first attack now step through the wind-up (`advanceThroughWindup`).
+- **Official values (`40bf461`, 42 stat blocks).** Goblins 0.6 s (base, Hero, Goblin Gang's Goblins); Goblin Barrel's Goblins 0.3 s (2026-10-06); Spear Goblins 0.5 s (card, Goblin Gang, Goblin Giant; Goblin Hut's by inference, same character); Musketeer 0.7 s (base, Evolution, Hero, Three Musketeers); Hunter 0.7 s; Wizard 0.5 s (base, Evolution, Hero); Princess 0.3 s (her first hit moved into the 1.2 s deploy time on 2025-03-04); Guards 0.5 s; Zappies 0.8 s; Electro Dragon 0.5 s; Electro Giant 1.0 s; Ronin 0.4 s; Mortar and its Evolution 1.0 s (2024-10-08, "now matches the unevolved Mortar"). Goblin Drill's Goblins keep 0.4 s (the April 2025 change excluded them; RoyaleAPI value).
+- **RoyaleAPI-derived values (`22c59e1`, 85 stat blocks).** `hit_speed - load_time` from cr-api-data (2023-10), applied only where `load_time > 0`, the result is >= 0, `load_first_hit` is false, and the unit's hit speed today equals its 2023 hit speed; half ticks round up. The formula reproduces the official "before" values of Musketeer 0.8, Wizard 0.4, Electro Dragon 0.7, Electro Giant 1.5 and Mortar 1.0. Units that fail a rule stay without a value; they are listed under "Values to look up".
+- **inject waiver (`fa191b5`).** `inject(..., deploy_ticks = 0)` waives the wind-up only for an engagement on the unit's first active tick, so a unit perception sees in range does not wind up again every second, and a unit still walking gets no free wind-up. Perception's `test_deploy_ticks_zero_recovers_exactly_the_deploy_second` (15 -> 10 ticks) holds.
+
+### CARD_ID_COUNT 185 -> 256, `84d8fef`
+
+The 13 new entries needed more ids than the 9 free (176-184). 256 leaves 67 free; ids 16, 37 and 38 stay unused. `observation_size()` 13977 -> 14403 and `CYCLE_START` 13607 -> 13891 (the 4 hand one-hots and the 2 opponent-cycle blocks each grow by 71). This breaks every checkpoint. `python_ai/tools/migrate_checkpoint_card_ids.py` pads a checkpoint forward (new input columns zero, new head rows copy never-registered id 184, Adam moments padded, `spell_flags` rebuilt) and was verified on an old-layout checkpoint made with the 185-id build; no checkpoint ships in the repo, so nothing was migrated. `get_card_info` gains `is_evolution`, and `python_ai/deck.py` reads it instead of `range(123, 164)`. `hog26_placement_prior.npz` was re-stamped (its counts do not depend on the id count). Not gameplay-affecting. `1637ca5` updates `python_ai` test pins.
+
+### The 13 new entries
+
+All are gameplay-affecting additions with tests tagged `[new_card][<key>]`, each failing without its commit. "Ability pending" means the Hero is registered body-only (restated from the base card); `CardDefinition::abilityPending` makes `sampleRandomDeck` skip it, so random decks never deal it.
+
+| Id | Entry | Commit | Modelled | Ability pending |
+|---:|---|---|---|---|
+| 176 | Hero Balloon | `a87d191` | Body of base Balloon (id 45); Coffin Cadets ability not built | yes |
+| 177 | Hero Dark Prince | `1e90f09` | Body of base Dark Prince (id 46), 1 s deploy, first charge after 2.5 tiles; Destructive Dismount not built | yes |
+| 178 | Hero Bowler | `72e68aa` | Body of base Bowler (id 22), 7-tile line; Stone Swish not built | yes |
+| 179 | Hero Tombstone | `7231a17` | Body of base Tombstone (id 96); Regal Revival and the Tomb Queen not built | yes |
+| 180 | Hero Valkyrie | `fafbcd5` | Wild Whirlwind: 3 elixir, single use, dash to nearest ground non-tower within 5.5, 3.5 s spin, 97 per 0.25 s in 2.5 tiles, 48 to Crown Towers, 15% less damage taken (single-source numbers) | no |
+| 181 | Hero Berserker | `0be918a` | Savage Survival: 3 elixir, single use, 3.5 s, hit speed 0.2 s, hp floor 1, 75% less damage to Crown Towers (single-source numbers) | no |
+| 182 | Elite Barbarians Evolution | `aeed1d8` | Body of id 17 plus a 5 s spear (220, ground only, band 3-4.5 tiles); Rage path omitted | no |
+| 183 | Minion Giant | `9da8008` | Flying building-targeter, 4 elixir, 1817 hp, 153 damage, 1.7 s, range 4.0, sight 6.5, Medium | no |
+| 184 | Hero Ice Wizard | `a1304bc` | Body of base Ice Wizard (id 34); Frosty Fella: 2 elixir, single use, 46 damage, 5 s freeze, radius 2.5 around the nearest slowed troop; the Snowman is omitted | no |
+| 185 | Hero Electro Wizard | `38b510e` | Body of base Electro Wizard (id 35); Surging Strikes not built | yes |
+| 186 | Electro Giant Evolution | `ce7d206` | Base Electro Giant body (3952 hp, 184 dmg, 1.8 s, 1.0 s first hit) with the base card's periodic stun; the de-level pulse is omitted (no numbers) | no |
+| 187 | Giant Evolution | `9c4d8bc` | Enrage at <= 50% hp (latched), Rage trail of the last 1.5 s of positions, radii 2/2.5/3/3.5 growing per attack, +30% move and attack speed for 1.5 s (single-source numbers) | no |
+| 188 | Mirror Evolution | `6501e2c` | Copies the last card played in its Evolved form at cost + 1; cycles to evolve 2 (single-source), evolved uses 1 (unsourced) | no |
+
+Abilities built: Hero Valkyrie, Hero Berserker and Hero Ice Wizard (their numbers are single-source or partial; see "Values to look up"). Ability-pending: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero Electro Wizard. Per-entry notes are in the commit messages (`git show <commit>`). Id 188 is not in the Evolution id range `123-163`, which is why `deck.py` now reads the `is_evolution` flag.
+
+### Tower Troops: deferred
+
+The 14 Tower Troop value items (Tower Princess, Cannoneer, Royal Chef, Dagger Duchess) are deferred to a separate change by the user's decision; `include/core/TowerTroops.h` is untouched. Its troops are written at level 11 while the default towers are level 9, and its "Tower Princess" option is mislabelled (summary, decision 5). Their open values are under "Values to look up", (d).
+
+### Engine bugs found, not fixed
+
+- Buildings never run deploy effects, so the Cannon Evolution barrage and the Tesla Evolution pulse never fire.
+- The Cannon Cart grounds itself with a stun (UPSTREAM item 32 note, pre-existing).
+- `python_ai/models/net.py`: `aux_card_head` and `cycle_id_head` ignore their `num_card_ids` argument and always use the live engine width.
+
+### Test results
+
+| Suite | Baseline (`9ab9b45`) | HEAD `6820f16` |
+|---|---|---|
+| C++ (clean build) | 734 cases, 733 passed, 1 failed as expected (`test_navigation_wedge.cpp`), exit 0 | 956 cases, 955 passed, 1 failed as expected, exit 0 |
+| `python_ai` | 1007 passed, 3 skipped, 2 failed | 1007 passed, 3 skipped, 5 failed |
+| `perception` | 436 passed, 3 skipped | 436 passed, 3 skipped |
+
+The `python_ai` failures: three in `test_rl_ppo_compaction.py` (the 2 baseline Apple Silicon PyTorch bit-exactness failures, plus `test_the_LOSS_and_every_diagnostic_are_bit_identical`, which now differs by 6e-8 in `coverage_entropy`, the same float32 family; it reaches one more statistic since the card-id layers changed shape); `test_teacher_combos.py::test_the_teacher_actually_executes_a_planned_pair_end_to_end` (the teacher now re-plans in the staged state, playing Skeletons and then Hog 30 ticks later, instead of executing the due Hog; fixing it needs a teacher or fixture change outside the authorized `python_ai` scope, so it is left failing); and `test_placement_hires.py::test_both_heads_can_resolve_a_single_column_at_small_scale`, which is flaky (passed on 2 reruns). `tools/audit/verify_pyd.py` passes. `docs/CARDS.md` was regenerated (141 cards and 45 Evolutions). `6820f16` adds the perception `card_map` rows for the new ids.
+
+Build gotcha: GNU Make 3.81 (macOS) compares mtimes to the second. An edit in the same second as the last compile leaves stale objects (it once produced towers reading hp 1). `touch` the edited files, or wait a second, before rebuilding.
+
+## Values to look up
+
+Everything below is a number or fact this work could not source, listed so it can be looked up by hand (RoyaleAPI, DeckShop, the Fandom wiki and StatsRoyale refused automated requests; the official posts do not state these). The ledger file `docs/live_sync/ledger.json` carries a `confidence` field on each open item (`official`, `cross-checked`, `single-source`, `derived`, `unresolved`) and an `applied_in` commit or a `not_applied_reason`. Values are level 11, engine conventions (ticks, tiles).
+
+### (a) Value changes still unresolved
+
+The 54 open items with status `unresolved` that are not Tower Troop items (56 in all; the other 2 are under (d)). Each line gives what the engine holds, what is known, and why it is not applied. Items for Tower Troops are under (d).
+
+**Base cards**
+
+- **Arrows / Fireball, Damage per application (level 11)** (unknown). Engine: 123 x3. Known: DeckShop 366 total (122 x 3) / 688. Sources: drift only (sources: DeckShop); no official post. Why open: 1 hp rounding difference of level scaling; low value.
+- **Cannon Cart, No retarget when switching form** (2025-06-28). Engine: unverified; transform via applyFreeze (CombatEntity.h:302-306,605). Known: Cannon Cart no longer retargets when switching form. Sources: official only (mechanics note); engine behaviour not probed. Why open: Needs an engine probe before deciding; no number involved.
+- **Dark Prince, Splash (area damage) radius** (unknown). Engine: none (no withSplash). Known: 1.1 tiles (stale cr-api-data); post: "all troops ... Splash Radius of 1.5 tiles". Sources: drift only (source: cr-api-data, stale; Supercell 2025-01-07 post names only Baby Dragon and Witch). Why open: Needs a live source on whether Dark Prince has splash at all. Verifier: Supercell 2025-01-07 post (january-balance-changes-2) states 'all troops, except Skeleton Dragons, should have a Splash Radius of 1.5 tiles', so the stale 1.1 is superseded IF Dark Prince splashes at all;
+- **Goblin Barrel (spawned Goblins), Spawned Goblins damage** (2026-08-04). Engine: 120. Known: Goblin Damage: 120 → 125 (+4%). Sources: drift only: no source says barrel Goblins inherit; 2025-04-09 post excluded them from an earlier Goblins change. Why open: Needs DeckShop/RoyaleAPI Goblin Barrel page check.
+- **Goblin Cage, Goblin Brawler Movement Speed** (unknown). Engine: raw 0.7f. Known: Fast (90) (wiki). Sources: drift only (sources: Fandom wiki, single). Why open: Wiki-only; engine literal 0.7 is between Medium and Fast tiers. Needs a second source before editing.
+- **Goblin Cage, Lifetime** (unknown). Engine: 300 ticks default. Known: Lifetime 20 sec (wiki). Sources: drift only (sources: Fandom wiki, single). Why open: Also blocks Tesla lifetime 30->25 s (2026-06-01 post) and any other non-30 s building. Needs a per-card lifetime field plus a second source for Cage.
+- **Goblin Demolisher, Death damage (kamikaze burst)** (unknown). Engine: 404, radius 2.5. Known: 404 / 465. Sources: conflict: Fandom 404 vs RoyaleAPI 465; no official figure. Why open: Engine matches Fandom.
+- **Goblin Demolisher, Kamikaze form movement speed** (unknown). Engine: raw 1.0f. Known: Very Fast. Sources: drift only (sources: Fandom/elixirdeck search snippet). Why open: Helper id -37, not a registry id. Need a second source.
+- **Goblin Demolisher, Movement speed** (unknown). Engine: raw 0.5f. Known: Medium. Sources: drift only (sources: RoyaleAPI search snippet; page 403). Why open: Need a second source.
+- **Goblin Drill, Building lifetime** (unknown). Engine: 300 ticks (30 s), Building ctor default. Known: Lifetime 10 sec (Fandom wiki). Sources: drift only (sources: Fandom wiki). Why open: One source; no official post. Needs a second source (RoyaleAPI/DeckShop) and a per-card building lifetime field. Not applied.
+- **Goblin Gang (Goblins), Goblin Damage** (2026-08-04). Engine: 120 (CardRegistry.h:1016). Known: Goblin Damage: 120 → 125 (+4%). Sources: conflict: official lists Goblins & Hero Goblins only; Goblin Gang not named. Why open: Apply to ids 4 and 172 in their own batches; for 112 get a live Goblin Gang page first.
+- **Goblin Gang (Spear Goblins), No hit on Crown Towers at low hitpoints** (2025-08-06). Engine: no matching mechanic. Known: they'll no longer get a hit on Crown Towers when at low Hitpoints. Sources: official only. Why open: Text-only; likely a result of first-hit time, needs a measurement.
+- **Goblin Gang (Spear Goblins -27), Spear Goblin Spawn Radius** (2026-04-06). Engine: offsets +-0.5 tiles (CardRegistry.h:1020). Known: Increased Spawn Radius. Sources: official only; applies to the Spear Goblins card, Gang not named. Why open: No value published.
+- **Goblin Gang / Rascals (ranged halves), Targets air (secondary Spear Goblins -27 and Rascal Girls -28)** (unknown). Engine: ground only (CardRegistry.h:1019 and :1025 lack withTargetsAir). Known: (no source read). Sources: drift only; in-repo inconsistency (UPSTREAM item 30), no external source read. Why open: Rascals id 113 belongs to another batch for the Girls' stat. A second public source would make this to_apply.
+- **Goblin Hut (Spear Goblin helper -17), Spawned Spear Goblin Hit Speed** (unknown). Engine: 16 ticks (CardRegistry.h:212-215 goblinHutSpearGoblinStats; shared by ids 23, -26, -27). Known: Hit Speed 1.7 sec (Fandom wiki). Sources: drift only (sources: Fandom wiki). Engine 1.6 s deliberately set by UPSTREAM item 32. Why open: Single source; no official post. Spear Goblins card is another batch. Verifier: official 2026-08-04 post lists Spear Goblins Hit Speed 1.7s -> 1.6s, so the engine's 16 ticks matches the official card value; the Fandom 1.7 is stale.
+- **Graveyard, Spawn pattern (Improved Spawn Pattern)** (2026-02-02). Engine: cast point + 6 points on 3.3-tile ring, 12 skeletons. Known: Skeletons now rise further from the center of the spell. Sources: official only, text only. Why open: Skeleton Count is already 12 (latest official). Missing 14->13 change between the Jan and Jun posts is not in the corpus. Test test_card_registry.cpp:1171-1187 pins 12 (unchanged).
+- **Heal Spirit, Movement speed** (unknown). Engine: raw 0.85f. Known: Very Fast (120). Sources: drift only (sources: theriagames.com); engine sibling spirits already use SPEED_VERY_FAST. Why open: Need an official or second source.
+- **Mortar, Deploy time before first lock (inert period)** (unknown). Engine: default 10-tick deploy, no delay. Known: 3.5 sec deploy, 1 sec first hit (Fandom wiki table). Sources: drift only (sources: Fandom wiki). Why open: Single source; no official post or second source. Unclear whether 3.5 s overlaps the 1 s first hit entry above. Do not apply without RoyaleAPI/DeckShop confirmation.
+- **Mortar, Splash radius** (unknown). Engine: 0 (no withSplash; include/core/CardRegistry.h:917-918, CardStats.h:179). Known: Splash Radius 2 (Fandom wiki). Sources: drift only (sources: Fandom wiki). Why open: Single source; also unverified that the building projectile path honours splashRadius.
+- **Mother Witch, Hitpoints (bug fix -1 HP)** (2024-10-08). Engine: 529. Known: A similar bug fix (-1 HP) was applied to Mother Witch.. Sources: official only: no absolute value in corpus; no drift row. Why open: Needs RoyaleAPI/DeckShop level-11 HP to check 529.
+- **Rascals, Rascal Girl Damage (secondary unit -28)** (2025-07-07). Engine: 81. Known: Rascal Girl Damage: 133 -> 125 (-6%). Sources: official only (drift base12#194 restates the post); VERIFIER downgrade. Why open: Engine 81 matches neither old (133) nor new (125); confirm the level-11 value on RoyaleAPI/DeckShop before editing if desired. Post is official so it wins. Grep of tests/ found no pin on Girl damage. VERIFIER: downgraded. The post lists this under NERFS, but engine Girl damage is 81 so 133 -> 125 would be a +54% buff;
+- **Ronin, Damage** (unknown). Engine: 371. Known: Noff 371; other sites 337 (L11). Sources: conflict: Noff 371 vs other sites 337; no official value. Why open: Engine matches Noff.
+- **Rune Giant, Enchantment damage bonus on multi-projectile cards (Hunter, Firecracker)** (2025-01-30). Engine: whole hit x1.5 via buffDamageMultiplier. Known: The enchantment's damage bonus is now divided among projectiles. Sources: official only. Why open: Cannot tell whether the engine's per-hit x1.5 already equals the divided bonus; needs real enchant formula (flat bonus vs multiplier). Hunter 62/146 and Firecracker 64/130 belong to other families.
+- **Skeleton Barrel, Death Damage** (2026-10-19). Engine: none; death only spawns skeletons via SpawnOnDeath. Known: Skeleton Barrel Death Damage: 145 -> 163 (+12%); Skeleton Barrel Evolution Death Damage: 192 -> 163 (-15%). Sources: official chain + drift agree. Why open: Damage is sourced and identical for both ids. Not applicable until a drop radius (and delay, Crown Tower rule) is sourced; AreaDamageOnDeath(radius, damage) or DelayedAreaDamageOnDeath (CardRegistry.h:510) can carry it. Evo chain 256 -> 238 -> 220 -> 192 -> 163 and base 133 -> 145 -> 163 are contiguous.
+- **Skeleton Barrel, Skeleton count on death** (unknown). Engine: 2 offsets. Known: 7 Skeletons (clasher.us, sportskeeda, noff.gg; not official). Sources: drift only (sources: clasher.us, sportskeeda, noff.gg via search snippets). Why open: No official statement; evolution already uses 7. Needs a fetchable RoyaleAPI/DeckShop value before applying.
+- **Skeletons, Spawn Spread** (2026-10-19). Engine: offsets {0,0},{+0.6,0},{-0.6,0}. Known: Spawn Spread: 0.4 -> 0.5 tiles (+25%). Sources: official only (drift rows restate it); conflict: mapping of "spread" to engine offsets and the pre-Oct-6 value are unsourced. Why open: Apply to the evolution id 125 as well (both literals). Also "always split when placed on middle tiles" is an unmodelled placement rule. Measure in-game or find a source for the unit before editing.
+- **Skeletons (Skeleton Barrel drop), Spawn Spread (barrel skeletons)** (unknown). Engine: offsets +-0.4. Known: n/a (post names the Skeletons card only). Sources: drift only (sources: drift base09#137 guess; official posts silent). Why open: No source says the barrel drop inherits the Skeletons spread change. Owned by the Skeleton Barrel family.
+- **Sparky, Splash radius** (unknown). Engine: 1.5 (withSplash(1.5f), include/core/CardRegistry.h:746). Known: 1.8 tiles (TrophyCoach only). Sources: conflict: Jan 2025 official post says all troops except Skeleton Dragons have 1.5 splash; TrophyCoach (2026-10-13) says 1.8; RoyaleAPI/DeckShop/wiki not readable. Why open: No official Sparky splash change in the posts. Need a second source before applying.
+- **Spear Goblins, Spawn Radius** (2026-04-06). Engine: offsets {0,0},{+-0.7,0} (CardRegistry.h:558-560; -26 :272 uses {+-0.4,0.3}; -27 :1019 own offsets). Known: Increased Spawn Radius. Sources: official only (prose, no value). Why open: Post names only Spear Goblins the card; whether carriers inherit is unstated.
+- **Three Musketeers, Rework: bayonet close-range extra damage** (2025-11-26). Engine: plain ranged 6.0, 218 dmg. Known: Armed with new bayonets, they strike from range and deal extra damage up close. Sources: official only; numbers not found (RoyaleAPI/wiki 403 to prior agents). Why open: Need bayonet damage and band distance from RoyaleAPI/DeckShop before applying; the engine's current damage 218 and range may also be stale.
+- **Tornado, Excess Crown Tower damage removed** (2025-11-21). Engine: 154 at 100% to towers, no withCrownTowerDamage. Known: Tornado no longer deal excess damage to Crown Towers. Sources: official only, no number. Why open: No official CT figure in the corpus (the 120->43 CT line is Hero Wizard). Needs a sourced value (RoyaleAPI/DeckShop), then withCrownTowerDamage.
+- **Vines, Crown Tower Damage** (2026-06-01). Engine: full per-pulse damage on towers: 135 x 3. Known: Vines: 76 -> 70 (-8%). Sources: official chain + drift agree on value. Why open: withCrownTowerDamage(perApplication) exists (CardStats.h:663, example Poison CardRegistry.h:648). 70/3 not integer.
+- **Vines, Deploy Time** (2026-03-02). Engine: 8 ticks generic spell delay. Known: Deploy Time: 0.4s -> 0.9s (+125%). Sources: official chain + drift agree on value; mapping ambiguous. Why open: All spells share 8 ticks; engine value is not Vines-specific.
+- **Vines, Duration (damage window)** (2025-10-06). Engine: 3 pulses 7 ticks apart. Known: Duration: 2.5s -> 2s (-20%). Sources: official chain + drift agree on value; mapping to pulses unpublished. Why open: Pulse count/interval not published. Option: withRepeats(3,10). Note UPSTREAM item 32i cadence fix interacts.
+
+**Evolutions**
+
+- **Battle Ram, Death-spawned Evolved Barbarians hitpoints/damage/Rage** (2026-08-04). Engine: 830 hp, 230 dmg, no Rage (battleRamEvolvedBarbarianStats, include/core/CardRegistry.h:375-378); base spawn 716/192 (:167-170). Known: Evolved Barbarians Hitpoint Bonus: 10% → 0% ; Evolved Barbarians Rage Duration: 3sec → 5sec (+67%). Sources: drift only (sources: Aug 4 post under 'Barbarians & Barbarians Evolution'; Battle Ram not named). Why open: 830/230 matches neither old nor new official bonus. Rage (35% -> 30% on 2025-10-24, duration 3 -> 5 s) would need the Rage mechanic on the spawned units; the engine's Barbarians Evolution (155) models it as self-haste (CardRegistry.h:1480).
+- **Dart Goblin, Double Trouble gum amount allowed** (2026-10-19). Engine: no gum/ammo concept (PoisonOnHit flat, CardRegistry.h:1204). Known: reducing the amount of Double Trouble gum allowed on him. Sources: official only (prose, no value). Why open: Unclear which stat this is.
+- **Firecracker, Excess damage to Crown Towers** (2025-11-24). Engine: full damage to towers. Known: No longer deal excess damage to Crown Towers. Sources: official only (no numbers). Why open: No numeric target; "excess" undefined.
+- **Goblin Giant, Evolved knife Goblins damage** (2026-08-04). Engine: 120 (goblinDrillGoblinStats; include/core/CardRegistry.h:216-218, used at :1527). Known: Goblins & Hero Goblins: Goblin Damage 120 -> 125 (+4%). Sources: conflict: official post names only "Goblins & Hero Goblins"; does not name Goblin Drill or Goblin Giant Evolution goblins; third-party agree on Goblins only. Why open: goblinDrillGoblinStats is shared with Goblin Drill (ids 98/153); do not change from this row alone. Needs RoyaleAPI/wiki confirmation.
+- **Musketeer, Sniper shot vs Crown Towers** (2026-03-16). Engine: burst applies to any target including Crown Towers. Known: Musketeer Evolution can no longer snipe towers. Sources: conflict: engine has no extended snipe range so reach is already normal; post does not say whether the empowered damage still hits towers within normal range. Why open: Needs a decision or a measurement of the live game; no number involved.
+- **Royal Ghost, Souldier Spawn Damage** (2026-04-06). Engine: none: helper -42 has no spawn-effect (CardRegistry.h:394-396); the engine's withSpawnEffect (CardStats.h:384) is used only by cards like Mega Knight (:687). Known: Souldier Spawn Damage: 204 → 81 (-60%). Sources: official chain + drift agree on 81; no source for the area. Why open: Damage is sourced; the burst's radius is not in any post read. The factories fire spawnDeployEffect on every spawn (CardFactories.h:156-195), so withSpawnEffect(radius, 81) on helper -42 may work with no new engine code, but that is unverified and the radius needs a source.
+- **Skeleton Army, Skeleton General Spawn Placement** (2026-01-12). Engine: 16th offset {0.9f, 1.2f} (CardRegistry.h:149, skeletonArmyEvolvedOffsets). Known: Skeleton General Spawn Placement: 1 tile higher. Sources: official + drift agree on wording; no numbers. Why open: Needs a measured placement or an official coordinate.
+- **Valkyrie, Excess damage to Crown Towers (bug fix)** (2025-11-21). Engine: pull/splash damage hits towers at full value, no excess-damage concept. Known: Firecracker Evolution, Valkyrie Evolution, and Tornado no longer deal excess damage to Crown Towers. Sources: official only; meaning of "excess damage" not defined. Why open: Cannot be edited without knowing what "excess" meant. Related tower-chip reductions (radius 5.5->5, damage 84->42) are already in this ledger.
+
+**Heroes and Champions**
+
+- **Hero Giant, Heroic Hurl grab range** (unknown). Engine: 3.0. Known: within 2 tiles. Sources: drift only (sources: Fandom Giant/Hero page and trophycoach.com, both third party; official post says only "in reach"). Why open: Medium confidence. Second source Fandom: https://clashroyale.fandom.com/wiki/Giant/Hero VERIFIER: no official figure (posts say only "in reach"); the two sources are a coaching site and the Fandom wiki, and independence could not be confirmed (Fandom fetch returned HTTP 402). Downgraded per two-independent-sources rule.
+- **Goblinstein, Lightning Link Crown Tower Damage** (2024-10-17). Engine: 107 per hit to towers, no reduction. Known: Lightning Link Crown Tower Damage (level 11): reduced from 71 to 46 (-36%). Sources: official only (2024-10-17; 2024-12-16 bug fix extends to the King Tower). Why open: Per-hit and still-current are assumptions: not restated after the Aug 2026 dps rescale. Needs the effect to set crownTowerDamage (small header edit; the effect header is not data-only). VERIFIER: official post gives no unit.
+- **Golden Knight, Dash count per ability** (2026-09-03). Engine: up to 10 chained dashes (GoldenKnightDashEffect(335, 5.5f, 10); include/core/CardRegistry.h:1048). Known: Golden Knight no longer dashes multiple times during his ability. Sources: official only; ambiguous (list mixes C.H.A.O.S fixes). Why open: Do not change without a clearer source.
+- **Hero Ice Golem, Snowstorm 3rd blast effect** (2026-08-04). Engine: 15-tick full freeze FreezeOnHit(15, 0.0) (HeroIceGolemSnowstormEffect.h:30-33; args CardRegistry.h:1673). Known: 3rd Blast: Freeze Effect → Slow Effect. Sources: official chain + drift agree on structure; no source for the numbers. Why open: Blasts 1-2 use 20 ticks / 0.6 (unsourced) in the engine; do not copy without a source.
+- **Little Prince, Ability stats "now correct" (no values)** (2026-09-07). Engine: see other rows. Known: Little Prince's ability stats are now correct. Sources: official only, no numbers. Why open: Check RoyaleAPI/DeckShop for the live ability cost and cooldown/Guardienne hp 1600 if wanted; not derivable from posts.
+- **Hero Magic Archer, Triple Shot damage bug fix** (2026-08-26). Engine: splitTargetsFullDamage false, divides 143 across hits. Known: Triple Shot now deals the correct damage. Sources: official only (no number). Why open: Cannot determine intended damage from the source.
+- **Monk, Third-hit damage / knockback** (unknown). Engine: flat 140 every hit. Known: 422 damage, 1.8 tile knockback (timesaver.gg). Sources: drift only (sources: timesaver.gg alone). Why open: DeckShop page and posts give no combo data; need a second source.
+- **Hero Wizard, Tornado Pull Strength** (2026-02-02). Engine: 0.5-tile pull. Known: Increased Tornado Pull Strength. Sources: official only, unquantified. Why open: No numeric source found.
+- **Hero Wizard, Tornado damage (Crown Tower 43; troop value unsourced)** (2026-02-23). Engine: 20 per pulse to all targets (HeroWizardFieryFlightEffect(50, 4.0f, 20, 0.5f), include/core/CardRegistry.h:1638). Known: Tornado Crown Tower Damage: 120 → 43. Sources: official gives tower value only; drift cites unverified secondary sources. Why open: Engine 20 is flagged unsourced in the registry comment; a sourced troop value and a tower-specific value (needs mechanic) are required before any edit.
+
+**Rules that span cards**
+
+- **Champions (cooldown on placement), Ability cooldown resets on new Champion placement** (2025-09-25). Engine: persists old cooldown. Known: Ability cooldowns will reset as each new Champion is placed. Sources: official only; ambiguous wording. Why open: Moot for single-use abilities (Aug 2026) except Boss Bandit 122.
+- **All troops except Skeleton Dragons, Attack Splash Radius 1.5** (2025-01-07). Engine: 1.5 on most; outliers 2.3. Known: all troops, except for Skeleton Dragons, should have a Splash Radius of 1.5 tiles on their attacks. Sources: official only; outliers not individually verified. Why open: Needs per-card review: spirits/kamikaze are area-on-attack effects, not necessarily 'splash'. Skeleton Dragons already 1.5 after Apr 2026.
+- **Royal Hogs (+Evolution) / Boss Bandit, Charge Range (chargeThreshold)** (2025-01-07). Engine: 3.0 tiles. Known: Troops that cost 5 or more Elixir will now have a 2-tile Charge Range. Sources: official only; applicability unconfirmed. Why open: Real Royal Hogs/Boss Bandit are not known to be charge-range cards; the engine's withCharge on them is a modelling choice. No source read says they have a Charge Range stat.
+
+### (b) New entries: numbers not found
+
+From the per-entry implementation notes and designs. "Not modelled" means the mechanic was left out because its numbers are unknown; the number to find is named. Single-source values that were used are listed in each commit message and are worth a second source.
+
+**Minion Giant** (id 183, `9da8008`)
+
+- Deploy time / first-hit delay. unpublished; engine defaults, no withFirstHit.
+- Projectile speed, splash, Crown Tower modifier. unpublished; engine-fixed projectile, no splash, no modifier.
+- Knockback immunity. secondary source only; engine flying-knockback rule unverified.
+- Post-launch changes to HP/range/sight/speed. LDPlayer is launch-era; no second source reachable.
+- Omitted: mass 15.
+- Omitted: collision radius 0.75.
+- Omitted: knockback immunity.
+
+**Hero Balloon** (id 176, `a87d191`)
+
+- Ability elixir cost. 2 (TrophyCoach) vs 1 elsewhere; no official figure.
+- Skeletrooper hp, count, speed, attack range, sight. no source.
+- Landing radius, targeting range cap, air targets, flight delay. no source.
+- Omitted: Coffin Cadets ability and HeroBalloonCoffinCadetsEffect header (official numbers known: landing 230, Skeletrooper dmg 204, hit 1.1 s, single-use).
+
+**Hero Dark Prince** (id 177, `1e90f09`)
+
+- Destructive Dismount (Rhino) numbers. Rhino hp (1040 vs 1413), trample damage, speed, landing damage/radius, mount-up timing have no usable source.
+- Hero-specific hp/damage/shield/range/speed/sight. unpublished; base Dark Prince values restated.
+- 2.5-tile first charge. June 2026 post may describe the Rhino rather than the Prince; engine has one threshold so re-charges also use 2.5.
+- shield 240 vs 256. sources conflict; base uses 240.
+- splash. base models none; unresolved.
+- Omitted: Destructive Dismount ability (ability cost 3 third-party, single-use).
+
+**Hero Bowler** (id 178, `72e68aa`)
+
+- Stone Swish reach, wind-up, per-shot and tower damage, cadence, AoE. no official source; third-party values conflict.
+- Stone Swish elixir cost 2. single non-official source (trophycoach), not used since ability omitted.
+- Hero inheritance of the 7.5 -> 7 tile range cut. post names base Bowler only.
+- Hero-specific hp/damage/hit speed. unpublished; base Bowler copied.
+- Omitted: Stone Swish ability entirely (official 7.3 s plant duration not built: a root without the unsourced extra shots would be strictly worse than not activating; avoids an engine change rootedTicksRemaining).
+
+**Hero Tombstone** (id 179, `7231a17`)
+
+- Tomb Queen hit speed, movement speed, range, size. no source.
+- Tombstone pulse interval, death spawn count, hp 529 vs 530. sources conflict; inherited unchanged from id 96.
+- sacrifice behaviour (death burst, queen position). unsourced.
+- Omitted: Regal Revival ability and Tomb Queen unit.
+
+**Hero Valkyrie** (id 180, `fafbcd5`)
+
+- dash duration/speed. unpublished; dash modelled as instant, spin starts at activation.
+- movement and normal attacks during spin. unsourced; she stays put and does not attack.
+- radius centre-to-centre vs edge. unsourced; centre-to-centre used.
+- stun/freeze/curse interaction during spin. unsourced; not modelled.
+- Hero-form range, speed, sight, deploy time. unpublished; inherited from base Valkyrie id 10.
+
+**Hero Berserker** (id 181, `0be918a`)
+
+- Ultra Fast movement during ability. no numeric speed published.
+- elixir refund if defeated before activation (2026-09-07). no refund mechanic in engine, amount unstated.
+- +64% damage claim. one unverified source.
+- swing in progress / rounding of 75% / whether hp floor defers death. unpublished.
+- Omitted: Ultra Fast movement.
+- Omitted: defeat-before-activation elixir refund.
+- Omitted: +64% damage.
+
+**Hero Ice Wizard** (id 184, `a1304bc`)
+
+- Snowman unit. hp contradicted (~425 timesaver vs 266 ldplayer); lifetime only pre-nerf.
+- Slow duration 3 s. engine base value, not in official posts.
+- Crown Tower damage of the 46. unpublished; 100% used.
+- Elixir refund if defeated before projectile hits (2026-10-27). new mechanic, no amount.
+- Activation with no slowed enemy. effect no-ops but elixir and use are spent; needs canActivate hook (UPSTREAM proposal).
+- Freeze centre (nearest slowed troop to hero vs to hero's target), 'behind' offset. unpublished.
+- Omitted: Snowman unit.
+- Omitted: freeze ending when Snowman dies.
+- Omitted: elixir refund on early death.
+
+**Hero Electro Wizard** (id 185, `38b510e`)
+
+- Surging Strikes stun duration, single vs refreshed stun. ~3 s (RoyaleAPI/TrophyCoach summaries) conflicts with while-alive (RoyaleTracker); no official number; no timed stun-on-hit mechanism.
+- Ability cost 2, radius, damage, Crown Tower reduction. third-party only or unsourced.
+- Hero hp/damage/hit speed/range vs base. no Hero stat table readable; base restated.
+- Omitted: Surging Strikes ability effect.
+- Omitted: attack-delay removal (engine has none to remove).
+
+**Elite Barbarians Evolution** (id 182, `aeed1d8`)
+
+- Rage path magnitude/radius/geometry. no source; official gives only duration 2 s.
+- spear flight time, Crown Tower damage, first-throw delay. unsourced.
+- 6-tile spear sight (official 2026-10-06). engine has one sightRange; sight test pins Evolutions to base 5.5.
+- evolvedUsesGranted. 1 is the engine convention, unsourced.
+- periodic effect ignores stun and current target. existing periodic-effect machinery (Hunter precedent).
+- Omitted: Rage path.
+- Omitted: spear flight time.
+- Omitted: separate 6-tile spear sight.
+
+**Electro Giant Evolution** (id 186, `ce7d206`)
+
+- de-level pulse (interval, radius, first-pulse time, magnitude, targets). no official figure; third-party values conflict.
+- cycles to evolve / evolved uses. unsourced; engine default 2/1 used as placeholder.
+- reflect tower damage 38 / real Zap Pack reflect. needs new mechanic; base periodic stun carried over.
+- Omitted: expanding de-level pulse.
+
+**Giant Evolution** (id 187, `9c4d8bc`)
+
+- trail circle drop interval. unsourced; modelled as per-tick position history.
+- evolved uses. 1 is engine convention.
+- evo range/speed/sight/deploy. base values copied.
+- 50% inclusive?. unspecified; <= used like Cannon Cart.
+- Omitted: circle drop interval (replaced by continuous history).
+
+**Mirror Evolution** (id 188, `6501e2c`)
+
+- Evolved uses per charge. No source; 1 is the structural minimum, one literal in CardRegistry.h.
+- Copying a Hero. timesaver says it yields the Evolution; engine has no Hero-to-base map, so Hero form is copied.
+- Whether the copy consumes the copied card's evolution cycle. not stated; not advanced.
+- Omitted: +1 level (engine has no levels).
+- Omitted: Hero-to-Evolution copy.
+
+### (c) First-hit times not found
+
+Units that got no first-hit value (they keep the old behaviour: a ready unit strikes the tick its target is in range). The value to look up is each unit's first-hit time in seconds in the live game ("First Hit Speed" or "First Hit Time" on its card page). 138 stat blocks remain without one (the Evolution rows count the unevolved and the evolved half separately); they fall into these groups.
+
+**Hit speed changed since 2023. The cr-api hit speed no longer matches the engine's, so `hit_speed - load_time` is not valid. Look up the current first-hit time directly.** (79 blocks)
+
+Barbarians (id 8; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeleton Army (id 12; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Royal Giant (id 18; cr-api 1700 ms hit speed / 800 ms load; engine 18 ticks); Dart Goblin (id 20; cr-api 700 ms hit speed / 350 ms load; engine 8 ticks); Skeletons (id 24; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Bomb Tower (id 27; cr-api 1600 ms hit speed / 1100 ms load; engine 18 ticks); Executioner (id 36; cr-api 900 ms hit speed / 400 ms load; engine 24 ticks); Giant Skeleton (id 39; cr-api 1400 ms hit speed / 1100 ms load; engine 13 ticks); Minions (id 41; cr-api 1000 ms hit speed / 500 ms load; engine 12 ticks); Minion Horde (id 42; cr-api 1000 ms hit speed / 500 ms load; engine 12 ticks); Dark Prince (id 46; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Battle Healer (id 49; cr-api 1500 ms hit speed / 1200 ms load; engine 20 ticks); Miner (id 52; cr-api 1200 ms hit speed / 700 ms load; engine 13 ticks); Night Witch death Bat (helper id -12; cr-api 1300 ms hit speed / 700 ms load; engine 12 ticks); Night Witch periodic Bat (helper id -14; cr-api 1300 ms hit speed / 700 ms load; engine 12 ticks); Skeleton Dragons (id 65; cr-api 1900 ms hit speed / 1500 ms load; engine 20 ticks); Cannon Cart (id 69; cr-api 1000 ms hit speed / 400 ms load; engine 9 ticks); Ice Spirit (id 72; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Fire Spirit (id 73; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Heal Spirit (id 74; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Electro Spirit (id 75; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Bats (id 78; cr-api 1300 ms hit speed / 700 ms load; engine 12 ticks); Battle Ram (id 81; cr-api 400 ms hit speed / 50 ms load; engine 14 ticks); Ram Rider (the ram) (id 87; cr-api 1800 ms hit speed / 1200 ms load; engine 17 ticks); Skeleton Barrel (id 89; cr-api 300 ms hit speed / 200 ms load; engine 10 ticks); Lava Hound (id 91; cr-api 1300 ms hit speed / 300 ms load; engine 15 ticks); Barbarians (Battle Ram) (helper -10 battleRamBarbarianStats; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeletons (Skeleton Barrel, Tombstone periodic) (helper -11 skeletonBarrelSkeletonStats; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Skeletons (Witch, Tombstone death) (helper -13 witchSkeletonStats; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Fire Spirit (Furnace) (helper -15 furnaceFireSpiritStats; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Barbarians (Barbarian Hut periodic) (helper -16 barbarianHutBarbarianStats; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Spear Goblins (Goblin Hut) (helper -17 goblinHutSpearGoblinStats; cr-api 1700 ms hit speed / 1200 ms load; engine 16 ticks); Skeletons (Graveyard) (helper -21 graveyardSkeletonStats; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Barbarian (Barbarian Barrel) (helper -23 barbarianBarrelBarbarianStats; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Rascal Girls (helper -28 Rascals girls; cr-api 1000 ms hit speed / 500 ms load; engine 17 ticks); Barbarian (Barbarian Hut death) (helper -35 barbarianHutDeathBarbarianStats; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeletons (Skeleton King) (helper -38 skeletonKingSummonedSkeletonStats; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Skeletons (id 125; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Bats (id 126; cr-api 1300 ms hit speed / 700 ms load; engine 12 ticks); Dart Goblin (id 131; cr-api 700 ms hit speed / 350 ms load; engine 8 ticks); Skeleton Army (id 133; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Skeleton Barrel (id 134; cr-api 300 ms hit speed / 200 ms load; engine 10 ticks); Royal Giant (id 143; cr-api 1700 ms hit speed / 800 ms load; engine 18 ticks); Ice Spirit (id 144; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Minion Horde (id 149; cr-api 1000 ms hit speed / 500 ms load; engine 12 ticks); Goblin Drill (id 153; cr-api 1100 ms hit speed / 200 ms load; engine 100 ticks); Barbarians (id 155; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Executioner (id 157; cr-api 900 ms hit speed / 400 ms load; engine 24 ticks); Battle Ram (id 161; cr-api 400 ms hit speed / 50 ms load; engine 14 ticks); Barbarians (Battle Ram) (id -10; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeletons (Skeleton Barrel) (id -11; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Bats (Night Witch death) (id -12; cr-api 1300 ms hit speed / 700 ms load; engine 12 ticks); Skeletons (Witch) (id -13; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Bats (Night Witch periodic) (id -14; cr-api 1300 ms hit speed / 700 ms load; engine 12 ticks); Fire Spirit (Furnace) (id -15; cr-api 300 ms hit speed / 100 ms load; engine 10 ticks); Barbarians (Barbarian Hut) (id -16; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeletons (Graveyard) (id -21; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Barbarians (Barbarian Barrel) (id -23; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Hero Barbarian Barrel Barbarian (id -47; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Barbarians (Barbarian Hut death) (id -35; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeletons (Skeleton King summon) (id -38; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Runner (Wall Breakers Evolution) (id -41; cr-api 1200 ms hit speed / 1000 ms load; engine 8 ticks); Barbarians (Battle Ram Evolution) (id -10; cr-api 1300 ms hit speed / 900 ms load; engine 14 ticks); Skeletons (Skeleton Evolution child) (id 24; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Skeleton Shadow (Skeleton Army Evolution) (id -43; cr-api 1000 ms hit speed / 500 ms load; engine 11 ticks); Souldier (Royal Ghost Evolution) (id -42; cr-api 1800 ms hit speed / 1200 ms load; engine 18 ticks); Rascal Girls (Rascals, id 113) (id -28; cr-api 1000 ms hit speed / 500 ms load; engine 17 ticks).
+
+**No RoyaleAPI (cr-api-data 2023-10) entry: the unit post-dates the dump or is not a character there, and no official post states a first hit.** (26 blocks)
+
+Berserker (id 51; engine 6 ticks); Goblin Machine (id 55; engine 12 ticks); Magic Archer (id 63; engine 11 ticks); Goblin Demolisher (id 66; engine 11 ticks); Flying Machine (id 67; engine 11 ticks); Suspicious Bush (id 85; engine 14 ticks); Rune Giant (id 86; engine 15 ticks); Little Prince (id 120; engine 12 ticks); Goblinstein (Monster) (id 121; engine 15 ticks); Boss Bandit (id 122; engine 11 ticks); Spirit Empress (registry stub; playCard spawns the forms) (id 165; engine 12 ticks); Spirit Empress ground (id 165 ground form; engine 12 ticks); Spirit Empress flying (id 165 flying form; engine 14 ticks); Bush Goblins (helper -30 suspiciousBushGoblinStats; engine 14 ticks); Kamikaze Goblin Demolisher (helper -37 goblinDemolisherKamikazeStats; engine 10 ticks); Guardienne (helper -39 guardienneStats; engine 12 ticks); Goblinstein Doctor (helper -40 Goblinstein Doctor; engine 18 ticks); Goblin Machine rocket turret (id -24; engine 50 ticks); Bush Goblins (Suspicious Bush) (id -30; engine 14 ticks); Kamikaze Goblin Demolisher (id -37; engine 10 ticks); Guardienne (Little Prince) (id -39; engine 12 ticks); Trusty Turret (Hero Musketeer) (id -45; engine 5 ticks); Lumberjack Ghost (id -44; engine 8 ticks); Doctor (Goblinstein, id 121) (id -40; engine 18 ticks); Spirit Empress (ground, id 165) (Spirit Empress ground form; engine 12 ticks); Spirit Empress (flying, id 165) (Spirit Empress flying form; engine 14 ticks).
+
+**cr-api `load_time` is 0, so the formula gives no wind-up. Look up whether the unit has a first hit at all.** (9 blocks)
+
+Cannon (id 25; cr-api 900 ms hit speed / 0 ms load; engine 10 ticks); Furnace (id 70; cr-api 6000 ms hit speed / 0 ms load; engine 17 ticks); X-Bow (id 92; cr-api 300 ms hit speed / 0 ms load; engine 4 ticks); Cannon (id 129; cr-api 900 ms hit speed / 0 ms load; engine 10 ticks); Furnace (id 138; cr-api 6000 ms hit speed / 0 ms load; engine 17 ticks); Goblin Cage (id 139; cr-api 10000 ms hit speed / 0 ms load; engine 100 ticks).
+
+**cr-api `hit_speed - load_time` is negative (damage-ramp or Inferno-type units). The pair is not usable; look up the live first-hit time.** (5 blocks)
+
+Inferno Tower (id 28; cr-api 400 ms hit speed / 1200 ms load; engine 4 ticks); Inferno Dragon (id 56; cr-api 400 ms hit speed / 1200 ms load; engine 4 ticks); Mighty Miner (id 115; cr-api 400 ms hit speed / 700 ms load; engine 4 ticks); Inferno Dragon (id 163; cr-api 400 ms hit speed / 1200 ms load; engine 4 ticks).
+
+**The derived value is an exact half tick (the rounding rule does not decide it).** (2 blocks)
+
+Firecracker (id 64; cr-api 3000 ms hit speed / 2350 ms load; engine 30 ticks); Cursed Hog (Mother Witch) (helper -34 cursedHogStats; cr-api 1200 ms hit speed / 950 ms load; engine 12 ticks).
+
+**Sparky: cr-api `load_first_hit` is true, a charge-style load that does not follow `hit_speed - load_time`.** (1 blocks)
+
+Sparky (id 60; cr-api 4000 ms hit speed / 3000 ms load; engine 40 ticks).
+
+**Official statements exist but do not cover this unit.** (3 blocks)
+
+Hero Goblins Banner Brigade Goblins (helper id -48; cr-api 1100 ms hit speed / 700 ms load; engine 11 ticks); Trusty Turret (Hero Musketeer) (helper id -45; engine 5 ticks); Goblins (Hero Goblins Banner Brigade) (id -48; cr-api 1100 ms hit speed / 700 ms load; engine 11 ticks).
+
+**Not applicable (13 blocks).** Spells (Zap, Giant Snowball, Goblin Barrel: the spawned Goblins carry the first hit and have their own rows) and non-attacking structures or zero-damage units (Barbarian Hut, Goblin Hut, Tombstone, Goblin Cage, Goblin Drill, Elixir Collector, Hero Magic Archer Decoy). Nothing to look up.
+
+### (d) Tower Troop values (deferred)
+
+The Tower Troop change is deferred, so none of these were applied (`applied_in` null in the ledger). Targets as the ledger records them, with their sources; `unresolved` ones need a primary value first.
+
+- **Cannoneer, Damage** [to_apply, official]. Engine: 109. Target: Damage: 386 -> 320 (-17%) (2025-08-06). Chain 401 -> 386 (2024-10-08) -> 320.
+- **Cannoneer, First hit speed** [needs_new_mechanic, official]. Engine: no first-hit delay; initialCooldownTicks=0 on Cannoneer. Target: First Hit Speed 600 -> 800 (ms) (2024-10-08). Spawn-time seedCooldown (initialCooldownTicks) does not model it; see history row.
+- **Cannoneer, Hit speed** [to_apply, official]. Engine: 8 ticks. Target: Hit Speed: 2.1s -> 2.2s (-5%) (2025-09-02). Chain 2.4s -> 2.1s (2025-08-06) -> 2.2s.
+- **Cannoneer, Hitpoints (L11)** [to_apply, cross-checked]. Engine: 3052. Target: 2616 (pockettactics, 1v9) (unknown). Engine 3052 is the Tower Princess row. RoyaleAPI page was 403; search snippet only.
+- **Dagger Duchess, Dagger recharge / empty fire rate** [unresolved, unresolved]. Engine: burst of 8x on every 8th attack, no recharge model. Target: conflicting: 0.9s / 1.2s per dagger (unknown). Do not edit until a primary value is found.
+- **Dagger Duchess, Damage per dagger** [to_apply, official]. Engine: 89 per dagger, burst x8 on every 8th attack. Target: Damage: 112 -> 107 (-5%) (2025-04-09). Keep the 8x burst model; only the per-dagger base changes (89 -> 107).
+- **Dagger Duchess, Hitpoints (L11)** [to_apply, cross-checked]. Engine: 2298. Target: 2768 (wiki, pockettactics, RoyaleAPI) (unknown). Engine 2298 from Liquipedia.
+- **Dagger Duchess, Projectile speed** [needs_new_mechanic, official]. Engine: 2.0 hard-coded for every tower arrow, no per-variant field. Target: Projectile Speed 600 -> 1000 (66.67%) (2025-01-07). Tower arrows use one constant 2.0 (Tower.h:77); needs a per-variant projectile speed field and a unit mapping.
+- **Royal Chef, Buff magnitude (+1 level)** [unresolved, unresolved]. Engine: +10% hp top-up and 1.10x damage approximation. Target: increases the Level ... by 1 (2024-12-16). Engine has no levels; 10% hp/1.10x dmg is an approximation.
+- **Royal Chef, Buff target selection** [to_apply, official]. Engine: nearest unserved ally within 6 tiles, royalChefServed latch. Target: increases the Level of your highest HP Troop by 1; prioritizes Troops that have not yet been leveled up (2024-12-16). Edit of RoyalChefBuffEffect selection; the engine radius of 6 is not sourced by the post.
+- **Royal Chef, Buff threshold (min target hp fraction)** [to_apply, official]. Engine: no hp-fraction gate. Target: Buff Threshold: 20% -> 33% (2025-02-04). Edit RoyalChefBuffEffect::apply to skip allies with hp/transformCheckMaxHp < 0.33 (guard transformCheckMaxHp>0). No new engine field needed; only the effect changes.
+- **Royal Chef, Cooking time (min idle / max while attacking)** [to_apply, official]. Engine: fixed 280 ticks, no hot interval. Target: Minimum Cooking Time 21sec -> 23sec; Maximum Cooking Time 35sec -> 38sec (2025-08-06). Chain 18-30 -> 24-40 -> 21-35 -> 23-38. Mapping min=idle, max=attacking is from the 2024-12-16 launch post. Needs a period that lengthens while attacking.
+- **Royal Chef, Cooks slower when a friendly Tower is destroyed** [needs_new_mechanic, official]. Engine: not modelled. Target: When a Tower is destroyed, Royal Chef will cook slower. (2025-02-04). No magnitude in the post; find a source before applying.
+- **Royal Chef, Damage (L11)** [to_apply, cross-checked]. Engine: 153. Target: 109 (RoyaleAPI; pockettactics DPS 109 at 1.0s) (unknown). Engine 153 is a reused Tower Princess value.
+- **Royal Chef, Hit speed** [to_apply, official]. Engine: 4 ticks. Target: Hit Speed: 0.9s -> 1s (11%) (2025-02-04).
+- **Royal Chef, Hitpoints** [to_apply, official]. Engine: 3204. Target: Hitpoints: 2921 -> 2703 (-7%) (2025-10-06). Chain 2703 -> 2921 (2025-05-05) -> 2703.
+- **Tower Princess (tower troop), Damage (L11)** [to_apply, cross-checked]. Engine: 153. Target: 109 dmg, 136 DPS (unknown). Default tower None is L9 (90 dmg); 109 is its L11 equivalent.
+- **Tower Princess (tower troop), Hit speed** [to_apply, cross-checked]. Engine: 4 ticks. Target: 0.8 s (unknown). Also remove the comment at TowerTroops.h:30-31 (437 dps chase).
+- **Tower Princess (tower troop), Hitpoints (L11)** [to_apply, cross-checked]. Engine: 3204. Target: 3052 (RoyaleAPI/pockettactics/1v9 L11) (unknown). Enum TowerTroopType::TowerPrincess; no card id. Engine 3204 is another card's L11 row.
+
+Also unverified: whether Tower Princess and Cannoneer keep the level-11 stats `TowerTroops.h` holds (3204 hp / 153 damage is the engine's Cannoneer row; the real Tower Princess is 3052 / 109 / 0.8 s at level 11).
+
 ## Summary
 
-**Where the engine stands.** For most base cards the engine matches the **2026-07-06 balance update**: every base-card change in that post is already in it. Nothing from the August 4, August 26, September 8, September 16, October 6 or October 19 updates is in it, apart from the handful of cards UPSTREAM item 32 fixed on 2026-09-25. Hero and Champion ability numbers drifted further: the July 6 Hero changes were never applied either. Some drift is much older (2024–2025), which shows the July 2026 roster sync missed changes as well. The table below dates each open value change by when the target value took effect:
+**Where the engine stands** (at `9ab9b45`, before the changes in "Implementation status"). For most base cards the engine matches the **2026-07-06 balance update**: every base-card change in that post is already in it. Nothing from the August 4, August 26, September 8, September 16, October 6 or October 19 updates is in it, apart from the handful of cards UPSTREAM item 32 fixed on 2026-09-25. Hero and Champion ability numbers drifted further: the July 6 Hero changes were never applied either. Some drift is much older (2024–2025), which shows the July 2026 roster sync missed changes as well. The table below dates each open value change by when the target value took effect:
 
 | Target value took effect | Open "to apply" items |
 |---|---:|

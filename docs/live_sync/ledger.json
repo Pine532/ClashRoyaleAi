@@ -19,7 +19,9 @@
    "tests_pinning_old_value": [],
    "notes": "",
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "2645028"
   },
   {
    "family": "Archers",
@@ -41,7 +43,9 @@
     "docs/CARDS.md:192 (not affected)"
    ],
    "notes": "Exact: 112 x 1.25 = 140.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Arrows",
@@ -63,7 +67,9 @@
     "tests/core/test_card_registry.cpp:645 (123*3 on a DummyEntity, not a tower; unaffected unless it becomes a tower)"
    ],
    "notes": "The 2024-08 reduction (111 -> 93) was never applied either. DeckShop still shows 93, stale.",
-   "verifier": "confirmed: no later Arrows/spell CT post through 2026-10 (Sept 23 only changes Fireball CT 172->159); per-volley 25 consistent with total 75 (Fireball 207/689 and Arrows 111/369 both ~30%)"
+   "verifier": "confirmed: no later Arrows/spell CT post through 2026-10 (Sept 23 only changes Fireball CT 172->159); per-volley 25 consistent with total 75 (Fireball 207/689 and Arrows 111/369 both ~30%)",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Arrows",
@@ -86,7 +92,10 @@
     "tests/core/test_card_registry.cpp:645 pins 123*3"
    ],
    "notes": "1 hp rounding difference of level scaling; low value.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Baby Dragon",
@@ -106,7 +115,9 @@
    "notes": "Base id 44 already 1.5 (CardRegistry.h:575). Add .withSplash(1.5f) to both troop definitions of addEvolution(137).",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed (note: post lists \"Baby Dragon\" only; Evolution inheritance rests on the post text \"all troops, except Skeleton Dragons, should have 1.5 tiles\")"
+   "verifier": "confirmed (note: post lists \"Baby Dragon\" only; Evolution inheritance rests on the post text \"all troops, except Skeleton Dragons, should have 1.5 tiles\")",
+   "confidence": "official",
+   "applied_in": "d5d1165"
   },
   {
    "family": "Baby Dragon",
@@ -126,7 +137,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Release 2025-09-01 says movement speed only; Dec post says speedup standardized with slowdown, so slow = 30 is inferred.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Bandit",
@@ -146,7 +160,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Golden Knight (116) is in the same fix; its chain is instantaneous. Edit is in CombatEntity (shared), not per-card; mind Boss Bandit repeated-dash ability. Verifier: Boss Bandit (122) also has withChargeInvulnerability (CardRegistry.h:1097), so the same guard covers both; Golden Knight (116) is dashed by ability, other family.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "f7ec3ac"
   },
   {
    "family": "Barbarian Barrel",
@@ -170,7 +186,9 @@
     "tests/core/test_deck_audit_item32.cpp:183 and tests/core/test_hero_abilities.cpp:794 (constructs the reroll effect with 232; only if that literal changes)"
    ],
    "notes": "Chain 240 -> 230 (2025-12-01) -> 232 (2026-02-02) -> 215. Decide the reroll literal at :249 separately (recommended 215 to stay 'like the barrel').",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Barbarians",
@@ -189,7 +207,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Comment at CardRegistry.h:1471-1473 says not applied; update it too.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Barbarians",
@@ -210,7 +230,9 @@
     "tests/entities/test_combat_entity.cpp:1422-1436 uses its own multiplier 0.5; does not pin"
    ],
    "notes": "1/1.30 derived from the stated 30%. Rage spell id 108 and Lumberjack 156 / Battle Ram Evo carry the same number (other families). Movement-speed part of the boost is not modelled (CardRegistry.h:1474-1475 comment).",
-   "verifier": "corrected: as_of 2025-10-06 -> 2025-10-24 (post header 24 Oct 2025, file 2025-10-24_october-balance-changes-2.txt); target 0.77f confirmed"
+   "verifier": "corrected: as_of 2025-10-06 -> 2025-10-24 (post header 24 Oct 2025, file 2025-10-24_october-balance-changes-2.txt); target 0.77f confirmed",
+   "confidence": "official",
+   "applied_in": "4cb63a1"
   },
   {
    "family": "Battle Healer",
@@ -230,7 +252,9 @@
    "tests_pinning_old_value": [],
    "notes": "",
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Battle Healer",
@@ -250,7 +274,9 @@
    "notes": "Heal 102 per hit then heals slower; post does not restate heal amount.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Battle Healer",
@@ -270,7 +296,9 @@
    "tests_pinning_old_value": [],
    "notes": "",
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Battle Ram",
@@ -292,7 +320,10 @@
     "tests/core/test_deck_audit_item32.cpp:378 (bat hp=230, unrelated)"
    ],
    "notes": "830/230 matches neither old nor new official bonus. Rage (35% -> 30% on 2025-10-24, duration 3 -> 5 s) would need the Rage mechanic on the spawned units; the engine's Barbarians Evolution (155) models it as self-haste (CardRegistry.h:1480).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Battle Ram",
@@ -312,7 +343,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "CardStats::withKnockback is spell-side only.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Bomber",
@@ -333,7 +367,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Update all three literals. Regenerate docs/CARDS.md afterwards. No test pins 225 for Bomber (grep).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Bomber",
@@ -353,7 +389,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine has a target-count split without a distance.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Bowler",
@@ -373,7 +412,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Semantics caveat: assumes the post figure is the extension beyond range 4.0, as the engine comment says; if it is total travel from the Bowler the engine value itself is wrong. No other source read. Hero Bowler absent from the engine.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Cannon",
@@ -393,7 +434,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 320 -> 353 (2025-01-07) -> 304 (2025-10-06) -> 281 (2025-12-01) -> 261. Same inert-burst caveat as the radius entry; edit both on line 1179.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a mechanic the engine lacks: CardFactories::spawnDefensiveBuilding never calls spawnDeployEffect, so the Cannon Evolution's Deploy Barrage (withSpawnEffect at CardRegistry.h ~1179) never fires."
   },
   {
    "family": "Cannon",
@@ -413,7 +457,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Comment at CardRegistry.h:1173 also says 2.5. Static reading: building spawn path (CardFactories.h:198-204) never calls spawnDeployEffect, so the barrage may not fire at all; verify by run before/after editing. Base id 25 has no barrage.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Not observable and untestable: the Cannon is an Archetype::DefensiveBuilding, and CardFactories::spawnDefensiveBuilding (include/core/CardFactories.h:190-197) never calls spawnDeployEffect, so id 129's withSpawnEffect(2.5f, 202) is dead data."
   },
   {
    "family": "Cannon Cart",
@@ -433,7 +480,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "No evolution/hero id. grep of tests found no 212 pin for id 69.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "febf4f5"
   },
   {
    "family": "Cannon Cart",
@@ -453,7 +502,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Goblin-push behaviour follows from the same mass mechanic.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Cannon Cart",
@@ -475,7 +527,10 @@
     "tests/core/test_card_registry.cpp:1454 (transform test)"
    ],
    "notes": "Needs an engine probe before deciding; no number involved.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Clone",
@@ -495,7 +550,9 @@
    "notes": "Set isCloneCopy in becomeCloneCopy; test tests/core/test_game_manager.cpp:708 covers champion clones only.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "f7ec3ac"
   },
   {
    "family": "Dark Prince",
@@ -514,7 +571,10 @@
    "corroboration": "drift only (source: cr-api-data, stale; Supercell 2025-01-07 post names only Baby Dragon and Witch)",
    "tests_pinning_old_value": [],
    "notes": "Needs a live source on whether Dark Prince has splash at all. Verifier: Supercell 2025-01-07 post (january-balance-changes-2) states 'all troops, except Skeleton Dragons, should have a Splash Radius of 1.5 tiles', so the stale 1.1 is superseded IF Dark Prince splashes at all; whether he does remains unsourced by an official post. Stays unresolved (needs a second source on existence of splash).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Dart Goblin",
@@ -535,7 +595,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Chain 133->156 (2025-08), 156->151 (2026-01), 151->143 (2026-10). Evolution restates the literal so all three occurrences change. No test pins 151 for Dart Goblin (grep).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "febf4f5"
   },
   {
    "family": "Dart Goblin",
@@ -559,7 +621,9 @@
     "tests/core/test_sight_range.cpp:295"
    ],
    "notes": "Centre-to-centre sight.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a0e76a3"
   },
   {
    "family": "Dart Goblin",
@@ -579,7 +643,10 @@
    "corroboration": "official only (prose, no value)",
    "notes": "Unclear which stat this is.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Dart Goblin",
@@ -599,7 +666,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Apply together with the stage-1 damage row: PoisonOnHit(64,10,10) in engine units. Check applyDot yields at least one tick with 10 ticks / interval 10.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "18740ef"
   },
   {
    "family": "Dart Goblin",
@@ -619,7 +688,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Engine models only one flat stage, mapped to stage 1.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "8fe698d"
   },
   {
    "family": "Dart Goblin",
@@ -639,7 +710,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Stage 3 live value not found; do not guess. Aug 2025 cut the cloud to 1 s, so reachable stages are unsourced.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Earthquake",
@@ -659,7 +733,9 @@
    "corroboration": "official chain + drift agree (per-wave split inferred)",
    "notes": "Engine never applied the old 159 (it deals 100% to towers), so this is a first CT reduction for the spell. Per-wave 49 inferred from 147 = 3 x 49; medium confidence. Related spells in the same post belong to other families. Wave fix (all 3 waves) already matches.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Electro Dragon",
@@ -680,7 +756,9 @@
    "corroboration": "official chain + 3 drift rows agree",
    "notes": "withDeployDelay only seeds cooldown at spawn (CardFactories.h:116), so it cannot express per-target first-hit time; old 0.7 s never modelled. Evolution inheritance is by Supercell convention; the post names only Electro Dragon. See Hunter/Ronin family rows for the same mechanic.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Electro Dragon",
@@ -700,7 +778,10 @@
    "corroboration": "official only",
    "notes": "Primary-target semantics unstated.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Dragon",
@@ -720,7 +801,10 @@
    "corroboration": "official only",
    "notes": "Depends on Rune Giant enchant modelling (other family).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Dragon",
@@ -740,7 +824,10 @@
    "corroboration": "official chain (192->128->64) + drift agree",
    "notes": "Engine only has maxSplitTargets and boolean splitTargetsFullDamage (CardStats.h:159-162). Real chain count is unbounded with degradation per the engine comment; unspecified in posts. Base id 57 chain (3 targets, full 192) is not covered by any post.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Giant",
@@ -760,7 +847,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Single id. No test pins 163. Hp 3952 and hit speed 18 already match.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "2645028"
   },
   {
    "family": "Electro Giant",
@@ -780,7 +869,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "withDeployDelay(10) would be a no-op because the cooldown counts down during the 10-tick deploy (CombatEntity.h:570-625 per verifier).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Electro Giant",
@@ -800,7 +891,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Also covers the 2024-12-16 bug fix (Zap Pack reduced damage on King Tower), which gives no number.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Spirit",
@@ -820,7 +914,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Real chains to up to 9 targets; engine hits 2.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Spirit",
@@ -840,7 +937,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Sub-tick value; unit missing in post (seconds assumed).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Spirit",
@@ -860,7 +960,10 @@
    "corroboration": "official only",
    "notes": "Applies to all four Spirits (ids 72-74 other batches). Semantics unclear.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Electro Wizard",
@@ -884,7 +987,9 @@
     "tests/core/test_card_registry.cpp:808 (deploy zap, 1000 - 118)"
    ],
    "notes": "Engine 118 matches neither the post old (110) nor new (116); origin unsourced, so confirm before editing. The post says he hits Spirits \"with both attacks\", while the engine halves damage across 2 targets (withSplitTargets(2)); decide whether 116 is per-target or total before changing. Line 808 tests the deploy zap, which should stay 118 if only the attack changes. No Evolution id exists.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "7cdd996"
   },
   {
    "family": "Elixir Collector",
@@ -906,7 +1011,10 @@
     "tests/core/test_default_deck_qa.cpp:461 (Cannon expires at its lifetime; checks default lifetime, relevant when adding the field)"
    ],
    "notes": "Lifetime also drives hp decay in Building; a per-card value changes decay rate. VERIFIER: confirmed no per-card lifetime: Building ctor default 300 (Building.h:17), spawnDefensiveBuilding CardFactories.h:198-202 passes none, no CardStats field.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Elixir Collector",
@@ -928,7 +1036,9 @@
     "tests/core/test_game_manager.cpp:149-161 (steps 80 + DEPLOY_TIME_TICKS and expects extra elixir; would need 150)"
    ],
    "notes": "Engine comment says interval/amount unsourced. Chain 12 -> 13 (2025-11-03) -> 15. VERIFIER: apply together with, or after, the per-card building lifetime; with the engine 300-tick lifetime a 150-tick interval yields only 2 pulses (6-elixir card), so alone it worsens the card. Test pin confirmed at tests/core/test_game_manager.cpp:149-161.",
-   "verifier": "corrected: note added, status unchanged (to_apply)"
+   "verifier": "corrected: note added, status unchanged (to_apply)",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Executioner",
@@ -951,7 +1061,10 @@
     "tests/core/test_card_registry.cpp:254 (boomerang hits twice; no distance pinned)"
    ],
    "notes": "Base change also applies to evolution id 157 (shares boomerang). Purpose: no clipping Crown Towers from behind the bridge.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Executioner",
@@ -971,7 +1084,9 @@
    "corroboration": "official chain (294->268 Dec 2025, 268->240 Jul 2026) + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Tests: none pins 1.75/313 (test_combat_entity.cpp:1838-1870 use synthetic values). Base id 36 has no band.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a3d00cc"
   },
   {
    "family": "Executioner",
@@ -991,7 +1106,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine band compares lastAttackDistance (centre-to-centre per CombatEntity.h:733); source distance basis unknown, verify by measurement.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a3d00cc"
   },
   {
    "family": "Executioner",
@@ -1011,7 +1128,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Spells have withKnockback; troop-hit path has none.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Fireball",
@@ -1031,7 +1151,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Gameplay-affecting; see UPSTREAM item 29. DeckShop also 159.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Firecracker",
@@ -1052,7 +1174,10 @@
    "tests_pinning_old_value": [],
    "notes": "Needs a per-card projectile-speed field and a measured value (none sourced).",
    "mechanic": "per-card projectile speed",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Firecracker",
@@ -1075,7 +1200,9 @@
     "tests/core/test_sight_range.cpp:294"
    ],
    "notes": "Both base and evolved blocks of id 130 restate it.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "18740ef"
   },
   {
    "family": "Firecracker",
@@ -1094,7 +1221,10 @@
    "corroboration": "official only (no numbers)",
    "tests_pinning_old_value": [],
    "notes": "No numeric target; \"excess\" undefined.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Flying Machine",
@@ -1114,7 +1244,9 @@
    "tests_pinning_old_value": [],
    "notes": "",
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "febf4f5"
   },
   {
    "family": "Freeze",
@@ -1133,7 +1265,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Use withCrownTowerDamage(37) (CardStats.h:663). Verify a damage>0 spell with a FreezeOnHit reaches tower damage via AreaSpell.h:208,249-251.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Freeze",
@@ -1154,7 +1288,9 @@
     "tests/core/test_card_registry.cpp:829,840 (\"Freeze deals no direct damage\", enemy->hp == 1000)"
    ],
    "notes": "Engine treated damage as vestigial; set 148 and the Crown Tower value 37 together. Not Hero/Evolution-bearing (no ids besides 107). Update comment at :984-985.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "0d473c5"
   },
   {
    "family": "Freeze",
@@ -1175,7 +1311,9 @@
     "tests/core/test_card_registry.cpp:841 (enemy->freezeTicks == 40)"
    ],
    "notes": "Update comment at :984-985 (\"4 s full stun\").",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Giant",
@@ -1197,7 +1335,9 @@
     "tests/core/test_hero_abilities.cpp:337 (abilityCooldownTicks == 140)"
    ],
    "notes": "Mechanic exists.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Giant",
@@ -1219,7 +1359,10 @@
     "tests/core/test_hero_abilities.cpp:348, :823, :842 construct HeroGiantHurlEffect(3.0f, 20) directly (positions may depend on 3.0; recheck)"
    ],
    "notes": "Medium confidence. Second source Fandom: https://clashroyale.fandom.com/wiki/Giant/Hero VERIFIER: no official figure (posts say only \"in reach\"); the two sources are a coaching site and the Fandom wiki, and independence could not be confirmed (Fandom fetch returned HTTP 402). Downgraded per two-independent-sources rule.",
-   "verifier": "corrected: to_apply -> unresolved (drift-only, independence unverified)"
+   "verifier": "corrected: to_apply -> unresolved (drift-only, independence unverified)",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Giant",
@@ -1239,7 +1382,10 @@
    "corroboration": "official only (no number)",
    "tests_pinning_old_value": [],
    "notes": "Air troops reportedly take none (trophycoach).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Giant Skeleton",
@@ -1259,7 +1405,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Verified: no per-card troop collision radius exists.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Giant Snowball",
@@ -1280,7 +1429,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Evo id 158 restates literals so it needs its own call; evo value assumed to follow base (Nov 2025 post gave no number). perception/UPSTREAM_REQUESTS.md item 29 tracks the blanket spell CT nerf. Gameplay-affecting: voids win-rate history.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Giant Snowball",
@@ -1302,7 +1453,9 @@
     "tests/core/test_card_registry.cpp:846-861 (Giant Snowball base: freezeTicks == 15 at :859, freezeSlow == 0.5 at :860; hp 821 at :858 uses a non-tower target)"
    ],
    "notes": "Base number is implied by the wording, not printed; two independent sources agree.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "99cc47d"
   },
   {
    "family": "Giant Snowball",
@@ -1324,7 +1477,9 @@
     "tests/core/test_card_registry.cpp:846-861 (Giant Snowball base: freezeTicks == 15 at :859, freezeSlow == 0.5 at :860; hp 821 at :858 uses a non-tower target)"
    ],
    "notes": "Inference: 30% slow = factor 0.7, consistent with Ice Wizard 0.65 -> 0.7 pattern and evo 158. Note the Ice Wizard / Fisherman / Ice Golem rows belong to other families.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "7542a6a"
   },
   {
    "family": "Giant Snowball",
@@ -1344,7 +1499,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Medium confidence that engine knockback is the roll distance (see Feb 2025 chain row).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Giant Snowball",
@@ -1364,7 +1521,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "The comment at :1507 says untargetable-while-trapped is not modelled. Rolling speed increase is the cause per the post.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Giant Snowball",
@@ -1384,7 +1544,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "No test pins the evo values (grep of tests/core/test_evolutions.cpp, test_card_registry.cpp found none).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "99cc47d"
   },
   {
    "family": "Goblin Barrel",
@@ -1404,7 +1566,10 @@
    "corroboration": "drift only: no source says barrel Goblins inherit; 2025-04-09 post excluded them from an earlier Goblins change",
    "tests_pinning_old_value": [],
    "notes": "Needs DeckShop/RoyaleAPI Goblin Barrel page check.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Barrel",
@@ -1424,7 +1589,9 @@
    "corroboration": "official only (drift rows agree on interpretation)",
    "tests_pinning_old_value": [],
    "notes": "Interpretation (barrel Goblins, not the barrel's 8-tick delay) supported by the April 2025 post excluding barrel Goblins from Goblins-card changes. Engine has no first-hit delay on other troops, so verify seeding on spawn. Verifier: CardFactories::spawn seeds initialCooldownTicks (CardFactories.h:116) so the mechanism exists; goblins also carry the 10-tick deploy, so the in-match effect of 3 ticks is near nil.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Goblin Barrel",
@@ -1444,7 +1611,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Do not change goblinBarrelGoblinStats damage: shared with base id 109.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblin Cage",
@@ -1465,7 +1635,9 @@
    "notes": "One builder edit changes both ids. If the human wants Evolution kept at 1080, give id 139 its own brawler stats. 1121 = 1080 x 1.04 rounded, matches post.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Goblin Cage",
@@ -1486,7 +1658,10 @@
    "notes": "Wiki-only; engine literal 0.7 is between Medium and Fast tiers. Needs a second source before editing.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Cage",
@@ -1507,7 +1682,10 @@
    "corroboration": "drift only (sources: Fandom wiki, single)",
    "notes": "Also blocks Tesla lifetime 30->25 s (2026-06-01 post) and any other non-30 s building. Needs a per-card lifetime field plus a second source for Cage.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Cage",
@@ -1527,7 +1705,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Cycles 1->2 of the same post is already applied.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblin Cage",
@@ -1547,7 +1728,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Chain 306->337 (2024-10-08)->366. Needs a hold mechanism; the existing hook+poison numbers are unsourced.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblin Curse",
@@ -1566,7 +1750,9 @@
    "corroboration": "official chain + drift agree",
    "notes": ".withCrownTowerDamage(10) (CardStats.h:663).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Goblin Curse",
@@ -1585,7 +1771,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Chain 25 -> 30 -> 35. Regenerate docs/CARDS.md:149; UPSTREAM_REQUESTS.md:616 already lists 258 vs 210. No test pins 43 (grep of tests/).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "27b25b8"
   },
   {
    "family": "Goblin Curse",
@@ -1604,7 +1792,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Same as Poison (CardRegistry.h:649). Drift row calling it a missing mechanic is wrong.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Goblin Demolisher",
@@ -1624,7 +1814,10 @@
    "corroboration": "conflict: Fandom 404 vs RoyaleAPI 465; no official figure",
    "tests_pinning_old_value": [],
    "notes": "Engine matches Fandom.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Demolisher",
@@ -1644,7 +1837,10 @@
    "corroboration": "drift only (sources: Fandom/elixirdeck search snippet)",
    "tests_pinning_old_value": [],
    "notes": "Helper id -37, not a registry id. Need a second source.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Demolisher",
@@ -1666,7 +1862,9 @@
     "tests/core/test_card_registry.cpp:1488 (kamikaze transform test; check it does not assume an unbounded kamikaze)"
    ],
    "notes": "Chain 10 -> 7 (2024-10-08) -> 8 (2025-01-07) -> 10 (2025-06-02) is contiguous; final 10 s. VERIFIER: mechanic exists. CombatEntity.h:593-611 with fraction 1.0 triggers on the first tick and sets hp=0 after transformLifetimeTicks; heroMusketeerTurretStats already uses withHpTransform(1.0f, 100, false) as a pure lifetime timer (CardRegistry.h:350-353, tests/core/test_hero_abilities.cpp:88). CardFactories.h:68-71 copies the fields for any entity. Update comment at CardRegistry.h:325-327. Real timer starts at transform; here at spawn (same moment, plus deploy ticks).",
-   "verifier": "corrected: needs_new_mechanic -> to_apply (existing withHpTransform fraction-1.0 lifetime timer)"
+   "verifier": "corrected: needs_new_mechanic -> to_apply (existing withHpTransform fraction-1.0 lifetime timer)",
+   "confidence": "official",
+   "applied_in": "10a2f53"
   },
   {
    "family": "Goblin Demolisher",
@@ -1686,7 +1884,10 @@
    "corroboration": "drift only (sources: RoyaleAPI search snippet; page 403)",
    "tests_pinning_old_value": [],
    "notes": "Need a second source.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Drill",
@@ -1707,7 +1908,10 @@
    "corroboration": "drift only (sources: Fandom wiki)",
    "tests_pinning_old_value": [],
    "notes": "One source; no official post. Needs a second source (RoyaleAPI/DeckShop) and a per-card building lifetime field. Not applied.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Drill",
@@ -1728,7 +1932,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "AreaSpell::crownTowerDamage exists (AreaSpell.h:71) but spawnDeployEffect (CardFactories.h:137-146) cannot set it. Also: spawnDefensiveBuilding (CardFactories.h:198-204) never calls spawnDeployEffect (only troop spawners at :156,170,183,195), so the Drill burst appears not to fire at all (static reading, not run; verify with a run). The 2026-08-04 removal (0) is superseded by this. Same plumbing affects the Cannon Evolution barrage.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblin Drill",
@@ -1749,7 +1956,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine has withHotPeriodicInterval only, no separate first-fire field. Wiki still says 0.8 s (stale). The 3 s repeat interval is not verified from posts.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblin Drill",
@@ -1770,7 +1980,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "125 inferred from the Goblins line in the same post section, not stated on the Drill line. goblinDrillGoblinStats is also used at CardRegistry.h:1443 (Evolved Mortar id 152) and :1527 (periodic, interval 22), where the post states no change: split the builder or accept. Ids 98 and 153 both reference both builders (:945,:1450,:1455 periodic; death at :948,:1459). docs/CARDS.md shows no damage for the Drill (regenerate not needed).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Goblin Drill",
@@ -1790,7 +2002,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "Whether the death spawn stays 2 Goblins is not stated by the posts. The engine death-spawn of 4 is an unsourced approximation of an older state. Also folds in: re-emergence deals no damage/knockback (2024-10-08) and submerge-spawned Goblins have the standard deploy time. Cheap approximation (3 on death) would be a judgement, not sourced.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblin Gang",
@@ -1810,7 +2025,10 @@
    "notes": "Apply to ids 4 and 172 in their own batches; for 112 get a live Goblin Gang page first.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Gang",
@@ -1830,7 +2048,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "initialCooldownTicks via withDeployDelay is a spawn-time lock-on, not a first-hit delay. Goblins (id 4) and Hero Goblins carry the same stat in other batches.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Goblin Gang",
@@ -1850,7 +2070,10 @@
    "notes": "Text-only; likely a result of first-hit time, needs a measurement.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Gang",
@@ -1870,7 +2093,9 @@
    "corroboration": "official chain + drift agree (Gang inheritance inferred from the post text)",
    "notes": "Chain: 0.3 -> 0.4 (Jan 2025) -> 0.5 (Aug 2025); the post's section is 'Spear Goblins' and its text names Goblin Gang. Same mechanic as the Goblins row.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Goblin Gang",
@@ -1890,7 +2115,10 @@
    "notes": "No value published.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Gang",
@@ -1911,7 +2139,10 @@
    "notes": "Rascals id 113 belongs to another batch for the Girls' stat. A second public source would make this to_apply.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Giant",
@@ -1932,7 +2163,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "initialCooldownTicks seeds the cooldown only at spawn (CardStats.h:248, CardFactories.h:116), not a per-acquisition first hit. Shared builder for both ids. Official post dated Oct 6 section; file is the Oct 24 slug.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Goblin Giant",
@@ -1952,7 +2185,10 @@
    "corroboration": "conflict: official post names only \"Goblins & Hero Goblins\"; does not name Goblin Drill or Goblin Giant Evolution goblins; third-party agree on Goblins only",
    "tests_pinning_old_value": [],
    "notes": "goblinDrillGoblinStats is shared with Goblin Drill (ids 98/153); do not change from this row alone. Needs RoyaleAPI/wiki confirmation.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblin Hut",
@@ -1975,7 +2211,10 @@
     "tests/core/test_deck_audit_item32.cpp:547 (getAttackCooldown() == 16)"
    ],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "tests_pinning_old_value": [],
@@ -1995,7 +2234,9 @@
    "status": "to_apply",
    "corroboration": "official chain + drift agree",
    "notes": "Update both literals; the turret is a secondary unit of id 55 only.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "tests_pinning_old_value": [],
@@ -2015,7 +2256,9 @@
    "status": "to_apply",
    "corroboration": "official chain + drift agree",
    "notes": "Hit speed stays 12 ticks. Rocket damage stays 304.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "tests_pinning_old_value": [],
@@ -2035,7 +2278,9 @@
    "status": "to_apply",
    "corroboration": "official chain + drift agree",
    "notes": "Update the :257 comment (DPS 86 becomes ~61).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "tests_pinning_old_value": [],
@@ -2055,7 +2300,10 @@
    "status": "needs_new_mechanic",
    "corroboration": "official chain + drift agree",
    "notes": "Unit mapping to tiles/tick is not known; do not guess. +40% relative is the only unit-free fact.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblins",
@@ -2077,7 +2325,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Aimed at Goblin Gang balance; post says Goblin Barrel/Drill goblins are not affected. Hero 172 inheritance assumed. VERIFIER: the April 2025 post lists this under the Goblin Gang heading and excludes only Barrel/Curse/Drill/Evolved Goblin Giant/Evolved Mortar goblins, so Goblin Gang id 112 (CardRegistry.h:1016) is affected too. Engine confirmed lacking: initialCooldownTicks (CardStats.h:248, withDeployDelay :540) is seeded once at spawn (CardFactories.h:116) and ticks down while moving/deploying, so it is not a first-hit-on-acquire delay.",
-   "verifier": "corrected: engine_ids += 112 (Goblin Gang)"
+   "verifier": "corrected: engine_ids += 112 (Goblin Gang)",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Goblins",
@@ -2098,7 +2348,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Grep of tests/ found no pin on Goblin damage 120. The same Aug 4 post says Goblin Drill spawned goblins also do +4%: goblinDrillGoblinStats (-18, CardRegistry.h:217) 120 -> 125, owned by the Goblin Drill family. Goblin Barrel (-20, :228), evo drill (-36, :320) and Goblin Gang (id 112, :1016) goblins are NOT stated in the post.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Goblins",
@@ -2122,7 +2374,9 @@
     "tests/core/test_hero_abilities.cpp:721 (countAfter == 4)"
    ],
    "notes": "Only the respawned Banner squad changes; the Hero Goblins own 4-unit squad (test_hero_abilities.cpp:613) stays 4. Re-read lines 677-730 of the test before editing since 700/721 may count the reactivated squad.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Goblins",
@@ -2144,7 +2398,10 @@
     "tests/core/test_hero_abilities.cpp:677 (respawns at the last-known death position)"
    ],
    "notes": "PeriodicSpawnEffect has no offset parameter. Direction is an interpretation of the post prose.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Goblins",
@@ -2167,7 +2424,9 @@
     "tests/core/test_hero_abilities.cpp:731 (window-elapsed test; check tick count used)"
    ],
    "notes": "Update the comment at CardRegistry.h:1616 too.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "bb00184"
   },
   {
    "family": "Goblinstein",
@@ -2187,7 +2446,9 @@
    "corroboration": "official only (drift row restates the post)",
    "notes": "withChampionAbility 4th arg (CardStats.h:592). Same change applies to every other Hero/Champion id except Boss Bandit, handled outside this group.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Goblinstein",
@@ -2206,7 +2467,9 @@
    "mechanic": "",
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Goblinstein",
@@ -2226,7 +2489,10 @@
    "corroboration": "official only (2024-10-17; 2024-12-16 bug fix extends to the King Tower)",
    "notes": "Per-hit and still-current are assumptions: not restated after the Aug 2026 dps rescale. Needs the effect to set crownTowerDamage (small header edit; the effect header is not data-only). VERIFIER: official post gives no unit. 71/107 = 0.66 if per hit, but 71/214 = 0.33 if per second (the usual ~1/3 tower scaling), so 46 may be per second (23 per 5-tick pulse), not per hit. No second source in corpus. Do not apply 46/hit without a source for the unit; effect header edit (crownTowerDamage) is also needed.",
    "tests_pinning_old_value": [],
-   "verifier": "corrected: downgraded to_apply -> unresolved; unit of 71->46 (per hit vs per second) not established"
+   "verifier": "corrected: downgraded to_apply -> unresolved; unit of 71->46 (per hit vs per second) not established",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Goblinstein",
@@ -2248,7 +2514,9 @@
     "tests/core/test_champion_abilities.cpp:254 (comment \"8 hits total\", constructed directly)"
    ],
    "notes": "Chain 5s -> 4s (2024-10-17, already applied) -> 3.5s.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "4744bf9"
   },
   {
    "family": "Goblinstein",
@@ -2270,7 +2538,9 @@
     "tests/core/test_champion_abilities.cpp:254 and :264 (effect constructed with 107 directly, asserts 10000 - 107; effect-level test, only changes if the test is edited)"
    ],
    "notes": "94 = 188 / 2 pulses per second, derived. Registry literal to edit is the 2nd ctor arg at CardRegistry.h:1083.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Goblinstein",
@@ -2293,7 +2563,9 @@
     "tests/core/test_champion_abilities.cpp:249 (constructs a StationaryCombatant with 2385; not a registry pin)"
    ],
    "notes": "Chain 2752 -> 2598 -> 2393 -> 2304 -> 2385 -> 2240, contiguous.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "2645028"
   },
   {
    "family": "Golden Knight",
@@ -2314,7 +2586,9 @@
     "tests/core/test_champion_abilities.cpp:124,140,153 (fixtures use 161 locally; not registry)"
    ],
    "notes": "Dash damage 335 untouched. docs/CARDS.md:163 regenerate.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Golden Knight",
@@ -2335,7 +2609,10 @@
     "tests/core/test_champion_abilities.cpp:131-163 (chain of 2/3/10 dashes)"
    ],
    "notes": "Do not change without a clearer source.",
-   "verifier": "corrected: source_url placeholder replaced with URLS.tsv URL"
+   "verifier": "corrected: source_url placeholder replaced with URLS.tsv URL",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Golden Knight",
@@ -2356,7 +2633,9 @@
     "tests/core/test_champion_abilities.cpp:131,145,160,325 (construct effect with local 5.5f; independent of registry)"
    ],
    "notes": "Engine uses centre distance; live targets collision-radius edge.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Golden Knight",
@@ -2378,7 +2657,10 @@
     "tests/core/test_champion_abilities.cpp:310 (dash never moves him away from target)"
    ],
    "notes": "Missing parameters: backward distance, whether it damages.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Golem",
@@ -2400,7 +2682,9 @@
     "tests/core/test_sight_range.cpp:204 ({19, \"Golem\", 7.0f})"
    ],
    "notes": "No Golem Evolution or Hero id. Golemite (id -1, sight 7.0 at :157) not stated to change; Elixir Golem/Ice Golem rows are other families.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Graveyard",
@@ -2419,7 +2703,10 @@
    "corroboration": "official only, text only",
    "notes": "Skeleton Count is already 12 (latest official). Missing 14->13 change between the Jan and Jun posts is not in the corpus. Test test_card_registry.cpp:1171-1187 pins 12 (unchanged).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Guards",
@@ -2439,7 +2726,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Same caveat as Zappies. No Evolution/Hero id.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Heal Spirit",
@@ -2459,7 +2748,10 @@
    "corroboration": "drift only (sources: theriagames.com); engine sibling spirits already use SPEED_VERY_FAST",
    "tests_pinning_old_value": [],
    "notes": "Need an official or second source.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Hunter",
@@ -2480,7 +2772,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "withDeployDelay/initialCooldownTicks is a one-shot spawn-time seed (CardFactories.h:116), not a per-target first hit; only X-Bow uses it. Needs a shared engine-wide first-hit mechanic (also Musketeer).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Hunter",
@@ -2501,7 +2795,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Low priority, 1 hp. Evolution id 146 restates the literal twice (base and evolved builder, :1368 and :1370). grep of tests/ finds no pin on 885.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "25130bb"
   },
   {
    "family": "Hunter",
@@ -2521,7 +2817,10 @@
    "corroboration": "official only (March 2025 intent + April 2025 fix)",
    "tests_pinning_old_value": [],
    "notes": "No numbers involved. Cannon Cart grounding is only a freeze in the engine too. VERIFIER: isFlying is a writable entity flag (HeroWizardFieryFlightEffect.h:21 sets it), but nothing clears it temporarily or restores it, so new code is still needed.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Ice Golem",
@@ -2544,7 +2843,9 @@
     "tests/core/test_default_deck_qa.cpp:436-458 only asserts >0 / <1.0 (not pinned)"
    ],
    "notes": "Engine 3.0s matched neither old nor new.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Ice Golem",
@@ -2566,7 +2867,9 @@
     "tests/core/test_card_registry.cpp:732 (Ice Golem death freezeSlow 0.65); :701 and tests/entities/test_projectile.cpp, test_on_hit_effect.cpp use 0.65 for Ice Wizard/local FreezeOnHit (other cards)"
    ],
    "notes": "Ice Wizard (34, :565) and Giant Snowball also change, outside this family. Edit with the duration change in the same FreezeOnHit call.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "7542a6a"
   },
   {
    "family": "Ice Golem",
@@ -2590,7 +2893,9 @@
     "docs/CARDS.md:87,181 (regenerate)"
    ],
    "notes": "Both ids restate the literal.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Ice Golem",
@@ -2611,7 +2916,10 @@
     "tests/core/test_hero_abilities.cpp:513-535 ('third blast fully freezes')"
    ],
    "notes": "Blasts 1-2 use 20 ticks / 0.6 (unsourced) in the engine; do not copy without a source.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Ice Golem",
@@ -2632,7 +2940,9 @@
     "tests/core/test_hero_abilities.cpp:496,507,520 (build the effect with literal 80; independent of registry)"
    ],
    "notes": "Crown Tower multiplier 0.05 unchanged.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Ice Golem",
@@ -2653,7 +2963,9 @@
     "tests/core/test_hero_abilities.cpp:496,520 (local ctor 1.0f)"
    ],
    "notes": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "536aabe"
   },
   {
    "family": "Ice Golem / Golden Knight",
@@ -2676,7 +2988,9 @@
     "tests/core/test_champion_abilities.cpp:29 (abilityCooldownTicks == 120 for id 116)"
    ],
    "notes": "Rule applies to every Hero/Champion; other families will list it too. Post says some champions are buffed to compensate (none named for Golden Knight).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Ice Spirit",
@@ -2699,7 +3013,9 @@
     "tests/core/test_default_deck_qa.cpp:373-415 (comment says \"a second\"; asserts behaviour via freezeTicks, not 10, so should still pass)"
    ],
    "notes": "Engine 1.0 s matches neither old 1.2 nor new 1.1. Evolution follow-through is an inference from Supercell's base-affects-Evolution statement.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "1b6ed2b"
   },
   {
    "family": "Ice Spirit",
@@ -2719,7 +3035,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Delay between pulses not given in any row; research needed before implementing. Damage 110 already matches. VERIFIER: mechanic confirmed absent. AreaSpell supports spellOnHit and withRepeats (CardStats.h:479) but DelayedAreaDamageOnDeath (include/core/DelayedAreaDamageOnDeath.h) and AreaDamageOnDeath have no repeat; only DelayedAreaDamageOnDeath has no onHit slot, so a new thin death effect spawning a repeating freeze AreaSpell is needed. Inter-pulse delay unsourced.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Ice Wizard",
@@ -2738,7 +3057,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Check tests/core/test_card_registry.cpp:679-702 after change.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "25130bb"
   },
   {
    "family": "Ice Wizard",
@@ -2759,7 +3080,9 @@
     "tests/core/test_card_registry.cpp:701 (freezeSlow == 0.65)"
    ],
    "notes": "Engine factor is a speed multiplier.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "7542a6a"
   },
   {
    "family": "Inferno Dragon",
@@ -2780,7 +3103,9 @@
     "tests/core/test_evolutions.cpp:145"
    ],
    "notes": "Stage-4 (200 ticks, 2.0x) unsourced; not changed.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "8fe698d"
   },
   {
    "family": "Knight",
@@ -2802,7 +3127,9 @@
     "tests/core/test_hero_abilities.cpp:164 (abilityCooldownTicks == 250; keep the 250 or update)"
    ],
    "notes": "Same change applies to Hero Musketeer 168, Hero Giant 169 and others in their own families.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Knight",
@@ -2828,7 +3155,9 @@
     "tests/core/test_hero_abilities.cpp:220"
    ],
    "notes": "Those tests build HeroKnightTauntEffect themselves, so they do not pin the registry value and will not break; no test reads the registered 166 shield. Chain 819 -> 768 (2026-01-12) -> 512; trophycoach.com also lists 512.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a3d00cc"
   },
   {
    "family": "Lava Hound",
@@ -2848,7 +3177,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Regenerate docs/CARDS.md after the edit.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Lava Hound",
@@ -2868,7 +3199,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Same line as damage; edit together.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Lava Hound",
@@ -2888,7 +3221,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Level-11 values.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "0d473c5"
   },
   {
    "family": "Lava Hound",
@@ -2908,7 +3243,9 @@
    "corroboration": "official only (wiki snippet cited by drift shows 81, likely lagging; official wins)",
    "tests_pinning_old_value": [],
    "notes": "No later official pup damage change in corpus. Engine 81 equals neither old (90) nor new (84).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6744199"
   },
   {
    "family": "Lightning",
@@ -2927,7 +3264,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Earlier values 318->286 (Jun 2025) superseded. Only meaningful with top-3 targeting: today the engine hits every unit in radius.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Lightning",
@@ -2947,7 +3286,10 @@
    "corroboration": "official only",
    "notes": "Shared with Vines (id 105, other family). Split out by the verifier from the unresolved Lightning row.",
    "tests_pinning_old_value": [],
-   "verifier": "added"
+   "verifier": "added",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Lightning",
@@ -2966,7 +3308,9 @@
    "corroboration": "cr-api-data card description (three) + official posts that presuppose highest-HP targeting; Vines already uses withSpellTopHpTargets(3) (CardRegistry.h:978-981)",
    "notes": "Mechanic exists (CardStats.h:550, AreaSpell.h:181-186). Engine currently hits everything in radius 3.5 (CardRegistry.h:641). Gameplay-affecting: voids win-rate history. Pairs with the Crown Tower 265 entry.",
    "tests_pinning_old_value": [],
-   "verifier": "corrected: unresolved -> to_apply (count 3 found in cr-api-data description; mechanic exists)"
+   "verifier": "corrected: unresolved -> to_apply (count 3 found in cr-api-data description; mechanic exists)",
+   "confidence": "derived",
+   "applied_in": "fd7fa90"
   },
   {
    "family": "Little Prince",
@@ -2985,7 +3329,10 @@
    "corroboration": "official only, no numbers",
    "notes": "Check RoyaleAPI/DeckShop for the live ability cost and cooldown/Guardienne hp 1600 if wanted; not derivable from posts.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Little Prince",
@@ -3004,7 +3351,9 @@
    "corroboration": "official + drift agree",
    "notes": "Global rule across Heroes/Champions; other families spec their own ids. Mechanic exists (CardStats.h:590-598).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Little Prince",
@@ -3025,7 +3374,9 @@
     "tests/core/test_champion_abilities.cpp:231 builds its own guardStats (217); does not read the registry, so does not pin"
    ],
    "notes": "Edit the literal in guardienneStats(); withCharge(3.0,2.0) unchanged.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Little Prince",
@@ -3044,7 +3395,9 @@
    "corroboration": "official chain + drift agree (drift row wrongly said no mechanic)",
    "notes": "Grace counts from the last landed hit (CombatEntity.h:714,844), approximating \"while moving\".",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Little Prince",
@@ -3064,7 +3417,10 @@
    "corroboration": "official only",
    "notes": "Same mechanic as the landing damage; CardStats::spellKnockback is spells only.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Little Prince",
@@ -3084,7 +3440,10 @@
    "corroboration": "official chain (207->230->256->320) + drift agree on value; mapping of \"Charge Damage\" to the landing hit is inferred from 256 continuity",
    "notes": "Do not confuse with the Guardienne 2x charge hit (withCharge) which models 434 on 217.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Lumberjack",
@@ -3105,7 +3464,9 @@
    "corroboration": "official only (drift row cites the same post; I verified the post text)",
    "tests_pinning_old_value": [],
    "notes": "Engine 1.75 is unsourced (matches neither 1.35 nor 1.30). Rage spell id 108 (1.35, include/core/CardRegistry.h:991) and Evolved Barbarians/Evolved Battle Ram are separate families; their drops share this change. No test pins 1.75 (grep tests/ for 1.75 and AreaBuffOnDeath found none for the registry values).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "4cb63a1"
   },
   {
    "family": "Lumberjack",
@@ -3125,7 +3486,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "CardStats only has spellCrownTowerDamage (CardStats.h:111); no per-target tower damage for troops. Post wording is \"Lumberjack Evolution Crown Tower Damage\"; its text says the Ghost haunts the Princess Towers, so apply to the ghost hit. Prior ghost damage chain: 192 -> 256 (2025-04-09), already applied.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Lumberjack",
@@ -3145,7 +3509,10 @@
    "corroboration": "official only (posts 2025-02-03 and 2025-02-11; no numbers given)",
    "tests_pinning_old_value": [],
    "notes": "Low priority, qualitative. Source URLs: 2025-02-03 release is https://supercell.com/en/games/clashroyale/blog/release-notes/february-events-challenges-2/. Engine comment at include/core/CardRegistry.h:359-360 (\"invincible\") disagrees with the post (\"invisible\"). No lifespan numbers are published, so a target cannot be set without a second source.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Magic Archer",
@@ -3165,7 +3532,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 133 -> 143 (2025-12-01, applied) -> 135.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Magic Archer",
@@ -3187,7 +3556,9 @@
     "tests/core/test_hero_abilities.cpp:408 (hp == 529)"
    ],
    "notes": "Bug fix; engine 529 matches neither old nor new.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "3d89011"
   },
   {
    "family": "Magic Archer",
@@ -3208,7 +3579,9 @@
     "tests/core/test_hero_abilities.cpp:410 (abilityCooldownTicks == 250)"
    ],
    "notes": "General Hero/Champion rule, applies to all; source_url is the same post as row #525. Post says numbers may be adjusted later.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Magic Archer",
@@ -3227,7 +3600,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine 100 was unsourced.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a3d00cc"
   },
   {
    "family": "Magic Archer",
@@ -3246,7 +3621,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Change first ctor arg of HeroMagicArcherTripleThreatEffect.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a3d00cc"
   },
   {
    "family": "Magic Archer",
@@ -3266,7 +3643,10 @@
    "tests_pinning_old_value": [],
    "notes": "Engine does not represent a distinct Triple Shot range; what 15.5 measures relative to engine lineSplash 11.0 is undetermined. Also related: 2026-08-26 bug fix \"Triple Shot now deals the correct damage\" (no number; unresolved).",
    "mechanic": "hero ability shot range / piercing triple-shot",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Magic Archer",
@@ -3285,7 +3665,10 @@
    "corroboration": "official only (no number)",
    "tests_pinning_old_value": [],
    "notes": "Cannot determine intended damage from the source.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Mega Knight",
@@ -3305,7 +3688,10 @@
    "corroboration": "official chain + drift agree (4 -> 2.5 Jun 1, 2.5 -> 4 Aug 4)",
    "tests_pinning_old_value": [],
    "notes": "Related fixes (river crossing, Electro Giant always knocked back; mechanics_0 2025-03-31) belong to the same mechanic.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Mega Knight",
@@ -3325,7 +3711,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Implement together with the knockback row.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "tests_pinning_old_value": [],
@@ -3345,7 +3734,9 @@
    "status": "to_apply",
    "corroboration": "official chain + drift agree",
    "notes": "Engine 300 matches no source value (unsourced placeholder). Semantic caveat: whether the posted figure is total or bonus over the normal 312 hit is not stated; engine deals the single number on teleport. test_hero_abilities.cpp:387 constructs HeroMegaMinionWarpEffect(300) directly and asserts 400-300, so it does not pin the registry value.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "tests_pinning_old_value": [],
@@ -3365,7 +3756,10 @@
    "status": "needs_new_mechanic",
    "corroboration": "official chain + drift agree",
    "notes": "Rework: assassination only, 0% tower reduction (engine already excludes towers from targets).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "tests_pinning_old_value": [],
@@ -3385,7 +3779,10 @@
    "status": "needs_new_mechanic",
    "corroboration": "official only",
    "notes": "Entities carry no max-hp field. Not mentioned as changed in later posts; whether towers count is not stated.",
-   "verifier": "confirmed (note: Entity has no max-hp field for troops, only Building::maxHp; a card-def lookup by cardId could derive it, still new targeting code)"
+   "verifier": "confirmed (note: Entity has no max-hp field for troops, only Building::maxHp; a card-def lookup by cardId could derive it, still new targeting code)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Mighty Miner",
@@ -3407,7 +3804,9 @@
     "check tests/core/test_champion_abilities.cpp and tests/core/test_mighty_miner_escape_effect.cpp for repeat-activation assertions (none found by grep for 115/Mighty with numeric pins)"
    ],
    "notes": "Global rule: every Hero/Champion except Boss Bandit (id 1099 line keeps limit 2); other families own their own ids. The official post's rows for this rule are not in this group's post rows, only the drift row.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Mighty Miner",
@@ -3427,7 +3826,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Mid (204) and max (409) stages not changed in the post. No test pins 40/409 (grep of tests for 409 found none).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Miner",
@@ -3447,7 +3848,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine value 194 is the level-11 damage vs troops; the engine never modelled Miner's CT reduction (49 before). Mighty Miner 115 is separate.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "tests_pinning_old_value": [],
@@ -3467,7 +3871,10 @@
    "status": "needs_new_mechanic",
    "corroboration": "official only",
    "notes": "Per-level numbers not in the rows; sourced by hero stats agents.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "tests_pinning_old_value": [],
@@ -3487,7 +3894,10 @@
    "status": "needs_new_mechanic",
    "corroboration": "official chain + drift agree",
    "notes": "Could be approximated with an initial ability cooldown; that is a design choice.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "tests_pinning_old_value": [],
@@ -3507,7 +3917,10 @@
    "status": "needs_new_mechanic",
    "corroboration": "official chain + drift agree",
    "notes": "Engine 210/1.15 are unsourced; same mechanic as cooking time and pancake level-ups.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Minion Horde",
@@ -3529,7 +3942,10 @@
     "tests/core/test_evolutions.cpp:153 (Dark Guard untargetable test; not a speed value)"
    ],
    "notes": "Field CombatEntity::temporaryHitSpeedMultiplier (CombatEntity.h:384, applied at :771 while temporaryInvisibilityTicksRemaining>0) already implements a hit-speed change during invisibility (used by ArcherQueenCloakEffect.h:19, CardRegistry.h:1063). Only DarkGuardOnDamageEffect needs a multiplier parameter, which is an effect-header edit, not a new engine mechanic. The engine never modelled the old 50% either. Semantics of \"33%\" unsourced beyond the post.",
-   "verifier": "corrected: split from needs_new_mechanic; hit-speed part has an existing mechanic (temporaryHitSpeedMultiplier), so to_apply"
+   "verifier": "corrected: split from needs_new_mechanic; hit-speed part has an existing mechanic (temporaryHitSpeedMultiplier), so to_apply",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Source gives only 'Hit Speed Slowdown: 50% -> 33%'."
   },
   {
    "family": "Minion Horde",
@@ -3551,7 +3967,10 @@
     "tests/core/test_evolutions.cpp:153 (Dark Guard untargetable test; not a speed value)"
    ],
    "notes": "2026-04-06 release text says attack and movement speed are reduced and units are invincible; no number given. Engine only models 3s untargetable. Movement modifier genuinely absent (no temporary speed multiplier found in include/).",
-   "verifier": "corrected: split off from the hit-speed entry"
+   "verifier": "corrected: split off from the hit-speed entry",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Monk",
@@ -3571,7 +3990,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Engine has no cast delay for either value.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Monk",
@@ -3590,7 +4012,9 @@
    "corroboration": "official post; drift#206 agrees",
    "notes": "Pass usesLimit=1 as 4th arg. The 170-tick cooldown becomes moot. Rule is global to Heroes/Champions except Boss Bandit (other agents).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Monk",
@@ -3611,7 +4035,9 @@
     "tests/core/test_card_registry.cpp:95"
    ],
    "notes": "Verify against RoyaleAPI before applying if possible (403 to curl). Verifier: DeckShop live page (web/champ/ds_monk.html) shows \"5 elixir\"; cr-api-data cards.json in the corpus lists 4 (stale, predates the live value). Two non-official sources agree on 5; keep to_apply.",
-   "verifier": "confirmed (cr-api-data cards.json says 4, stale; DeckShop+timesaver say 5)"
+   "verifier": "confirmed (cr-api-data cards.json says 4, stale; DeckShop+timesaver say 5)",
+   "confidence": "cross-checked",
+   "applied_in": "fd7fa90"
   },
   {
    "family": "Monk",
@@ -3631,7 +4057,10 @@
    "corroboration": "official only",
    "notes": "Moot unless deflection is modelled.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Monk",
@@ -3650,7 +4079,10 @@
    "corroboration": "drift only (sources: timesaver.gg alone)",
    "notes": "DeckShop page and posts give no combo data; need a second source.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Mortar",
@@ -3671,7 +4103,10 @@
    "corroboration": "drift only (sources: Fandom wiki)",
    "tests_pinning_old_value": [],
    "notes": "Single source; no official post or second source. Unclear whether 3.5 s overlaps the 1 s first hit entry above. Do not apply without RoyaleAPI/DeckShop confirmation.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Mortar",
@@ -3692,7 +4127,9 @@
    "corroboration": "official only for the evolution (explicit); base value implied by the same post and Fandom wiki (First Hit Speed 1 sec)",
    "tests_pinning_old_value": [],
    "notes": "Evo value is official; base 1sec is inferred from 'match the unevolved Mortar' plus the wiki. Distinct from the unresolved 3.5 s deploy entry.",
-   "verifier": "confirmed: id 152 value is official (2024-10-08); base id 93 value (1s) rests on the post saying evo is made to match the unevolved Mortar plus the Fandom wiki, not an explicit official number. Engine seedCooldown path (CardFactories.h:116) applies to buildings."
+   "verifier": "confirmed: id 152 value is official (2024-10-08); base id 93 value (1s) rests on the post saying evo is made to match the unevolved Mortar plus the Fandom wiki, not an explicit official number. Engine seedCooldown path (CardFactories.h:116) applies to buildings.",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Mortar",
@@ -3713,7 +4150,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Evolution is slower than before; update the stale comment at CardRegistry.h:1436. docs/CARDS.md lines 140 and 216 (regenerate, do not hand-edit). No test pins 50/40.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Mortar",
@@ -3734,7 +4173,10 @@
    "corroboration": "drift only (sources: Fandom wiki)",
    "tests_pinning_old_value": [],
    "notes": "Single source; also unverified that the building projectile path honours splashRadius.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Mortar",
@@ -3754,7 +4196,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Do not change goblinDrillGoblinStats itself: it is shared with Goblin Drill (ids 98/153, :945), which the post does not touch. Engine's 10 ticks matches neither old nor new.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "8fe698d"
   },
   {
    "family": "Mother Witch",
@@ -3774,7 +4218,10 @@
    "corroboration": "official only: no absolute value in corpus; no drift row",
    "tests_pinning_old_value": [],
    "notes": "Needs RoyaleAPI/DeckShop level-11 HP to check 529.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Musketeer",
@@ -3797,7 +4244,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Evolution and Hero inherit by convention. Same mechanic as Hunter.",
-   "verifier": "corrected: added id 80 Three Musketeers (post: \"This change also affects Three Musketeers\"; id 80 in docs/CARDS.md:127, 1.0 s hit speed, no first-hit delay)"
+   "verifier": "corrected: added id 80 Three Musketeers (post: \"This change also affects Three Musketeers\"; id 80 in docs/CARDS.md:127, 1.0 s hit speed, no first-hit delay)",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Musketeer",
@@ -3817,7 +4266,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Ids 6 and 168 have no burst. grep of tests/ shows burst tests only use synthetic multipliers (tests/entities/test_combat_entity.cpp:1245-1258), none pin 1.8 or 390 for id 140. 217*1.808 = 392.34 so truncation gives 392.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "398964a"
   },
   {
    "family": "Musketeer",
@@ -3837,7 +4288,10 @@
    "corroboration": "conflict: engine has no extended snipe range so reach is already normal; post does not say whether the empowered damage still hits towers within normal range",
    "tests_pinning_old_value": [],
    "notes": "Needs a decision or a measurement of the live game; no number involved.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Musketeer",
@@ -3859,7 +4313,9 @@
     "tests/core/test_hero_abilities.cpp:43-59 (title \"repeating-cooldown\", abilityCooldownTicks == 220 at :57, abilityUsesRemaining == -1 at :58)"
    ],
    "notes": "Mechanic exists (withHeroAbility usesLimit arg; id 170 uses 1). Whether to keep cooldownTicks as a leftover is the implementer's call; cooldown is moot once single-use.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Musketeer",
@@ -3879,7 +4335,10 @@
    "corroboration": "official only (no numbers)",
    "tests_pinning_old_value": [],
    "notes": "Turret hp 200 / damage 90 are unsourced in the engine comment (:345-349); another agent covers stats.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "P.E.K.K.A.",
@@ -3899,7 +4358,10 @@
    "corroboration": "official chain + drift agree (drift evo2#274 restates it); but unit conflict with the 2025-05-05 post",
    "tests_pinning_old_value": [],
    "notes": "Bracket thresholds (<990 / 991-1989 / >1990) come from the 2025-01 posts and are not restated in 2026; the exact 990 and 1990 hp edges are uncovered. The 2026 old values 409/778/1477 are ~2.56x the 2025-05-05 level-11 values 160/304/577 with no change in between in the corpus, so which unit the 430/819/1551 are in is unconfirmed; check a level-11 table before implementing. The engine's 6242 cap (+66% hp) has no source. No test pins healOnHit for id 148 (tests/entities/test_combat_entity.cpp:1310 tests the generic field only).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Phoenix",
@@ -3920,7 +4382,10 @@
    "corroboration": "official chain + drift agree (damage value unresolved: not in any source read)",
    "notes": "Death damage number not found in the posts; do not invent one. VERIFIER: AreaDamageOnDeath exists but the Phoenix death-damage value is not in any source, so nothing can be applied until a number is found; kept needs_new_mechanic (no per-target tower-reduction field on AreaDamageOnDeath either).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Phoenix",
@@ -3940,7 +4405,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Engine id -19 revive child. VERIFIER: confirmed no egg/delayed-revive entity anywhere in include/ (only comment at CardRegistry.h:219-222).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Prince",
@@ -3960,7 +4428,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine 3.0 matches neither old (2, per 2025-01-07 post) nor new. No Prince Evolution exists. test_card_registry.cpp:921+ charge test uses Battle Ram (id 81), test_combat_entity.cpp sets chargeThreshold by hand; none pins Prince.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "4cb63a1"
   },
   {
    "family": "Princess",
@@ -3981,7 +4451,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Evolution did not exist in March 2025 but restates base stats. VERIFIER: cooldown ticks during deploy (CombatEntity.h:570-574), so seed 15 = 12 deploy + 3 first hit is consistent; still a modelling choice.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "7cdd996"
   },
   {
    "family": "Princess",
@@ -4002,7 +4474,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Seed value is derived from the engine modelling (cooldown ticks down during deploy, CombatEntity.h update); no other card models first-hit except X-Bow. A modelling decision, not a source number. Apply together with Deploy Time. VERIFIER: cooldown ticks during deploy (CombatEntity.h:570-574), so seed 15 = 12 deploy + 3 first hit is consistent; still a modelling choice.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Princess",
@@ -4022,7 +4496,10 @@
    "corroboration": "official only (numbers unresolved)",
    "notes": "Numbers unresolved; none read.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Princess",
@@ -4041,7 +4518,9 @@
    "mechanic": "",
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Princess",
@@ -4061,7 +4540,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "burstEveryNAttacks (CardStats.h:326) multiplies damage only. Engine over-applies the slow today. VERIFIER: confirmed no on-hit-every-Nth gate: burstEveryNAttacks only flags damage (CombatEntity.h:739-744,1039), auraEveryNAttacks gates an ally aura (:782-785).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rage",
@@ -4080,7 +4562,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Change withSpellBuff(1.35f, 45) to withSpellBuff(1.30f, 45). Duration 45 ticks is already correct.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "7542a6a"
   },
   {
    "family": "Rage",
@@ -4102,7 +4586,10 @@
    "corroboration": "official only",
    "notes": "Applies to the Rage spell and the Lumberjack death Rage (and its Evolution).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rage",
@@ -4124,7 +4611,10 @@
     "tests/core/test_card_registry.cpp:1125 (enemy hp unchanged by Rage)"
    ],
    "notes": "Chain 192 -> 148 -> 179. AreaSpell.h:196-199 skips damage for buffsAllies spells.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rage",
@@ -4144,7 +4634,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Use withCrownTowerDamage(45) once the damaging mechanic exists. The post stat name says \"Damage Reduction\" but values are the tower-damage numbers (54 -> 45).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rage",
@@ -4164,7 +4657,10 @@
    "corroboration": "official only",
    "notes": "The flat stats stand in for Rage; no tweakable percent.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Ram Rider",
@@ -4184,7 +4680,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Ram unit only; crossbow secondary (id -25, damage 104 at :267) unchanged by the post. Charge hit is derived as damage x2.0 (:884), so becomes 542; no source states charge damage for this change.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Ram Rider",
@@ -4204,7 +4702,9 @@
    "corroboration": "official only (drift row restates it)",
    "tests_pinning_old_value": [],
    "notes": "Engine baseline 3.0 does not equal the pre-change 2 tiles, so the engine's measurement may differ; Evolved Royal Recruits is already 2.5 (:1420), implying the same unit. Prince (same post) uses 3.0 at its own literal and is another family's. Tests at tests/entities/test_combat_entity.cpp:822-874 set chargeThreshold 3.0 on test fixtures, not on the card. The 2025-01-07 post sets the 2-tile baseline (5+ Elixir troops -> 2-tile charge range); the Oct 2025 line is the latest. VERIFIER: Oct 2025 post names Prince (2 -> 2.5), Evolved Royal Recruits and Ram Rider together; engine Prince literal is still 3.0 (CardRegistry.h:342/673/701 family), so Prince likely needs the same 2.5 in its own family. Ram Rider engine 3.0 at :884 confirmed; no later official charge-distance change in corpus.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "4cb63a1"
   },
   {
    "family": "Rascals",
@@ -4224,7 +4724,10 @@
    "corroboration": "official only (drift base12#194 restates the post); VERIFIER downgrade",
    "tests_pinning_old_value": [],
    "notes": "Engine 81 matches neither old (133) nor new (125); confirm the level-11 value on RoyaleAPI/DeckShop before editing if desired. Post is official so it wins. Grep of tests/ found no pin on Girl damage. VERIFIER: downgraded. The post lists this under NERFS, but engine Girl damage is 81 so 133 -> 125 would be a +54% buff; the 'old' 133 equals the engine's Girl HITPOINTS (133, -28 at CardRegistry.h:1025), and 133 -> 125 is exactly -6% of that. The post label 'Damage' may be a typo for Hitpoints or the Girl's damage basis is unsourced. No second source read (deckshop page not parseable, royaleapi 403). Do not apply 125 to damage until verified against RoyaleAPI/DeckShop.",
-   "verifier": "corrected: to_apply -> unresolved (post old value 133 contradicts engine Girl damage 81, equals Girl hp 133; direction contradicts NERFS section)"
+   "verifier": "corrected: to_apply -> unresolved (post old value 133 contradicts engine Girl damage 81, equals Girl hp 133; direction contradicts NERFS section)",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Rocket",
@@ -4244,7 +4747,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Mechanic exists (Poison uses it, CardRegistry.h:648). Note the source old 371 is the tower damage, not the spell's 1485 area damage.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Ronin",
@@ -4263,7 +4768,10 @@
    "corroboration": "conflict: Noff 371 vs other sites 337; no official value",
    "notes": "Engine matches Noff.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Ronin",
@@ -4283,7 +4791,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "initialCooldownTicks is a spawn-only seed.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Ronin",
@@ -4302,7 +4812,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "docs/CARDS.md:101 regenerate. No test pins it.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Ronin",
@@ -4322,7 +4834,10 @@
    "corroboration": "official only",
    "notes": "Interval 3.5 s modelled as withParry(35).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Royal Delivery",
@@ -4343,7 +4858,9 @@
     "tests/core/test_card_registry.cpp:1239 (enemy->hp == 562, \"438 landing damage\"); update to 616"
    ],
    "notes": "Old 437 vs engine 438 rounding. Regenerate docs/CARDS.md:158. Recruit child unchanged.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Royal Ghost",
@@ -4364,7 +4881,9 @@
    "notes": "Bug fix for a Level 16 interaction; level-11 value changes. Does not touch the hard-coded Souldier damage (separate row).",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Royal Ghost",
@@ -4385,7 +4904,9 @@
    "notes": "Evolution restates the literal twice. Regenerate docs/CARDS.md (rows 94, 200).",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Royal Ghost",
@@ -4406,7 +4927,9 @@
    "notes": "Post says both Evolved and base forms, old 1.8s. Evolved block 18 -> 20 is exact. Base id 47 (and the un-evolved block of 136) is 5, which contradicts the post's old value 1.8s; set to 20 per the post but have a human confirm the field semantics (withInvisibility(revealTicksAfterAttack), CardStats.h:456) and consider a live card-page check. Changing 47 is gameplay-affecting for any deck with Royal Ghost.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a0e76a3"
   },
   {
    "family": "Royal Ghost",
@@ -4426,7 +4949,9 @@
    "notes": "Chain 133(Nov 2025) -> 102 (2025-12-01) -> 81. Update the comment at :392-393.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "536aabe"
   },
   {
    "family": "Royal Ghost",
@@ -4446,7 +4971,10 @@
    "notes": "Damage is sourced; the burst's radius is not in any post read. The factories fire spawnDeployEffect on every spawn (CardFactories.h:156-195), so withSpawnEffect(radius, 81) on helper -42 may work with no new engine code, but that is unverified and the radius needs a source. If the spawn-damage is bound to the Souldiers appearing when the Ghost becomes visible, see the Evolution-release row.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Royal Ghost",
@@ -4466,7 +4994,10 @@
    "corroboration": "official only",
    "notes": "Engine approximation documented at CardRegistry.h:1249-1252. No numbers (lifetime, rest time) are published in the posts read.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Royal Hogs",
@@ -4486,7 +5017,10 @@
    "tests_pinning_old_value": [],
    "notes": "Also covers Hog Flight release mechanic (fly, crash on arrival or when hit, then continue on foot).",
    "mechanic": "flying spawn with landing area damage",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rune Giant",
@@ -4506,7 +5040,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "Cannot tell whether the engine's per-hit x1.5 already equals the divided bonus; needs real enchant formula (flat bonus vs multiplier). Hunter 62/146 and Firecracker 64/130 belong to other families.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Rune Giant",
@@ -4526,7 +5063,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain: infinite (2025-01-21) -> 5s (2025-03-04) -> 0.5s (2026-10-19). Do not just change auraBuffDurationTicks (50), which is the length while she lives.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rune Giant",
@@ -4546,7 +5086,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "Affected carriers: Goblin Machine 55, Ram Rider 87, Goblin Giant 88, Goblin Giant Evolution 159 (secondary ids -24, -25, -26). Same filter hook as the self-destructing row.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Rune Giant",
@@ -4566,7 +5109,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "grep of tests/ finds no 2662 pin for id 86; docs/CARDS.md:133 is generated, regenerate. No Evolution/Hero id.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Rune Giant",
@@ -4586,7 +5131,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Affects base Battle Ram 81 (not its Evolution, which does not break), Wall Breakers 83 and similar die-on-first-hit troops.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Skeleton Army",
@@ -4607,7 +5155,9 @@
    "notes": "Reading 'Ghost Skeletons' = death-spawn shadows is an inference (post gives no definition); if a human decides it means the 15 plain evolved skeletons instead, the edit is line :1223 only. Do not change base id 12 or the un-evolved block :1221. Regenerate docs/CARDS.md only if :1223 is chosen.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "corrected: target line moved from the evolved stat block (CardRegistry.h:1223, the 15 plain skeletons + General) to the death-spawned ghost Skeleton Shadow (skeletonArmyShadowStats, CardRegistry.h:390, raw speed 1.0f ~ SPEED_FAST 0.994 pre-scale). The post names 'Ghost Skeletons' (distinct from 'Skeleton General'); ghosts are the invisible/indestructible units (Mar 2026 notes: 'Level indicators removed from ghost Skeletons'), which the engine models as -43 shadows."
+   "verifier": "corrected: target line moved from the evolved stat block (CardRegistry.h:1223, the 15 plain skeletons + General) to the death-spawned ghost Skeleton Shadow (skeletonArmyShadowStats, CardRegistry.h:390, raw speed 1.0f ~ SPEED_FAST 0.994 pre-scale). The post names 'Ghost Skeletons' (distinct from 'Skeleton General'); ghosts are the invisible/indestructible units (Mar 2026 notes: 'Level indicators removed from ghost Skeletons'), which the engine models as -43 shadows.",
+   "confidence": "official",
+   "applied_in": "a87cf6a"
   },
   {
    "family": "Skeleton Army",
@@ -4627,7 +5177,10 @@
    "corroboration": "official only",
    "notes": "The speed change above is independent.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Skeleton Army",
@@ -4647,7 +5200,10 @@
    "notes": "Needs a measured placement or an official coordinate.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Skeleton Barrel",
@@ -4667,7 +5223,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Damage is sourced and identical for both ids. Not applicable until a drop radius (and delay, Crown Tower rule) is sourced; AreaDamageOnDeath(radius, damage) or DelayedAreaDamageOnDeath (CardRegistry.h:510) can carry it. Evo chain 256 -> 238 -> 220 -> 192 -> 163 and base 133 -> 145 -> 163 are contiguous. docs/CARDS.md:136,198 regenerate after. No test pins it.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Skeleton Barrel",
@@ -4686,7 +5245,10 @@
    "corroboration": "drift only (sources: clasher.us, sportskeeda, noff.gg via search snippets)",
    "notes": "No official statement; evolution already uses 7. Needs a fetchable RoyaleAPI/DeckShop value before applying.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Skeleton Barrel",
@@ -4706,7 +5268,10 @@
    "corroboration": "official only",
    "notes": "Ordering of the two drops vs the 75% hp comment (:1226) is unverified. Verifier: an IOnDamageTakenEffect hook exists (CardStats.h:641, used by DarkGuardOnDamageEffect) but no early-spawn effect or double-drop does; new effect class still needed, so needs_new_mechanic stands.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Skeleton King",
@@ -4728,7 +5293,9 @@
     "tests/core/test_hero_abilities.cpp:59 (a hero pinned unlimited, abilityUsesRemaining == -1)"
    ],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Skeletons",
@@ -4749,7 +5316,10 @@
    "corroboration": "official only (drift rows restate it); conflict: mapping of \"spread\" to engine offsets and the pre-Oct-6 value are unsourced",
    "tests_pinning_old_value": [],
    "notes": "Apply to the evolution id 125 as well (both literals). Also \"always split when placed on middle tiles\" is an unmodelled placement rule. Measure in-game or find a source for the unit before editing.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Skeletons",
@@ -4770,7 +5340,10 @@
    "corroboration": "drift only (sources: drift base09#137 guess; official posts silent)",
    "tests_pinning_old_value": [],
    "notes": "No source says the barrel drop inherits the Skeletons spread change. Owned by the Skeleton Barrel family.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Sparky",
@@ -4790,7 +5363,10 @@
    "corroboration": "conflict: Jan 2025 official post says all troops except Skeleton Dragons have 1.5 splash; TrophyCoach (2026-10-13) says 1.8; RoyaleAPI/DeckShop/wiki not readable",
    "tests_pinning_old_value": [],
    "notes": "No official Sparky splash change in the posts. Need a second source before applying.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Spear Goblins",
@@ -4813,7 +5389,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "-17 = Goblin Hut copy, -26 = Goblin Giant (ids 88, 159), -27 = Goblin Gang (id 112). Goblin Giant carriers changed on 2025-10-24 (same 0.4->0.5). Hut copy has withDeployTime(5).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Spear Goblins",
@@ -4836,7 +5414,10 @@
    "corroboration": "official only (prose, no value)",
    "notes": "Post names only Spear Goblins the card; whether carriers inherit is unstated.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Spear Goblins",
@@ -4859,7 +5440,10 @@
    "corroboration": "official only",
    "notes": "Subsumed by first-hit-time wind-up.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Spirit Empress",
@@ -4879,7 +5463,9 @@
    "corroboration": "official chain + drift agree (drift dated 09-16, post section is Sept 8)",
    "tests_pinning_old_value": [],
    "notes": "Engine 249 is the level-9 value; level-11 pre-change was 309.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Spirit Empress",
@@ -4899,7 +5485,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine 926 is a Liquipedia level-9 value, so every earlier delta was never applied. No test pins 926 (grep of tests/ for 926 and 249 found nothing). docs/CARDS.md:171 is generated; regenerate.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "99cc47d"
   },
   {
    "family": "Spirit Empress",
@@ -4919,7 +5507,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Flying form speed (0.5 literal, line 36) has no post; leave unresolved/unchanged. Registry entry 1596 passes 0.85f too (placeholder).",
-   "verifier": "corrected: target spelled out. SpiritEmpressForms.h:20 assigns speed directly (bypasses troop()), so the edit is stats.speed = SPEED_FAST * MOVEMENT_SPEED_SCALE there; the registry placeholder CardRegistry.h:1596 passes SPEED_FAST to troop(), which scales it. Flying form (line 36) untouched: no post."
+   "verifier": "corrected: target spelled out. SpiritEmpressForms.h:20 assigns speed directly (bypasses troop()), so the edit is stats.speed = SPEED_FAST * MOVEMENT_SPEED_SCALE there; the registry placeholder CardRegistry.h:1596 passes SPEED_FAST to troop(), which scales it. Flying form (line 36) untouched: no post.",
+   "confidence": "official",
+   "applied_in": "a0e76a3"
   },
   {
    "family": "Suspicious Bush",
@@ -4941,7 +5531,10 @@
     "tests/core/test_sight_range.cpp:263 (sight 5.5, not range)"
    ],
    "notes": "Post explains it as making the Bush Goblin spawn at Crown Towers predictable; no number. DeckShop's 'August 2026 Buff' is not in the Supercell corpus.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Suspicious Bush",
@@ -4961,7 +5554,9 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "SPEED_SLOW 0.497 vs literal 0.5; SPEED_MEDIUM 0.663. docs/CARDS.md:132 regenerate. No later speed change in posts. No Evolution/Hero.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "3d89011"
   },
   {
    "family": "Tesla",
@@ -4982,7 +5577,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Building ctor already takes a lifetime argument; CardStats has no field and spawnDefensiveBuilding does not forward one. Evolution 154 inherits. Other buildings keep 300. HP 1182 from the same post is already applied. No test pins the 300-tick Tesla lifetime.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Tesla",
@@ -5002,7 +5600,10 @@
    "corroboration": "official chain + drift agree (chain: 2025-04-09 148->174, 2026-05-04 174->148)",
    "tests_pinning_old_value": [],
    "notes": "Engine 100 matches neither 174 nor 148 and is unsourced. Engine models the pulse as one deploy-time spawn effect; the real evolution pulses repeatedly, so this is a value fix only. No test pins 100 for id 154.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Not applicable as a value fix: the Tesla Evolution's Electro Pulse (damage and 0.5 s stun) never fires in the engine because spawnDefensiveBuilding omits spawnDeployEffect (same for Goblin Drill's withSpawnEffect(2.0f, 84))."
   },
   {
    "family": "The Log",
@@ -5022,7 +5623,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Gameplay-affecting; same decision as UPSTREAM item 29, invalidates win-rate history. 44 (Mar 2025) is intermediate; a 44->41 change is missing from the corpus.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "The Log",
@@ -5042,7 +5645,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Chain 289->266 (2025-07), 266->268 (2025-09). tests/entities/test_area_spell.cpp:455,458 use a constructed 269 AreaSpell, not the registry (not a pin of the card).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "27b25b8"
   },
   {
    "family": "Three Musketeers",
@@ -5062,7 +5667,9 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "initialCooldownTicks is a deploy delay, not first-hit time. The Nov 2025 rework may have changed first hit speed; unverified.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Three Musketeers",
@@ -5082,7 +5689,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "No evolution/hero id.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "615275b"
   },
   {
    "family": "Three Musketeers",
@@ -5102,7 +5711,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine 722 matches neither 883 nor 906; the Nov 2025 rework HP change (722 -> 883) is not in the input posts, but setting 906 follows the latest official value. Not checked whether other stats (damage 218, range) changed in the rework.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Three Musketeers",
@@ -5122,7 +5733,10 @@
    "corroboration": "official only; numbers not found (RoyaleAPI/wiki 403 to prior agents)",
    "tests_pinning_old_value": [],
    "notes": "Need bayonet damage and band distance from RoyaleAPI/DeckShop before applying; the engine's current damage 218 and range may also be stale.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Three Musketeers",
@@ -5142,7 +5756,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "Exact rule unstated.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Tornado",
@@ -5161,7 +5778,9 @@
    "corroboration": "official chain + drift agree; engine 154 matches neither old (168) nor new",
    "notes": "Hit structure unverified; no second source reached. Do not apply 42 (that is Valkyrie Evolution). Verified: the later 2026-08-04 line \"Tornado Damage: 84 -> 42\" belongs to Valkyrie Evolution, not Tornado; no later official post changes Tornado base damage.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "d6de60c"
   },
   {
    "family": "Tornado",
@@ -5180,7 +5799,10 @@
    "corroboration": "official only, no number",
    "notes": "No official CT figure in the corpus (the 120->43 CT line is Hero Wizard). Needs a sourced value (RoyaleAPI/DeckShop), then withCrownTowerDamage.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Valkyrie",
@@ -5200,7 +5822,10 @@
    "corroboration": "official only; meaning of \"excess damage\" not defined",
    "tests_pinning_old_value": [],
    "notes": "Cannot be edited without knowing what \"excess\" meant. Related tower-chip reductions (radius 5.5->5, damage 84->42) are already in this ledger.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Valkyrie",
@@ -5220,7 +5845,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Engine 50 is neither 84 nor 42. UPSTREAM item 32 discussion of Tornado spell (84 vs 154) is a different card.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Valkyrie",
@@ -5240,7 +5867,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Base id 10 has no tornado. Engine pull distance 2.0 is unsourced and untouched by posts. Tests in tests/entities/test_combat_entity.cpp:1366+ use hand-set fields, not the registry value.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "0d473c5"
   },
   {
    "family": "Vines",
@@ -5260,7 +5889,10 @@
    "notes": "withCrownTowerDamage(perApplication) exists (CardStats.h:663, example Poison CardRegistry.h:648). 70/3 not integer.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Vines",
@@ -5280,7 +5912,9 @@
    "notes": "Chain: 162/s -> 134/s (2025-09-05) -> total 306. If damage is lowered, set tower damage explicitly (CT row) or towers drop to 102/pulse. No test pins 135 (grep tests/ for Vines: only registry list and top-HP targeting test tests/entities/test_area_spell.cpp:274).",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed (note: 102/pulse assumes the 3-pulse structure survives the unresolved 2 s Duration change)"
+   "verifier": "confirmed (note: 102/pulse assumes the 3-pulse structure survives the unresolved 2 s Duration change)",
+   "confidence": "official",
+   "applied_in": "7542a6a"
   },
   {
    "family": "Vines",
@@ -5300,7 +5934,10 @@
    "notes": "All spells share 8 ticks; engine value is not Vines-specific.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Vines",
@@ -5320,7 +5957,10 @@
    "notes": "Pulse count/interval not published. Option: withRepeats(3,10). Note UPSTREAM item 32i cadence fix interacts.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Vines",
@@ -5340,7 +5980,10 @@
    "corroboration": "official only",
    "notes": "Stun duration not published in posts read (Duration 2 s may be it; unconfirmed). FreezeOnHit exists as a spell on-hit.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Vines",
@@ -5360,7 +6003,9 @@
    "notes": "Shared with Lightning; do together with the shield rule.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "f7ec3ac"
   },
   {
    "family": "Vines",
@@ -5380,7 +6025,9 @@
    "notes": "Shared with Lightning (other family); one edit in AreaSpell. Test at tests/entities/test_area_spell.cpp:274 covers top-N.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "901d09a"
   },
   {
    "family": "Void",
@@ -5400,7 +6047,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Engine currently hits towers with the tier value (e.g. 340 where the real game deals 97 for a single target).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed (typo 100%% fixed; AreaSpell.h:208,249-252 towerDamage takes one flat crownTowerDamage; no per-tier CT field)"
+   "verifier": "confirmed (typo 100%% fixed; AreaSpell.h:208,249-252 towerDamage takes one flat crownTowerDamage; no per-tier CT field)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Void",
@@ -5419,7 +6069,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Applies per wave (3 waves, 10 ticks apart). Tier args change together: withSpellTieredDamage(696, 307, 153). tests/entities/test_area_spell.cpp:310-360 uses literal 340/160/76 on a raw AreaSpell, not the registry, so it does not pin the card.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Void",
@@ -5438,7 +6090,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Aug 4 gave 161->294, Oct 19 old is 296: unexplained 2-point gap, no post between. 307 is the latest official value.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "febf4f5"
   },
   {
    "family": "Void",
@@ -5458,7 +6112,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Engine currently hits towers with the tier value (e.g. 340 where the real game deals 97 for a single target).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed (typo 100%% fixed; AreaSpell.h:208,249-252 towerDamage takes one flat crownTowerDamage; no per-tier CT field)"
+   "verifier": "confirmed (typo 100%% fixed; AreaSpell.h:208,249-252 towerDamage takes one flat crownTowerDamage; no per-tier CT field)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Void",
@@ -5476,7 +6133,9 @@
    "status": "to_apply",
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Void",
@@ -5496,7 +6155,10 @@
    "corroboration": "official chain + drift agree",
    "notes": "Engine currently hits towers with the tier value (e.g. 340 where the real game deals 97 for a single target).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed (typo 100%% fixed; AreaSpell.h:208,249-252 towerDamage takes one flat crownTowerDamage; no per-tier CT field)"
+   "verifier": "confirmed (typo 100%% fixed; AreaSpell.h:208,249-252 towerDamage takes one flat crownTowerDamage; no per-tier CT field)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Void",
@@ -5517,7 +6179,9 @@
     "tests/core/test_card_registry.cpp:90"
    ],
    "notes": "Regenerate docs/CARDS.md after.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Wall Breakers",
@@ -5538,7 +6202,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 391 -> 350 -> 281 -> 302. No test pins 350 for these ids (grep of tests/core found none). The Runner and barrel burst are separate stats.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "Wall Breakers",
@@ -5560,7 +6226,10 @@
     "tests/core/test_evolutions.cpp:254"
    ],
    "notes": "AreaDamageOnDeath has one damage scalar (AreaDamageOnDeath.h:20). Do not invent the Crown Tower number; the building 292 is the last sourced figure and may have drifted.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Wall Breakers",
@@ -5582,7 +6251,9 @@
     "tests/core/test_evolutions.cpp:254 (REQUIRE(bystander->hp == 100000 - 150))"
    ],
    "notes": "Chain 195 -> 292 (Jan 2025, troops and buildings) -> 291 -> 258 (Oct 2025) -> 192. Engine's single scalar also hits buildings/towers; see the next entry. Verify URL against URLS.tsv slug for 2026-04-07 file.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "536aabe"
   },
   {
    "family": "Wall Breakers",
@@ -5602,7 +6273,9 @@
    "corroboration": "official chain + drift agree (drift flags that no post says whether the Runner scaled with later base changes 281/302)",
    "tests_pinning_old_value": [],
    "notes": "184 is the last sourced Runner number; do not derive it from the base 302. Update the :369 comment too. Runner is id -41 (unregistered helper).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "0e260cc"
   },
   {
    "family": "Witch",
@@ -5623,7 +6296,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Post: all troops except Skeleton Dragons have 1.5 splash. Old 1 tile was real; engine models single target. Check that splash on Witch does not break tests relying on single-target Witch (none found by grep).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "d5d1165"
   },
   {
    "family": "Witch",
@@ -5643,7 +6318,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 109,73,64,56,76,60,53,153 consistent. Aug 2025 'heal from other Skeletons 56->0' and the 'first wave only' rework are folded into this mechanic. CardStats has only healOnHit* (CardStats.h:333-337).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Witch",
@@ -5663,7 +6341,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain gap: May 2025 row says 1090->1048 but Aug 2026 says old=1040; the 1048->1040 change is not in the post corpus. Cap only matters while heal-on-hit approximation exists; engine unit hp 839 is unchanged.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "Wizard",
@@ -5684,7 +6364,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Three literals (base, evolution base+shield variants :1313/:1315, hero). tests/core/test_hero_abilities.cpp:250,269 build StationaryCombatants with 281 but do not pin the registry value.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Wizard",
@@ -5706,7 +6388,9 @@
    "corroboration": "official chain + drift agree (drift proposals disagree on a mechanism; none exists)",
    "tests_pinning_old_value": [],
    "notes": "Old value 0.4 s is also not modelled. withDeployDelay does not model this (consumed during the 1 s deploy).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Wizard",
@@ -5729,7 +6413,9 @@
     "tests/core/test_hero_abilities.cpp:241 (hero->hp == 755)"
    ],
    "notes": "1 hp discrepancy only; official wins, low priority. Do together with shield change because the Evolution shield was derived as 25% of hp.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "25130bb"
   },
   {
    "family": "Wizard",
@@ -5748,7 +6434,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Set literal 176 (not 25% of hp). Chain gap: Aug 2024 post says 190, Sept 2026 old value is 192; the intervening change was not found in any post. Update the comment at :1310-1311 too.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Wizard",
@@ -5768,7 +6456,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Shield break should deal area damage; engine only removes the shield.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Wizard",
@@ -5788,7 +6479,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "Same mechanic as the explosion damage; implement together.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Wizard",
@@ -5809,7 +6503,9 @@
     "tests/core/test_hero_abilities.cpp:254,278 construct the effect with their own durations (3, 50); not pinned to the registry"
    ],
    "notes": "Post says the hero now gets only 2 tornadoes; pulse count follows the duration in the engine. Update comment at :1632-1635 (\"flies for 5 s\").",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "Wizard",
@@ -5830,7 +6526,9 @@
     "tests/core/test_hero_abilities.cpp:244 (abilityCooldownTicks == 200) if the cooldown is changed"
    ],
    "notes": "Pass usesLimit=1 as Hero Mini P.E.K.K.A. does (:1606-1607). The post applies to all Heroes/Champions except Boss Bandit; other ids belong to other families.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "Wizard",
@@ -5849,7 +6547,10 @@
    "corroboration": "official only, unquantified",
    "tests_pinning_old_value": [],
    "notes": "No numeric source found.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "Wizard",
@@ -5870,7 +6571,10 @@
     "tests/core/test_hero_abilities.cpp:278 (effect constructed with 20 directly)"
    ],
    "notes": "Engine 20 is flagged unsourced in the registry comment; a sourced troop value and a tower-specific value (needs mechanic) are required before any edit.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "X-Bow",
@@ -5890,7 +6594,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 43->58->61 consistent.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "c49f441"
   },
   {
    "family": "X-Bow",
@@ -5912,7 +6618,9 @@
     "tests/core/test_card_registry.cpp:1567 (X-Bow deploy-delay test, review only; does not pin 3 ticks)"
    ],
    "notes": "Apply together with damage: 61 per 4 ticks.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "fdd5c99"
   },
   {
    "family": "X-Bow",
@@ -5932,7 +6640,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Mar 2026 post fixes (X-Bow max-range targets, attacks after recharging) have no row here.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "Zap",
@@ -5952,7 +6663,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Evolution (124) restates the Zap literals so needs its own call (apply to both base and evolved CardStats in addEvolution); per-zap CT value for the Evolution is not stated separately (assumed same as base).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "6cd86d0"
   },
   {
    "family": "Zap",
@@ -5971,7 +6684,9 @@
    "corroboration": "official chain + drift agree",
    "notes": "Gap between zaps not stated anywhere read. Update the comment at :1127-1128.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "3d89011"
   },
   {
    "family": "Zappies",
@@ -5991,7 +6706,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Closest field withDeployDelay/initialCooldownTicks (CardStats.h:540) is a spawn-time seed, not a first-hit-on-target-acquisition delay. Post prose says \"increasing\" but the number falls; the number is the delay.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "40bf461"
   },
   {
    "family": "Zappies",
@@ -6011,7 +6728,9 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 2.1 -> 2.2 (2026-08-04) -> 2.3 (2026-09-08). No Zappies Evolution/Hero id. FreezeOnHit(3,...) at :845 unrelated.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "a956280"
   },
   {
    "family": "rules",
@@ -6029,7 +6748,10 @@
    "notes": "Moot for single-use abilities (Aug 2026) except Boss Bandit 122.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "rules",
@@ -6047,7 +6769,10 @@
    "notes": "Needs per-card review: spirits/kamikaze are area-on-attack effects, not necessarily 'splash'. Skeleton Dragons already 1.5 after Apr 2026.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "rules",
@@ -6067,7 +6792,10 @@
    "corroboration": "official only",
    "notes": "Engine Rage buffs no speed for any troop; Rage magnitudes themselves unsourced in engine. Verified: spell buff is damage-only (AreaSpell.h:195-199 applyBuff(multiplier,duration)); temporaryHitSpeedMultiplier is ability-gated on invisibility (CombatEntity.h:771) and selfHaste is on-hit (:772-777), so no spell-applied haste exists.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "rules",
@@ -6089,7 +6817,10 @@
    "notes": "Real Royal Hogs/Boss Bandit are not known to be charge-range cards; the engine's withCharge on them is a modelling choice. No source read says they have a Charge Range stat.",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "rules",
@@ -6116,7 +6847,9 @@
    "notes": "Semantics (stun vs knockback) unspecified. Bandit 50 and Boss Bandit 122 removed: their charge models a dash, and 2026-09-07 post says they can no longer be interrupted by Zap/Freeze while dashing. Evolutions added: Royal Recruits 150, Battle Ram 161, Royal Hogs 162. Evolved Battle Ram interruptible per 2026-10-27 post. Engine change in applyFreeze/pull/push (engine proposal, UPSTREAM_REQUESTS).",
    "tests_pinning_old_value": [],
    "mechanic": "",
-   "verifier": "corrected: engine_ids (removed Bandit/Boss Bandit dashers, added Evolutions 150,161,162)"
+   "verifier": "corrected: engine_ids (removed Bandit/Boss Bandit dashers, added Evolutions 150,161,162)",
+   "confidence": "official",
+   "applied_in": "901d09a"
   },
   {
    "family": "rules",
@@ -6134,7 +6867,10 @@
    "corroboration": "official only",
    "notes": "Dec 2025 shared-slot post suggests it covers Heroes; not stated.",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "rules",
@@ -6172,7 +6908,10 @@
    "corroboration": "official only",
    "notes": "Source list: Royal Recruits 77, Royal Hogs 82, Guards 76, Rascals 113, Goblins 4, Barbarians 8, Skeleton Army 12, Skeleton Barrel 89, Zappies 79, Bats 78, Minions 41, Minion Horde 42. Evolutions with their own builders: Bats 126, Skeleton Army 133, Skeleton Barrel 134, Minion Horde 149, Royal Recruits 150, Barbarians 155, Royal Hogs 162. Applies via spawnMeleeSquad/spawnRangedSquad offsets (CardFactories.h:147-169); needs a team-dependent offset flip, no existing field does it.",
    "tests_pinning_old_value": [],
-   "verifier": "corrected: engine_ids completed (added Goblins 4, Barbarians 8 and Evolutions)"
+   "verifier": "corrected: engine_ids completed (added Goblins 4, Barbarians 8 and Evolutions)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "rules",
@@ -6190,7 +6929,10 @@
    "corroboration": "official only",
    "notes": "Includes lane/diagonal row (mechanics_0#623).",
    "tests_pinning_old_value": [],
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
   },
   {
    "family": "rules",
@@ -6224,7 +6966,9 @@
    ],
    "notes": "Boss Bandit 122 keeps 2 (:1099). Already 1: 170 (:1607), 173 (:1653), Hero Barbarian Barrel's Barbarian (:249). Cooldown values become moot. Verified all 13 ids at the cited lines lack a usesLimit arg (1056/1083 span two lines, no trailing limit).",
    "mechanic": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": "acf8281"
   },
   {
    "family": "towers",
@@ -6243,7 +6987,10 @@
     "tests/core/test_tower_troops.cpp:84"
    ],
    "notes": "Engine has no levels; 10% hp/1.10x dmg is an approximation.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "towers",
@@ -6262,7 +7009,10 @@
     "tests/core/test_tower_troops.cpp:75-109 (nearest-ally tests)"
    ],
    "notes": "Edit of RoyalChefBuffEffect selection; the engine radius of 6 is not sourced by the post.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6279,7 +7029,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Edit RoyalChefBuffEffect::apply to skip allies with hp/transformCheckMaxHp < 0.33 (guard transformCheckMaxHp>0). No new engine field needed; only the effect changes. Note the +10% hp top-up can push the ratio above 1.",
-   "verifier": "corrected: needs_new_mechanic -> to_apply (transformCheckMaxHp provides target max hp)"
+   "verifier": "corrected: needs_new_mechanic -> to_apply (transformCheckMaxHp provides target max hp)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6298,7 +7051,10 @@
     "tests/core/test_tower_troops.cpp:43"
    ],
    "notes": "Chain 18-30 -> 24-40 -> 21-35 -> 23-38. Mapping min=idle, max=attacking is from the 2024-12-16 launch post. Needs a period that lengthens while attacking. VERIFIER: the engine already has a hot (while-attacking) periodic interval; its pull-in clause only fires when hot < normal, and re-arm uses hot when attacking at fire time, so a longer hot interval works as an approximation (re-armed at fire time, a pending timer is not stretched). Not a new mechanic. Edit: TowerTroops.h:49.",
-   "verifier": "corrected: needs_new_mechanic -> to_apply (withHotPeriodicInterval exists and accepts a longer interval)"
+   "verifier": "corrected: needs_new_mechanic -> to_apply (withHotPeriodicInterval exists and accepts a longer interval)",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6316,7 +7072,10 @@
    "corroboration": "official only",
    "tests_pinning_old_value": [],
    "notes": "No magnitude in the post; find a source before applying.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision)."
   },
   {
    "family": "towers",
@@ -6334,7 +7093,10 @@
    "corroboration": "conflict: RoyaleAPI 1.45s hit speed, mobilematters 0.9s, other article 1.2s; no official value",
    "tests_pinning_old_value": [],
    "notes": "Do not edit until a primary value is found.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "unresolved",
+   "applied_in": null,
+   "not_applied_reason": "Unresolved: no applicable value (see \"Values to look up\" in docs/LIVE_SYNC.md)."
   },
   {
    "family": "towers",
@@ -6353,7 +7115,10 @@
     "tests/core/test_tower_troops.cpp:28"
    ],
    "notes": "Chain 401 -> 386 (2024-10-08) -> 320.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6372,7 +7137,10 @@
     "tests/core/test_tower_troops.cpp:22"
    ],
    "notes": "Default tower None is L9 (90 dmg); 109 is its L11 equivalent.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "cross-checked",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6389,7 +7157,10 @@
    "corroboration": "drift only (sources: RoyaleAPI, pockettactics.com)",
    "tests_pinning_old_value": [],
    "notes": "Engine 153 is a reused Tower Princess value.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "cross-checked",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6406,7 +7177,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Keep the 8x burst model; only the per-dagger base changes (89 -> 107).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6424,7 +7198,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Spawn-time seedCooldown (initialCooldownTicks) does not model it; see history row.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision)."
   },
   {
    "family": "towers",
@@ -6441,7 +7218,10 @@
    "corroboration": "drift only (sources: RoyaleAPI, 1v9.gg, mobilematters)",
    "tests_pinning_old_value": [],
    "notes": "Also remove the comment at TowerTroops.h:30-31 (437 dps chase).",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "cross-checked",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6460,7 +7240,10 @@
     "tests/core/test_tower_troops.cpp:29"
    ],
    "notes": "Chain 2.4s -> 2.1s (2025-08-06) -> 2.2s.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6477,7 +7260,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6494,7 +7280,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Chain 2703 -> 2921 (2025-05-05) -> 2703.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6514,7 +7303,10 @@
     "tests/core/test_tower_troops.cpp:69"
    ],
    "notes": "Enum TowerTroopType::TowerPrincess; no card id. Engine 3204 is another card's L11 row.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "cross-checked",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6534,7 +7326,10 @@
     "tests/core/test_tower_troops.cpp:68"
    ],
    "notes": "Engine 3052 is the Tower Princess row. RoyaleAPI page was 403; search snippet only.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "cross-checked",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6553,7 +7348,10 @@
     "tests/core/test_tower_troops.cpp:35"
    ],
    "notes": "Engine 2298 from Liquipedia.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "cross-checked",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision); include/core/TowerTroops.h untouched."
   },
   {
    "family": "towers",
@@ -6571,7 +7369,10 @@
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "Tower arrows use one constant 2.0 (Tower.h:77); needs a per-variant projectile speed field and a unit mapping.",
-   "verifier": "confirmed"
+   "verifier": "confirmed",
+   "confidence": "official",
+   "applied_in": null,
+   "not_applied_reason": "Tower Troops deferred to a separate change (user decision)."
   }
  ],
  "new_entries": [
@@ -6793,7 +7594,10 @@
     "verifier": "Checked CardRegistry.h, CardStats.h (withFlying:372, withSightRange:536, DEPLOY_TIME_TICKS=10 at :54), RangedBuildingTargeter.h:30 (projectile speed 1.5 hard-coded). All cited templates/modifiers exist and combine validly. Projectile speed 1.5 is engine-fixed, not card-specific."
    },
    "rarity_verifier": "verified: DeckShop Rare",
-   "verifier_summary": "Corrections: Targets wording softened (ground-immunity not sourced); Balloon template corrected to Melee. Damage/hit speed/dates verified official."
+   "verifier_summary": "Corrections: Targets wording softened (ground-immunity not sourced); Balloon template corrected to Melee. Damage/hit speed/dates verified official.",
+   "implemented_in": "9da8008",
+   "implemented_id": 183,
+   "ability_pending": false
   },
   {
    "name": "Hero Ice Wizard",
@@ -7127,7 +7931,10 @@
      "Ice Wizard slow 35%->30% (2025-10-24 official) not applied: engine 0.65 should be 0.70 (CardRegistry.h:565).",
      "Ice Wizard attack splash radius 1->1.5 (2024-08-06 official): engine Ice Wizard (CardRegistry.h:563-565) has no withSplash; not modelled."
     ]
-   }
+   },
+   "implemented_in": "a1304bc",
+   "implemented_id": 184,
+   "ability_pending": false
   },
   {
    "name": "Hero Electro Wizard",
@@ -7414,7 +8221,10 @@
    "engine_modelling_verifier": {
     "checked": "Exist: CardRegistry.h:518 EW id35 (714,SPEED_FAST,5.0,118,18 ticks, withTargetsAir, withSplitTargets(2), FreezeOnHit(5), withSpawnEffect(3.0,118)); heroes ids 166-175 with withHeroAbility(cost,cooldown,effect,uses) CardStats.h:602; HeroMagicArcherTripleThreatEffect sets maxSplitTargets/temporarySplitTargetsTicksRemaining (timed buff template, valid). CARD_ID_COUNT=185 (CardRegistry.h:101) so id 176 fits.",
     "corrections": "AreaStunEffect.h is an IPeriodicEffect (Electro Giant), not an ability template; it is a poor fit. No engine post-ability attack delay found in Hero*.h (grep 'delay' empty), so the 'removed delay' change likely has no effect to apply (no_engine_effect / needs check). Note withSplitTargets(2) already splits damage per hit; a hero would need an ability that sets stun on every hit for a window."
-   }
+   },
+   "implemented_in": "38b510e",
+   "implemented_id": 185,
+   "ability_pending": true
   },
   {
    "name": "Hero Balloon",
@@ -7848,7 +8658,10 @@
      "status": "corrected",
      "note": "Hero Balloon is NOT in the engine (heroes 166-175 are Knight..Ice Golem; no 'Hero Balloon' string). Base Balloon id 45 at CardRegistry.h:602 verified (1676 hp, 640 dmg, 20 ticks, 0.1 range, SPEED_MEDIUM, withFlying, AreaDamageOnDeath(1.5,240), sight 7.7). withHeroAbility(cost,cd,effect,usesLimit) exists (CardStats.h:602); Hero Mega Minion single-use at CardRegistry.h:1651-1653 verified. SpawnOnAbility.h spawns child at self position via CardFactories::spawn with no landing damage: claim verified. Engine death bomb 240 radius 1.5 is a 2023-extract value, unverified here. proposed_status: not_in_engine / needs_new_mechanic."
     }
-   }
+   },
+   "implemented_in": "a87d191",
+   "implemented_id": 176,
+   "ability_pending": true
   },
   {
    "name": "Hero Dark Prince",
@@ -8267,7 +9080,10 @@
      "Whether hero shares base hit speed (engine id 46 already 1.4s)"
     ],
     "verifier": "checked against code: withShield/withCharge/withChargeSpeed/withIgnoresRiver/withChargeInvulnerability (CardStats.h:520)/withHeroAbility(elixir,cooldown,effect,usesLimit) (CardStats.h:602) all exist. withHeroAbility takes (elixirCost, cooldownTicks, effect, usesLimit); single-use = usesLimit 1. Hero Dark Prince absent from engine, no HeroDarkPrince*Effect.h exists, so needs_new_mechanic for dismount/Rhino spawn."
-   }
+   },
+   "implemented_in": "1e90f09",
+   "implemented_id": 177,
+   "ability_pending": true
   },
   {
    "name": "Hero Bowler",
@@ -8429,7 +9245,10 @@
      "Ability range and shot cadence unsourced",
      "Hero inheritance of Aug projectile range unsourced"
     ]
-   }
+   },
+   "implemented_in": "72e68aa",
+   "implemented_id": 178,
+   "ability_pending": true
   },
   {
    "name": "Hero Tombstone",
@@ -8827,7 +9646,10 @@
      "Engine Tombstone pulse 35 ticks vs Fandom 4 s"
     ],
     "verifier": "checked vs engine: CardRegistry.h:934 Tombstone exists (building(), default lifetime 300 ticks via Building.h:17; PeriodicSpawnEffect 35 ticks; SpawnOnDeath witchSkeletonStats). CardStats::withHeroAbility exists (CardStats.h:602), usable on building() chain but GameManager.h:579 consumer assumes CombatEntity isHero - untested for buildings. SpawnOnAbility (SpawnOnAbility.h:10-20) spawns child at self.position, does NOT remove caster -> new mechanic needed to consume Tombstone (confirmed). Hero Musketeer example is CardRegistry.h:1611-1613 (spec said 1609). Hero Giant (CardRegistry.h:1643-1645) confirms MeleeBuildingTargeter + withSightRange pattern. 'Hero Tombstone' not present in docs/CARDS.md (not_in_engine). Single-use after Aug 4: usesLimit=1 in withHeroAbility; spec's withHeroAbility(5.0f,0,...,1) is consistent."
-   }
+   },
+   "implemented_in": "7231a17",
+   "implemented_id": 179,
+   "ability_pending": true
   },
   {
    "name": "Hero Valkyrie",
@@ -9263,7 +10085,10 @@
       "No Hero Valkyrie card id exists in the engine (status: not_in_engine)."
      ]
     }
-   }
+   },
+   "implemented_in": "fafbcd5",
+   "implemented_id": 180,
+   "ability_pending": false
   },
   {
    "name": "Hero Berserker",
@@ -9511,7 +10336,10 @@
     "verifier": "Checked. CardRegistry.h:708 Berserker id 51 (896,SPEED_FAST,0.8,102,6 ticks) correct. Hero Mini P.E.K.K.A. is troop(170) at :1606 with withHeroAbility(1.0f,0,HeroMiniPekkaBoostEffect,1) at :1607 (usesLimit 1): correct. Hero Barbarian Barrel withHeroAbility usesLimit 1 is at :249 (spec cited :247; correction). CardStats.h:602 withHeroAbility(elixir,cooldownTicks,effect,usesLimit=-1) exists. CombatEntity.h:383-384 fields exist; hit-speed multiplier is applied at :771 only when temporaryInvisibilityTicksRemaining>0: claim correct, so decoupling/new timer needed. No Hero Berserker or Savage Survival in engine; hero ids 164-173,175 and spell 174 are taken, so 'next free hero id' is 176 or above (NUM_CARD_IDS 185). No existing hp-floor, timed speed override or tower-damage-reduction mechanic was found in this pass beyond the cited fields."
    },
    "elixir_verifier": "verified: DeckShop",
-   "verifier_note": "Checked every corpus file mentioning Berserker (2025-02-03/04/11, 2025-04-09, 2025-10-24, 2026-08-03, 2026-08-04, 2026-09-07). The 2026-09-23, 2026-10-06 and 2026-10-27 posts contain no Hero Berserker or Berserker change (10-27 only has Hero Ice Wizard refund). Spec's 'Hit speed 0.2s' etc. are TrophyCoach-only and were not cross-checked."
+   "verifier_note": "Checked every corpus file mentioning Berserker (2025-02-03/04/11, 2025-04-09, 2025-10-24, 2026-08-03, 2026-08-04, 2026-09-07). The 2026-09-23, 2026-10-06 and 2026-10-27 posts contain no Hero Berserker or Berserker change (10-27 only has Hero Ice Wizard refund). Spec's 'Hit speed 0.2s' etc. are TrophyCoach-only and were not cross-checked.",
+   "implemented_in": "0be918a",
+   "implemented_id": 181,
+   "ability_pending": false
   },
   {
    "name": "Elite Barbarians Evolution",
@@ -9629,7 +10457,8 @@
     {
      "stat": "Hitpoints/damage 2026 base-card changes",
      "value_level11": "none",
-     "verifier": "verified: grep of all 2026 official posts (08-03, 08-04, 09-23, 10-06, 10-27, 09-07) finds no Elite Barbarians base change; only the four Evolution rows below"
+     "verifier": "verified: grep of all 2026 official posts (08-03, 08-04, 09-23, 10-06, 10-27, 09-07) finds no Elite Barbarians base change; only the four Evolution rows below",
+     "confidence": "official"
     }
    ],
    "ability_or_evolution": {
@@ -9822,7 +10651,10 @@
      "Rage buff multipliers (assume spell Rage but unsourced)"
     ],
     "verifier": "Checked against code. CONFIRMED: Elite Barbarians id 17 at include/core/CardRegistry.h:493 (1341 hp, SPEED_FAST, 1.2, 384, 14 ticks); addEvolution(155,...) Barbarians with withSelfHasteOnHit at :1475; Lumberjack evo (156) uses AreaBuffOnDeath(2.5f,1.75f,55) at ~:1485; Executioner evo (157) withRangeBandBonus at :1499; withOffsets CardStats.h:352; withPeriodicEffect CardStats.h:461 (IPeriodicEffect interface exists, e.g. AreaStunEffect). CORRECTED/CAVEATS: (1) NO Elite Barbarians Evolution exists in the engine (grep: only id 17) -> status not_in_engine/card_missing; a new evolution id is needed. (2) The 1.75x in AreaBuffOnDeath is a multiplier arg, its semantics vs real Rage not verified here; 'rage-like precedent' is loose. (3) withPeriodicEffect is a timed hook with no projectile; whether it can fire a ranged min/max-range projectile is unverified, so it is a candidate not a fit. (4) Single sightRange field (CardStats.h:245) means the separate 6-tile spear sight vs 5.5 base needs new mechanic. (5) 'withOffsets (2 units)' for count 2 matches existing id 17 usage."
-   }
+   },
+   "implemented_in": "aeed1d8",
+   "implemented_id": 182,
+   "ability_pending": false
   },
   {
    "name": "Electro Giant Evolution",
@@ -10112,7 +10944,10 @@
     "card_missing": "No Electro Giant Evolution exists in the engine: CARDS.md has no 'Evolution of 84' row and ids 123-163 contain none for 84. proposed_status: needs_new_mechanic (new id + pulse mechanic).",
     "templates_checked": "CardRegistry.h:874 (id 84) exists; AreaStunEffect.h exists and applies applyFreeze to enemy entities in radius (no damage) - matches claim; withPeriodicEffect exists at CardStats.h:461; addEvolution exists at CardRegistry.h:430 (signature evoId, baseStats, evolvedStats, cycleThreshold, evolvedUses) - matches; withDeployDelay (CardStats.h:540) sets initialCooldownTicks and could model first-hit 10 ticks.",
     "caveat": "Base id 84's periodic 5 s stun is an approximation of the Zap Pack reflection, and an evolution built on it would inherit it. There is no per-entity level/hp-scaling mechanic; 'no mechanic for reflect' claim confirmed by grep. Next evolution id should be chosen after checking the next free id above 163 (164-175 are used by base cards)."
-   }
+   },
+   "implemented_in": "ce7d206",
+   "implemented_id": 186,
+   "ability_pending": false
   },
   {
    "name": "Giant Evolution",
@@ -10396,7 +11231,10 @@
      "status": "checked",
      "note": "Engine checks: Giant id 2 at CardRegistry.h:579 (3968, SPEED_SLOW, 1.2, 253, 15, sight 7.5) correct. addEvolution(id, base, evolved, cycleThreshold, evolvedUses) exists at :430 (Barbarians id 155 example ~:1470-1480 uses withSelfHasteOnHit). withSpellBuff (CardStats.h:488) and withSelfHasteOnHit (:685) exist; Rage id 108 is withSpellBuff(1.35,45) at :988-989 (not :990-991). AreaBuffOnDeath(2.5,1.75,55) is Lumberjack at :498 (death effect, not a persistent trail). Highest evolution id is 163 (:1575); ids 164-175 are base cards, so a Giant Evolution id is unassigned and needs a human decision (NUM_CARD_IDS=185). None of the existing modifiers give an HP-threshold trigger or a moving buff trail, so needs_new_mechanic stands. Evolution id would break the 41-Evolutions/123-163 convention."
     }
-   }
+   },
+   "implemented_in": "9c4d8bc",
+   "implemented_id": 187,
+   "ability_pending": false
   },
   {
    "name": "Mirror Evolution",
@@ -10524,7 +11362,10 @@
     "verifier": "Engine check: Mirror id 164 at CardRegistry.h:1590 (comment 1587-1589, not 1586); MIRROR_CARD_ID GameManager.h:30; Mirror branch GameManager.h:501-516; lastPlayedCardId excluded for Mirror at :548; addEvolution is at CardRegistry.h:430 (not 424); PlayerState EvolutionSlotState at PlayerState.h:15-19, playCard useEvolvedForm ~165-187; test_mirror.cpp:165-166 states mirroring an Evolution plays its base form. CARD_ID_COUNT=185 (CardRegistry.h:101). All claimed templates exist and behave as described; claim that addEvolution needs CardStats is correct (signature line 430). Needed new mechanics list is accurate."
    },
    "rarity_verifier": "verified for base: 2025-10-28_triple-threat post lists Mirror under Epic Cards",
-   "final_values_note_verifier": "verified by grep of all corpus txt: only 2026-10-27 post mentions Evolved Mirror/Mirror Evolution; other Mirror mentions (2025-09-26 'Mirror now works on Champions', 2026-02-23 info page fix) change no numbers. No 2026-09-23/10-06 post mentions Mirror."
+   "final_values_note_verifier": "verified by grep of all corpus txt: only 2026-10-27 post mentions Evolved Mirror/Mirror Evolution; other Mirror mentions (2025-09-26 'Mirror now works on Champions', 2026-02-23 info page fix) change no numbers. No 2026-09-23/10-06 post mentions Mirror.",
+   "implemented_in": "6501e2c",
+   "implemented_id": 188,
+   "ability_pending": false
   }
  ]
 }

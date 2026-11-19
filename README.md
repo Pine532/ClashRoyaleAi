@@ -55,7 +55,7 @@ a live match off the screen and replays it inside the engine.
 ## Features
 
 **Engine** (`include/`, `src/`)
-- **132 cards and 41 Evolutions**: troops, buildings, spells, spawners,
+- **141 cards and 45 Evolutions**: troops, buildings, spells, spawners,
   Champions and their abilities, death effects, knockback, slows, stuns and
   rolling spells. Every card's stats are in [`docs/CARDS.md`](docs/CARDS.md),
   generated from the engine.
@@ -67,15 +67,15 @@ a live match off the screen and replays it inside the engine.
   fixes the opening hand, and `snapshot()` forks a match for lookahead or
   paired A/B tests.
 - **Header-only C++17**, exposed to Python through pybind11.
-- **715 Catch2 test cases** covering combat, pathing, targeting, placement
+- **956 Catch2 test cases** covering combat, pathing, targeting, placement
   rules and match resolution.
 
 **Learning** (`python_ai/`)
 - A [Gymnasium](https://gymnasium.farama.org/) environment with a
-  13,977-float observation. It covers a 21-channel board grid, the hands and
+  14,403-float observation. It covers a 21-channel board grid, the hands and
   elixir, and a **record of which cards the opponent has played**, which
   makes card counting learnable.
-- **Recurrent PPO** (CNN + LSTM, 1.85M parameters). Actions are chosen in two
+- **Recurrent PPO** (CNN + LSTM, 1.92M parameters). Actions are chosen in two
   steps: first a card, then one of 612 placement cells, with per-card
   legality masks.
 - **Curriculum against a search-based teacher.** The opponent proposes
@@ -200,7 +200,7 @@ handoff, is in [`docs/runbooks/FINAL_RUN_RUNBOOK.md`](docs/runbooks/FINAL_RUN_RU
 ### Run the tests
 
 ```powershell
-.\build_python\Release\ClashRoyaleTests.exe                          # C++: 715 cases
+.\build_python\Release\ClashRoyaleTests.exe                          # C++: 956 cases
 python_ai\venv\Scripts\python.exe -m pytest python_ai\tests -q       # training stack
 perception\.venv\Scripts\python.exe -m pytest perception\tests -q    # perception
 ```

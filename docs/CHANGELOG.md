@@ -12,6 +12,43 @@ The reasoning behind each change, with its measurements, is in
 
 ## Unreleased
 
+*Gameplay-affecting.* The live sync: the engine brought up to the official game as of
+2026-11-18, on branch `update/live-sync`. The per-change ledger, with sources and
+status, is [`LIVE_SYNC.md`](LIVE_SYNC.md).
+
+- **Value patches.** 31 dated balance-patch commits, one per patch date from 2024-08
+  on, plus a commit of long-standing values (Lightning hits the 3 highest-hp targets;
+  Monk costs 5). Every older item was audited against `DECISIONS.md`, `CLAUDE.full.md`,
+  `UPSTREAM_REQUESTS.md` and units before it was applied. Four value items were skipped
+  (Cannon Evolution barrage radius and damage, Tesla Evolution pulse damage, Minion Horde
+  Evolution hit-speed slowdown); see the Compatibility note and `LIVE_SYNC.md` section 3.
+- **Crown Tower damage from spells** is applied (`perception/UPSTREAM_REQUESTS.md`
+  item 29): spells deal their published, reduced Crown Tower damage (Fireball 159,
+  Rocket 342, The Log 35, Zap 48, Arrows 25 a volley, Lightning 265 a strike, Earthquake,
+  Freeze, Giant Snowball, Goblin Curse); a spell with no published value still deals 100%.
+- **Single-use Hero and Champion abilities** (live since 2026-08-04): once per
+  deployment, except Boss Bandit's.
+- **First-hit time** (`CardStats::firstHitTicks`). A wind-up is armed when an engagement
+  starts and runs in parallel with the cooldown; it resets on stun, on leaving range and
+  on losing the target, and slows stretch it. DPS is unchanged. Values: 42 stat blocks
+  from official sources and 85 derived from RoyaleAPI (`hit_speed - load_time`,
+  cr-api-data 2023-10). `inject(deploy_ticks=0)` waives the wind-up for an engagement on
+  the unit's first active tick only. Unresolved rows are listed in `LIVE_SYNC.md`,
+  "Values to look up".
+- **13 new entries**: Hero Valkyrie, Hero Berserker and Hero Ice Wizard (abilities
+  built); Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone and Hero Electro
+  Wizard (body only, ability pending: random decks never deal them); the Elite
+  Barbarians, Electro Giant, Giant and Mirror Evolutions; Minion Giant.
+- **`CARD_ID_COUNT` 185 -> 256.** `get_card_info` gains `is_evolution`. Observation size
+  13977 -> 14403; the opponent card-cycle blocks start at 13891 (was 13607).
+- C++ suite: 956 cases (was 734), one failing as expected.
+
+**Compatibility:** Existing checkpoints no longer load as-is: the observation grew from
+13977 to 14403 floats. Migrate with `python_ai/tools/migrate_checkpoint_card_ids.py`
+(verified on an old-layout checkpoint; none ships in the repo). Every win rate and the
+critic's value history are out of date. The Cannon Evolution barrage and the Tesla
+Evolution pulse are dead data, because buildings never run deploy effects.
+
 *Gameplay-affecting.*
 
 - A troop knocked off a bridge onto the riverbank no longer vibrates at the bridge

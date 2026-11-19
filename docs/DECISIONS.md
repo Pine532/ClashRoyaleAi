@@ -7941,3 +7941,94 @@ its date in mind.
 - **Teacher debug data.** Stamping decisions onto every tick made the fixture 11 MB against 2.97 MB. Rendering the teacher's raw own-frame y put every red candidate on the blue half; over 8 real placements mean |dx| 0.01, |dy| 8.25 as recorded, 0.00 mirrored. A measured decision had ranks 1, 2 and 4 all on (2,15).
 - **Rendering.** Painting the static background per frame (612 fillRects plus 52 strokes) measured 127 ms/frame. A territory tint on each half was the biggest reason the viewer did not read as Clash Royale. The flex panel with a transition stayed at its 0 start value indefinitely; `transition: none` opened it to 400px immediately.
 - **Hover tooltip.** Removed: it drifted from the cursor under CSS scaling, and its hit-test took the first array match with radii not matching the drawn sizes, so some entities never hit.
+
+## 2026-11-18: the live-game sync
+
+Branch `update/live-sync`. The engine had been synced to the real game on 2026-07-06 and had fallen behind since. This section records why each choice was made. Per-item evidence is in `docs/LIVE_SYNC.md` and `docs/live_sync/ledger.json`; the commit list starts at c2f3284 (the ledger) and ends at 6820f16 (`perception/` card_map rows).
+
+**This is a gameplay-affecting change. Every win rate recorded against the earlier engine is void** (CLAUDE.md rule). It also changes the observation size, so no earlier checkpoint loads without migration (below).
+
+### The baseline found
+
+- For base cards the engine matched the 2026-07-06 balance update: every base-card change in that post was already in it.
+- Nothing from the 2026-08-04, 08-26, 09-08, 09-16, 10-06 or 10-19 updates was in it, apart from the handful of cards UPSTREAM item 32 fixed on 2026-09-25. Hero and Champion ability numbers had drifted further; the July 6 Hero changes were never applied.
+- Some drift was older, dating from 2024 and 2025, so the July 2026 sync had missed changes too. Open value changes by the date the target value took effect: 83 after 2026-07-06, 29 in 2026-01 to 2026-07-06, 37 in 2025, 9 in 2024, 8 undated.
+- The ledger's totals: 738 official change lines read, 364 roster comparisons that differed from the live game, 194 already applied, 156 superseded, 166 open to apply, 99 needing a new mechanic, 56 unresolved, 13 missing entries (1 card, 8 Heroes, 4 Evolutions).
+
+### The method
+
+- **Official corpus.** Every Clash Royale post on supercell.com from 2024-08-06 to 2026-11-08 carrying balance changes, releases or fixes, read as text (30 balance posts plus 36 season and update posts). Each change line was mapped to engine ids and the engine's current value, then re-checked by a second reviewer that also looked for missed lines.
+- **Roster comparison.** All 173 registered ids (22 batches) were compared with their live level-11 values. This is the only thing that catches drift from before August 2024, which no post in the corpus covers.
+- **Adversarial verification.** Values were chained across dates per card family so the latest official value wins, then each of 24 groups was audited by a reviewer told to break it: re-check every target against later posts, re-read every cited engine line. DeckShop's 186 per-card change-date pages were compared with the corpus as an independent check. Every date since 2024-08 has a covering post except two small 2025 hotfixes (X-Bow 2025-04-01, Spirit Empress 2025-07-10), and later posts state absolute values for both, so neither affects a final value.
+- **Limit.** RoyaleAPI, the Fandom wiki, StatsRoyale and seemeta refused automated requests (HTTP 402/403), so values only they publish became `single-source` or `unresolved`. Hero abilities and new Evolutions were hit hardest.
+- **Application.** One commit per patch date (31 commits, 25130bb to febf4f5), each with a test tagged `[live_sync]` that fails without the change. P08 (2025-05-05) produced no commit because its only item was skipped. Several later patches were re-anchored onto lines earlier patches had changed, and tests from earlier patches that over-pinned a value a later patch changed were narrowed in the later patch's commit.
+
+### Decisions
+
+**CARD_ID_COUNT 185 -> 256 (84d8fef).** The highest registered id was 175, so ids 176-184 gave 9 free ids for 13 entries (reusing the never-used 16, 37, 38 would still be one short). 256 leaves 67 free ids. The cost is that the observation grows 13977 -> 14403 (the 4 hand one-hots and the 2 opponent-cycle blocks each grow by 71) and `CYCLE_START` moves 13607 -> 13891, which breaks every checkpoint. The layout does not grow at the end, so the migration scatters rather than appends: `python_ai/tools/migrate_checkpoint_card_ids.py` zero-pads new input columns, copies the never-registered id 184's head rows into the new rows, pads the Adam moments and rebuilds `spell_flags`. It was verified on a checkpoint made with the 185-id build (scalar encoder and card embedding bit-identical on old ids, head rows identical, logits equal to float32 round-off, strict load including optimizer state). No checkpoint ships in the repo, so nothing was migrated in place. Evolution ids are no longer one contiguous range, so `get_card_info` gained `is_evolution` and `deck.py` reads it instead of `range(123, 164)`. `hog26_placement_prior.npz` was re-stamped; its counts do not depend on the id count.
+
+**Single-source policy.** Where no official post states a value, a number from one non-official source was used only if nothing contradicted it, and is commented as such at its line in `CardRegistry.h`. Where sources conflict or none exists, the mechanic is omitted rather than guessed (a Bowler root without the unsourced extra shots would be strictly worse than not activating it). The complete list of single-source values used:
+
+- Elite Barbarians Evolution (trophycoach.com): spear cooldown 5 s (50 ticks); 1 cycle to evolve; spear ground-only with band 3-4.5; body identical to id 17 (1341 hp, 384 damage, 14 ticks, Fast, cost 2).
+- Giant Evolution (timesaver.gg): enrage at 50% hp; trail radii 2 / 2.5 / 3 / 3.5 with +0.5 per attack; +30% move and attack speed (1.3); Rage duration and trail lifetime 1.5 s (15 ticks); 1 cycle to evolve with stats equal to the base; self, building and tower rage included.
+- Mirror Evolution (timesaver.gg): 2 cycles to evolve; cost = copied card's cost + 1.
+- Hero Balloon: body restated from base Balloon (hp 1676 from the 2026-02-02 post; the rest is the engine's id 45), since Hero-specific values are unpublished.
+- Hero Berserker (trophycoach.com): ability cost 3; ability hit speed 0.2 s (2 ticks); hp floor 1; damage to Crown Towers x0.25 during the ability (truncated, 102 -> 25); base damage 102 and Fast speed (range 0.8 is the engine's value from id 51).
+- Hero Bowler (deckshop.pro): cost 5.
+- Hero Dark Prince (deckshop.pro): cost 4.
+- Hero Electro Wizard (deckshop.pro, TrophyCoach agrees): cost 4.
+- Hero Ice Wizard: base stats 689 hp / 90 damage / 1.7 s / range 5.5 / Medium equal to the base Ice Wizard (trophycoach.com); Frosty Fella cost 2 (trophycoach.com, timesaver.gg and ldplayer.net agree, all unofficial); Frosty Fella radius 2.5 tiles (ldplayer.net, timesaver.gg).
+- Hero Tombstone (deckshop.pro): cost 3.
+- Hero Valkyrie, Wild Whirlwind (timesaver.gg): ability cost 3, spin 3.5 s (35 ticks), hit every 0.25 s (5 half-ticks), damage 97, radius 2.5, dash range 5.5, -15% damage taken (0.85), -50% Crown Tower damage (0.5).
+- Minion Giant (ldplayer.net): hp 1817 (DeckShop agrees), range 4.0, sight 6.5, Medium speed. Damage 153 and 1.7 s are official.
+- Monk's cost 4 -> 5 (fd7fa90): DeckShop's live page and timesaver.gg say 5; no official post states it; cr-api-data lists 4 and predates it.
+- The RoyaleAPI-derived first-hit set (85 stat blocks) is single-source as a class; see below.
+
+Values with no source at all (for example Electro Giant Evolution's pulse, Hero Valkyrie's dash duration) are listed as unresolved in the per-entry notes rather than invented.
+
+**Spell Crown Tower damage applied (6cd86d0, UPSTREAM item 29).** Item 29 was proposed and deliberately left unapplied while the numbers were unsourced. The official posts now publish one per spell, so it was applied: Arrows 123 -> 25 a volley, Earthquake 82 -> 49 a wave, Fireball 689 -> 159, Freeze 0 -> 37, Giant Snowball 179 -> 45, Goblin Curse 43 -> 10 per application, Lightning 1057 -> 265 a strike, Rocket 1485 -> 342, The Log 269 -> 35, Zap 192 -> 48 a zap. Troop damage is unchanged. This changes tower-damage economics a lot (a Rocket on a Crown Tower fell from 1485 to 342, 77%), and is the reason the lethal-window logic in `python_ai` now reads measured Crown Tower damage.
+
+**Long-standing misses (fd7fa90).** Lightning hits only the 3 highest-hp enemies; Monk costs 5.
+
+**Single-use abilities (acf8281).** The 2026-08-04 update changed Hero and Champion abilities from a cooldown to single use. Applied to every Hero and Champion except Boss Bandit, which the post exempts. The cooldown literals are left in place; they are moot.
+
+**First-hit time (e2661e6, 40bf461, 22c59e1).** The live game has a load time before the first attack on a newly engaged target; the engine had only a one-off delay from spawn. The mechanism is a wind-up armed when an engagement starts, running in parallel with the cooldown, never between consecutive attacks on one target, so DPS is unchanged. It resets on a stun, on leaving range and on losing the target, and a slow stretches it like the cooldown. With every value at 0 it is bit-identical to the old engine, so the mechanism landed first and alone.
+- Official values (42 stat blocks) are used wherever a post states one, at its latest value.
+- For the rest, RoyaleAPI's cr-api-data (2023-10) gives `hit_speed - load_time` (85 stat blocks, half ticks rounded up). That formula is trusted only where `load_time > 0`, because there it reproduces the official "before" values of Musketeer 0.8, Wizard 0.4, Electro Dragon 0.7, Electro Giant 1.5 and Mortar 1.0 exactly; where `load_time` is 0 the field may simply be unset, so no value is derived. It is also used only where the unit's hit speed is unchanged since 2023, since the load time was measured against the old hit speed, and where the result is >= 0 and `load_first_hit` is false (Sparky).
+- 138 rows stayed unresolved: 80 because the hit speed changed since 2023, 28 with no RoyaleAPI entry, 12 with `load_time` 0, 1 Sparky; the rest are non-attacking buildings or spells.
+- Existing tests that assumed an instant first attack now step through the wind-up (`advanceThroughWindup`).
+
+**The inject waiver (e2661e6, fixed in fa191b5).** `inject(..., deploy_ticks = 0)` is how `perception/` places a unit it already sees mid-fight, and the per-decision mirror has no history, so without a waiver every such unit would wind up again each second. The first version waived the wind-up for any such unit, which also gave a unit still walking a free wind-up. The waiver now lasts only for the unit's first active tick: it applies if the unit engages then (already in range) and is dropped otherwise, so `deploy_ticks = 0` again recovers exactly the deploy second (perception's `test_deploy_ticks_zero_recovers_exactly_the_deploy_second`, 15 -> 10 ticks). The fix has its own case in `test_first_hit.cpp` that fails without it (15 == 10).
+
+**Ability-pending Heroes kept out of random decks.** Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone and Hero Electro Wizard are registered body-only: their abilities have no usable numbers (Rhino hp 1040 vs 1413, Stone Swish unsourced, Surging Strikes stun ~3 s vs while-alive, Tomb Queen with no stats, Coffin Cadets built only from partial official numbers). A Hero whose ability is silently missing would train the agent on a card that does less than the real one, so random decks never deal them. Heroes with a built ability: Hero Valkyrie, Hero Berserker, Hero Ice Wizard (the freeze; the Snowman is omitted as its hp is contradicted, ~425 vs 266).
+
+**Evolutions added.** Elite Barbarians (spear; the Rage path is omitted, official gives only a 2 s duration), Electro Giant (base body only; the de-level pulse is omitted, no numbers), Giant (enrage and Rage trail), Mirror (copies the last card in evolved form at cost + 1; evolved uses 1 is unsourced). `python_ai/deck.py`'s old `range(123, 164)` would have missed id 188, which is the other reason for `is_evolution`.
+
+**Tower Troops deferred (user decision).** The 14 tower-troop items are a separate change. `include/core/TowerTroops.h` is untouched: its troops are written at level 11 while the default towers are level 9, and its "Tower Princess" option is mislabelled (3204 hp / 153 damage is what the real game gives Cannoneer; the real Tower Princess is the default tower).
+
+**Skipped value items.** P08 and P31a (Cannon Evolution barrage radius, damage) and P23 (Tesla Evolution pulse damage) change values nothing reads: buildings never run deploy effects (`spawnDefensiveBuilding` never calls `spawnDeployEffect`), so the barrage and the pulse are dead data. P26c (Minion Horde Evolution hit-speed slowdown) needs a new mechanic.
+
+**The older-value audit.** The 2024-2025 and undated items were each audited against DECISIONS.md, CLAUDE.full.md, UPSTREAM_REQUESTS.md and units before being applied, because an old official number is easy to misread. The worked case is Tornado: the official "84x2 -> 84" is a 168 -> 84 total, and the engine's single hit of 154 matched neither, so it became one hit of 84.
+
+### Engine bugs found and not fixed
+
+- Buildings never run deploy effects, so the Cannon Evolution barrage and the Tesla Evolution pulse never fire (above).
+- The Cannon Cart grounds itself with a stun (item 32 note, pre-existing).
+- `net.py`'s `aux_card_head` and `cycle_id_head` ignore their `num_card_ids` argument and always use the live engine width.
+
+These are follow-ups; `python_ai/` and the engine were out of scope for a fix.
+
+### Tests
+
+- C++, clean build of HEAD: 956 cases, 955 passed plus the 1 expected failure (`test_navigation_wedge.cpp`), exit 0 (baseline 734).
+- `perception/tests`: 436 passed, 3 skipped, equal to the baseline.
+- `python_ai/tests`: 1007 passed, 3 skipped, 5 failed (baseline 1007 / 3 / 2). Changed to follow the engine (1637ca5, no production code touched): `test_damage_spell_is_deck_derived` (Goblin Curse 35 x 6; the lethal-window fixture now sits between the two spells' measured Crown Tower damage; the 2.6 deck's window reads Fireball's 159), `test_deck_contract` (Lightning reports 265, not its troop damage 1057), `test_log_damage_is_derived` (The Log 268). Left failing:
+  - Two in `test_rl_ppo_compaction.py` fail on `main` too: PyTorch 2.13 on arm64 is not bit-exact for the compacted placement head.
+  - `test_the_LOSS_and_every_diagnostic_are_bit_identical` in the same file is a third of that family: `coverage_entropy` now differs by 6e-8, because the card-id layers changed shape and it reaches one more statistic.
+  - `test_teacher_combos.py::test_the_teacher_actually_executes_a_planned_pair_end_to_end`: the teacher now re-plans in the staged state (plays Skeletons, then Hog 30 ticks later) instead of executing the due Hog. It is a gameplay-sensitive staged test; fixing it needs a teacher or fixture change outside the authorised `python_ai` scope, so it is left failing.
+  - `test_placement_hires.py::test_both_heads_can_resolve_a_single_column_at_small_scale` is flaky (passed on 2 reruns), not counted as a regression.
+- `tools/audit/verify_pyd.py` OK; `docs/CARDS.md` regenerated (141 cards, 45 Evolutions).
+
+### Gotcha: GNU Make 3.81 compares mtimes to the second
+
+The macOS build uses Make 3.81. An edit saved in the same second as the last compile leaves stale objects, which once produced "towers read hp 1" nonsense that looked like an engine bug. `touch` the edited files, or wait a second, before rebuilding.

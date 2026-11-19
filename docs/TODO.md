@@ -29,6 +29,49 @@ Rules that apply to every item below:
 
 ---
 
+## L. Live sync follow-ups (added 2026-11-18)
+
+The live sync (branch `update/live-sync`, ledger in `docs/LIVE_SYNC.md`, summary in
+`CHANGELOG.md`) left this work. It is gameplay-affecting and changed the observation
+size, so the first two items gate any training.
+
+1. **Retrain from scratch, or migrate checkpoints.** Observation is now 14403 floats
+   (was 13977). `python_ai/tools/migrate_checkpoint_card_ids.py` migrates an old-layout
+   checkpoint (verified on one; none ships in the repo). Win-rate history and the
+   critic are out of date either way.
+2. **Re-run the side null** after the observation change: a policy against a bit-exact
+   copy of itself must score ~0.50.
+3. **Unresolved values.** Each needs a number no reachable source gives, or sources
+   disagree. See `LIVE_SYNC.md`, "Values to look up" (first-hit time: 138 unresolved, 80 because the hit speed
+   changed since 2023, 28 with no RoyaleAPI entry, 12 with load_time 0, 1 Sparky).
+4. **Ability-pending Heroes.** Hero Balloon, Hero Dark Prince, Hero Bowler, Hero
+   Tombstone and Hero Electro Wizard are body-only (`CardDefinition::abilityPending`);
+   random decks never deal them. Build the abilities, then clear the flag.
+5. **Tower Troops** (14 items) are deferred to a separate change by decision.
+   `include/core/TowerTroops.h` is untouched: its troops are level 11 while the default
+   towers are level 9, and its "Tower Princess" option is mislabelled.
+6. **Changes that need a new engine mechanic**: `LIVE_SYNC.md` section 3. Also the
+   Minion Horde Evolution hit-speed slowdown, the Elite Barbarians Rage path, the
+   Electro Giant de-level pulse (no numbers) and the Ice Wizard Snowman.
+7. **Bug: buildings never run deploy effects** (`spawnDefensiveBuilding` never calls
+   `spawnDeployEffect`), so the Cannon Evolution barrage and the Tesla Evolution pulse
+   never fire. Their value items (radius, damage) were skipped as dead data. Propose via
+   `perception/UPSTREAM_REQUESTS.md` before touching `src/`.
+8. **Teacher combo test fails.** `test_teacher_combos.py::test_the_teacher_actually_executes_a_planned_pair_end_to_end`:
+   the teacher now re-plans in the staged state (plays Skeletons, Hog 30 ticks later)
+   instead of executing the due Hog. Needs a teacher or fixture change in `python_ai/`.
+9. **Smaller engine/model notes.** The Cannon Cart grounds itself with a stun
+   (item 32 note); `net.py`'s `aux_card_head` / `cycle_id_head` ignore `num_card_ids`
+   (always the live engine width); `test_placement_hires.py::test_both_heads_can_resolve_a_single_column_at_small_scale`
+   is flaky; `test_rl_ppo_compaction.py::test_the_LOSS_and_every_diagnostic_are_bit_identical`
+   now differs by 6e-8 in `coverage_entropy` (Apple Silicon float32, same family as the
+   2 baseline failures).
+10. **Perception for the new cards.** `card_map` rows exist (6820f16) and need review
+    flags confirmed against the recorded build; detector labels, hand templates and
+    the deck pools (`meta_decks.json`) do not cover the 13 new entries yet.
+
+---
+
 ## P0. Real phone / live app integration — HIGH PRIORITY, not started (added 2026-11-10)
 
 **Goal:** the bot plays Clash Royale running on a PHYSICAL Android phone. It
