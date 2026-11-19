@@ -57,7 +57,7 @@ The undated commit `fd7fa90` makes Lightning hit the 3 highest-hp targets and ra
 - 2026-10-06: Cannon Evolution barrage damage 281 -> 261. Same cause.
 - 2026-08-04: Minion Horde Evolution hit-speed slowdown 50% -> 33%. The engine never modelled the 50%; it needs a mechanic.
 
-The first three are an engine bug found, not fixed: a Cannon Evolution or Tesla Evolution never fires its deploy effect.
+The first three were skipped because of an engine bug: buildings never fired their deploy bursts. **Fixed 2026-11-18 in `abccf30`** (follow-up task), and all three values are now applied in the commit "Live sync: the deploy-burst values skipped while building bursts were dead". The same bug had also silenced the Goblin Drill's emergence burst; it now fires, with the official 20 Crown Tower damage (`b069d65`).
 
 ### Crown Tower damage of spells (UPSTREAM item 29), `6cd86d0`
 
@@ -106,7 +106,7 @@ The 14 Tower Troop value items (Tower Princess, Cannoneer, Royal Chef, Dagger Du
 
 ### Engine bugs found, not fixed
 
-- Buildings never run deploy effects, so the Cannon Evolution barrage and the Tesla Evolution pulse never fire.
+- ~~Buildings never run deploy effects~~: **fixed in `abccf30`**. Cards affected: Goblin Drill (base and both Evolution halves), Cannon Evolution, Tesla Evolution.
 - The Cannon Cart grounds itself with a stun (UPSTREAM item 32 note, pre-existing).
 - `python_ai/models/net.py`: `aux_card_head` and `cycle_id_head` ignore their `num_card_ids` argument and always use the live engine width.
 

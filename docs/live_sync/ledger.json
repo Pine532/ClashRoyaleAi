@@ -436,8 +436,9 @@
    "notes": "Chain 320 -> 353 (2025-01-07) -> 304 (2025-10-06) -> 281 (2025-12-01) -> 261. Same inert-burst caveat as the radius entry; edit both on line 1179.",
    "verifier": "confirmed",
    "confidence": "official",
-   "applied_in": null,
-   "not_applied_reason": "Needs a mechanic the engine lacks: CardFactories::spawnDefensiveBuilding never calls spawnDeployEffect, so the Cannon Evolution's Deploy Barrage (withSpawnEffect at CardRegistry.h ~1179) never fires."
+   "applied_in": "Live sync: the deploy-burst values skipped while building bursts were dead",
+   "not_applied_reason": null,
+   "applied_after_fix": "abccf30"
   },
   {
    "family": "Cannon",
@@ -459,8 +460,9 @@
    "notes": "Comment at CardRegistry.h:1173 also says 2.5. Static reading: building spawn path (CardFactories.h:198-204) never calls spawnDeployEffect, so the barrage may not fire at all; verify by run before/after editing. Base id 25 has no barrage.",
    "verifier": "confirmed",
    "confidence": "official",
-   "applied_in": null,
-   "not_applied_reason": "Not observable and untestable: the Cannon is an Archetype::DefensiveBuilding, and CardFactories::spawnDefensiveBuilding (include/core/CardFactories.h:190-197) never calls spawnDeployEffect, so id 129's withSpawnEffect(2.5f, 202) is dead data."
+   "applied_in": "Live sync: the deploy-burst values skipped while building bursts were dead",
+   "not_applied_reason": null,
+   "applied_after_fix": "abccf30"
   },
   {
    "family": "Cannon Cart",
@@ -1927,15 +1929,16 @@
    "target_verbatim": "Crown Tower Spawn Damage: 0 -> 20",
    "as_of": "2026-10-06",
    "source_url": "https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/",
-   "status": "needs_new_mechanic",
+   "status": "to_apply",
    "mechanic": "spawn-burst Crown Tower damage override",
    "corroboration": "official chain + drift agree",
    "tests_pinning_old_value": [],
    "notes": "AreaSpell::crownTowerDamage exists (AreaSpell.h:71) but spawnDeployEffect (CardFactories.h:137-146) cannot set it. Also: spawnDefensiveBuilding (CardFactories.h:198-204) never calls spawnDeployEffect (only troop spawners at :156,170,183,195), so the Drill burst appears not to fire at all (static reading, not run; verify with a run). The 2026-08-04 removal (0) is superseded by this. Same plumbing affects the Cannon Evolution barrage.",
    "verifier": "confirmed",
    "confidence": "official",
-   "applied_in": null,
-   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
+   "applied_in": "b069d65",
+   "not_applied_reason": null,
+   "note_2026_11_18": "Mechanism added (CardStats::spawnEffectCrownTowerDamage); fires since abccf30."
   },
   {
    "family": "Goblin Drill",
@@ -5602,8 +5605,9 @@
    "notes": "Engine 100 matches neither 174 nor 148 and is unsourced. Engine models the pulse as one deploy-time spawn effect; the real evolution pulses repeatedly, so this is a value fix only. No test pins 100 for id 154.",
    "verifier": "confirmed",
    "confidence": "official",
-   "applied_in": null,
-   "not_applied_reason": "Not applicable as a value fix: the Tesla Evolution's Electro Pulse (damage and 0.5 s stun) never fires in the engine because spawnDefensiveBuilding omits spawnDeployEffect (same for Goblin Drill's withSpawnEffect(2.0f, 84))."
+   "applied_in": "Live sync: the deploy-burst values skipped while building bursts were dead",
+   "not_applied_reason": null,
+   "applied_after_fix": "abccf30"
   },
   {
    "family": "The Log",

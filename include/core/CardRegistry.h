@@ -1442,13 +1442,13 @@ private:
                 .withRangeBandBonus(4.0f, 6.0f, 1.25f),
             2, 1);
 
-        // Cannon ("Deploy Barrage"): a one-time burst on deploy (2.5 radius).
-        // Its damage is not sourced (the Cannon's hit reused) and its knockback
-        // is not modelled.
+        // Cannon ("Deploy Barrage"): a one-time burst on deploy: radius 2.0
+        // (2025-05-05 balance update, 2.5 -> 2), damage 261 (2026-10-06 balance
+        // update, 281 -> 261; docs/LIVE_SYNC.md). Knockback is not modelled.
         addEvolution(129,
             building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10),
             building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10)
-                .withSpawnEffect(2.5f, 202),
+                .withSpawnEffect(2.0f, 261),
             2, 1);
 
         // Firecracker: the real center and shrapnel sparks (low damage every
@@ -1785,14 +1785,15 @@ private:
                     .withOffsets({ {-0.4f,0.0f},{0.4f,0.0f},{0.0f,0.4f},{0.0f,-0.4f} }))),
             2, 1);
 
-        // Tesla ("Electro Pulse"): 6-tile radius, low damage and a 0.5 s stun.
-        // There is no hiding to emerge from here, so it fires once on deploy.
+        // Tesla ("Electro Pulse"): 6-tile radius, 148 damage (2026-05-04 balance
+        // update; docs/LIVE_SYNC.md) and a 0.5 s stun. There is no hiding to
+        // emerge from here, so it fires once on deploy.
         addEvolution(154,
             // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
             building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withFirstHit(4).withTargetsAir(),
             // First hit 0.4 s: RoyaleAPI cr-api-data, hit_speed 1100 - load_time 700 ms (docs/LIVE_SYNC.md).
             building(26, "Tesla", 4.0f, 1182, 'T', 5.5f, 220, 11).withFirstHit(4).withTargetsAir()
-                .withSpawnEffect(6.0f, 100, std::make_shared<FreezeOnHit>(5, 0.0f)),
+                .withSpawnEffect(6.0f, 148, std::make_shared<FreezeOnHit>(5, 0.0f)),
             2, 1);
 
         // Barbarians: the base 716 hp, the Evolution's hp bonus cut to 0% by

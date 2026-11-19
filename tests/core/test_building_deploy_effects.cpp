@@ -97,3 +97,14 @@ TEST_CASE("A building without a deploy burst still does nothing on landing (plai
           "[deploy_effect][building]") {
     CHECK(burstOnNeighbour(25, false)->hp == 100000);
 }
+
+TEST_CASE("Cannon Evolution's Deploy Barrage deals 261 in a 2.0-tile radius",
+          "[deploy_effect][building][live_sync_values]") {
+    CHECK(100000 - burstOnNeighbour(129, true, 1.0f)->hp == 261);  // 2026-10-06
+    // 2.6 tiles: inside the old 2.5 radius plus the 0.4 hitbox, outside the new 2.0.
+    CHECK(burstOnNeighbour(129, true, 2.6f)->hp == 100000);        // 2025-05-05
+}
+
+TEST_CASE("Tesla Evolution's Electro Pulse deals 148", "[deploy_effect][building][live_sync_values]") {
+    CHECK(100000 - burstOnNeighbour(154, true, 4.0f)->hp == 148);  // 2026-05-04
+}
