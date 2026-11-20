@@ -89,6 +89,11 @@ def _to_scalar(val):
     return val
 
 
+
+#: current_deck_name of an episode drawn by pool_mirror_share: the trainee's
+#: own deck as the opponent. Never a pool deck's name.
+MIRROR_DECK_NAME = "(mirror)"
+
 class MicroRoyaleEnv(gym.Env):
     def __init__(self, env_config=None):
         super().__init__()
@@ -116,6 +121,13 @@ class MicroRoyaleEnv(gym.Env):
         pool_cfg = env_config.get("deck_pool", None)
         self.deck_pool = None
         self.current_deck_name = None
+        #: With the pool on, the share of episodes in which the opponent plays
+        #: the trainee's own deck instead (a mirror), so a pool run keeps
+        #: practising the mirror. A deck with a Champion or Hero cannot be a
+        #: pool entry (deck_pool refuses them), so this is the only way such a
+        #: deck meets itself once the pool is on. 0 draws nothing extra: the
+        #: pool's deck sequence is then exactly what it was without it.
+        self.pool_mirror_share = float(env_config.get("pool_mirror_share", 0.0))
         #: Per-worker local win-rate estimate, {deck name: rate}, like
         #: selfplay_env's `pfsp_stats`: each worker converges its own estimate.
         self.deck_pool_stats = {}
@@ -208,7 +220,18 @@ class MicroRoyaleEnv(gym.Env):
         # item 23C).
         if seed is not None:
             self.game.seed(int(seed))
-        if self.deck_pool is not None:
+        if self.deck_pool is not None and self.pool_mirror_share > 0.0 \
+                and self._deck_rng.random() < self.pool_mirror_share:
+            # A mirror episode: the trainee's own deck, on both sides. Its
+            # name is not in deck_pool_stats, so _record_deck_outcome leaves
+            # every pool deck's estimate alone.
+            self.current_deck_name = MIRROR_DECK_NAME
+            mirror = list(self.ai_deck)
+            self.game.set_opponent_deck(mirror)
+            self.current_opp_deck = mirror
+            if self.teacher is not None:
+                self.teacher.set_deck(mirror)
+        elif self.deck_pool is not None:
             # Sampled per worker, per episode: workers are separate processes,
             # and per-episode sampling keeps each PPO batch a mix of matchups.
             picked = deck_pool.sample_deck(

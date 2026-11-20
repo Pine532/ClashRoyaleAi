@@ -71,6 +71,11 @@ PHASE1_DEFENSIVE_SCENARIO_PROB = float(os.environ.get(
 #: deck in the pool.
 PHASE1_DECK_POOL = os.environ.get("CLASH_PHASE1_DECK_POOL", "1") not in (
     "0", "false", "False", "")
+#: With the pool on, the share of episodes against the trainee's own deck
+#: (gym_wrapper's pool_mirror_share), so a pool run keeps practising the
+#: mirror: a deck with a Hero cannot be a pool entry. 0 restores the pool
+#: alone. The user's figure, 2026-11-20.
+PHASE1_POOL_MIRROR_SHARE = float(os.environ.get("CLASH_PHASE1_POOL_MIRROR_SHARE", 0.25))
 
 # Win rate that masters a random deck at the per-deck ladder's final stage
 # (then it rotates).
@@ -123,6 +128,7 @@ def make_env(seed=None):
             "teacher_stage": 0,
             "scenario_seed": seed,
             "deck_pool": PHASE1_DECK_POOL,
+            "pool_mirror_share": PHASE1_POOL_MIRROR_SHARE if PHASE1_DECK_POOL else 0.0,
             "defensive_scenario_prob": PHASE1_DEFENSIVE_SCENARIO_PROB})
     return _init
 
