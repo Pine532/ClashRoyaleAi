@@ -2,7 +2,8 @@
 
 The script runs against a fake interpreter: asked the MPS probe (`-c CODE`, two
 arguments) it answers as FAKE_MPS says; launched as the trainer it records the
-CLASH_DEVICE it was given and exits.
+CLASH_DEVICE it was given and exits. CLASH_P2_PATTERN matches nothing, so the
+launcher cannot adopt a real phase-2 trainer on this machine and linger.
 """
 import os
 import shutil
@@ -34,13 +35,17 @@ def test_start_picks_mps_where_available(tmp_path, mps, preset, want):
     out = tmp_path / "launched"
     env = {k: v for k, v in os.environ.items() if k != "CLASH_DEVICE"}
     env.update(FAKE_MPS=mps, FAKE_OUT=str(out), CLASH_LOGDIR=str(tmp_path / "logs" / "run"),
-               CLASH_WEIGHTS=str(tmp_path / "w.pth"))
+               CLASH_WEIGHTS=str(tmp_path / "w.pth"),
+               CLASH_P2_PATTERN=f"no-such-phase2-trainer-{tmp_path.name}")
     if preset is not None:
         env["CLASH_DEVICE"] = preset
-    subprocess.run(["bash", str(root / "tools" / "mac_training.sh"), "start"], env=env,
-                   cwd=root, capture_output=True, text=True, timeout=60, check=True)
-    for _ in range(100):
-        if out.exists() and out.read_text().strip():
-            break
-        time.sleep(0.1)
+    try:
+        subprocess.run(["bash", str(root / "tools" / "mac_training.sh"), "start"], env=env,
+                       cwd=root, capture_output=True, text=True, timeout=60, check=True)
+        for _ in range(100):
+            if out.exists() and out.read_text().strip():
+                break
+            time.sleep(0.1)
+    finally:
+        subprocess.run(["pkill", "-f", str(root)])    # the launcher and its caffeinate
     assert out.read_text().strip() == f"device={want}"

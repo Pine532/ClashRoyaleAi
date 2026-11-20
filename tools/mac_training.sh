@@ -49,7 +49,10 @@ NAME="$(basename "$CLASH_LOGDIR")"
 PIDFILE="$LOGROOT/$NAME.pid"        # the trainer's main process (phase 1, later phase 2)
 LOGLINK="$LOGROOT/$NAME.current_log" # path of the current stdout log
 SELFPLAY_WEIGHTS="${CLASH_WEIGHTS%.pth}_selfplay.pth"
-P2_PATTERN="trainers/train_selfplay.py"
+# The phase-2 process `_run` adopts, matched machine-wide by pgrep. Tests point
+# it at a string nothing matches, or their launcher would adopt a real phase-2
+# trainer and never exit.
+P2_PATTERN="${CLASH_P2_PATTERN:-trainers/train_selfplay.py}"
 SHIM='import os, signal, sys; signal.signal(signal.SIGINT, signal.SIG_DFL); os.execv(sys.argv[1], sys.argv[1:])'
 
 alive() { [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }
