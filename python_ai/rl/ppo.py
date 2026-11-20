@@ -12,6 +12,7 @@ Three masks:
               entropy uses this; on no-op steps the sampled cell never
               reaches the board, so it would be a free bonus.
 """
+import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 
@@ -27,6 +28,25 @@ from python_ai.rl import deck_coverage
 from python_ai.rl.engine_stats import next_card_labels
 from python_ai.rl import abilities as ability_mod
 from python_ai.rl.optim_step import clip_and_step
+
+#: Whether a no-op row's placement log-prob is part of the PPO ratio. On a no-op
+#: the engine ignores the cell, so there it only adds noise to the ratio and to
+#: the placement head's gradient (docs/TODO.md L18). "0" leaves it out, at the
+#: rollout and in the update alike. Env-overridable so the experiment's two arms
+#: run byte-identical code; the default keeps it in (the behaviour until then).
+NOOP_PLACEMENT_IN_RATIO = os.environ.get("CLASH_NOOP_PLACEMENT_IN_RATIO", "1") != "0"
+
+
+def ratio_placement_logprob(placement_logprob, card_actions, hand_size):
+    """The placement part of a row's joint log-prob as the PPO ratio uses it:
+    unchanged, or 0 on no-op rows (card arm == hand_size) when
+    NOOP_PLACEMENT_IN_RATIO is off. The rollout and the update both call this,
+    so the stored and the recomputed log-probs always agree on what they hold.
+    """
+    if NOOP_PLACEMENT_IN_RATIO:
+        return placement_logprob
+    return torch.where(card_actions == hand_size,
+                       torch.zeros_like(placement_logprob), placement_logprob)
 
 
 def _mean(xs):
@@ -254,7 +274,9 @@ class PPOUpdater:
                 card_dist_t = Categorical(logits=cl_seq)
                 place_dist_t = Categorical(logits=pl_seq)
                 new_logprobs = (card_dist_t.log_prob(mb_card_actions)
-                                + place_dist_t.log_prob(mb_place_actions))
+                                + ratio_placement_logprob(
+                                    place_dist_t.log_prob(mb_place_actions),
+                                    mb_card_actions, net.hand_size))
                 # The Champion ability is part of the joint action, scored
                 # under the readiness mask it was sampled with
                 # (rl/abilities.py).

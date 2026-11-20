@@ -55,7 +55,7 @@ from python_ai.rl.coverage import PLACEMENT_COVERAGE_COEF, placement_coverage_sl
 from python_ai.rl.engine_stats import extract_engine_stats, opponent_played_card
 from python_ai.rl.entropy import EntropyController
 from python_ai.rl.episode_metrics import EpisodeMetrics
-from python_ai.rl.ppo import PPOUpdater
+from python_ai.rl.ppo import PPOUpdater, ratio_placement_logprob
 from python_ai.rl.seeding import engine_seeds, seed_everything, worker_seeds
 
 
@@ -346,7 +346,8 @@ class BaseTrainer:
                 placement_dist = Categorical(logits=placement_logits)
                 placement_cell = sample_categorical(placement_logits)
                 card_logprob = card_dist.log_prob(card_idx)
-                placement_logprob = placement_dist.log_prob(placement_cell)
+                placement_logprob = ratio_placement_logprob(
+                    placement_dist.log_prob(placement_cell), card_idx, net.hand_size)
                 total_logprob = card_logprob + placement_logprob
                 # Champion abilities are part of the joint action, sampled
                 # under the readiness reported with this observation.
