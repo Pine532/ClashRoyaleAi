@@ -38,6 +38,7 @@ from python_ai.rewards.weights import DRAW_PENALTY
 from python_ai.rl import gae as gae_mod
 from python_ai.rl import abilities as ability_mod
 from python_ai.rl import hand_slots
+from python_ai.rl.sampling import sample_categorical
 from python_ai.rl.engine_stats import reseat_prev_stats
 from python_ai.rl.buffer import (
     ABILITY_FIELDS, ADVISOR_FIELDS, CORE_FIELDS, HAND_FIELDS, TRUNCATION_FIELDS,
@@ -331,12 +332,14 @@ class BaseTrainer:
                 card_logits, ab1_logits, ab2_logits, state_value, (self._hx, self._cx) = \
                     net.step_lstm_and_card(features, (hx_in, cx_in), card_mask)
                 card_dist = Categorical(logits=card_logits)
-                card_idx = card_dist.sample()
+                # Drawn on the CPU: MPS can draw a zero-probability arm
+                # (rl/sampling.py).
+                card_idx = sample_categorical(card_logits)
                 placement_logits = net.placement_given_card(
                     self._hx, card_embeds, card_idx, obs_tensor, spatial_map,
                     hires_map=hires_map)
                 placement_dist = Categorical(logits=placement_logits)
-                placement_cell = placement_dist.sample()
+                placement_cell = sample_categorical(placement_logits)
                 total_logprob = (card_dist.log_prob(card_idx)
                                  + placement_dist.log_prob(placement_cell))
                 # Champion abilities are part of the joint action, sampled

@@ -18,6 +18,8 @@ from torch.distributions import Categorical
 
 import clash_royale_env as E
 
+from python_ai.rl.sampling import sample_categorical
+
 _NEG_INF = float("-inf")
 
 
@@ -74,7 +76,8 @@ def sample(logits_list, ready):
     """(actions (N,k) long, log-prob (N,), entropy (N,k))."""
     acts = []
     for k, logits in enumerate(logits_list):
-        acts.append(Categorical(logits=_masked(logits, ready[:, k].bool())).sample())
+        # Drawn on the CPU: MPS can draw the masked arm (rl/sampling.py).
+        acts.append(sample_categorical(_masked(logits, ready[:, k].bool())))
     n = ready.shape[0]
     actions = (torch.stack(acts, dim=1) if acts
                else torch.zeros((n, 0), dtype=torch.long))
