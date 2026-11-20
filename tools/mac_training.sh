@@ -7,12 +7,7 @@
 #
 # Defaults (export a variable first to override it): the 2.6 Hog Cycle deck,
 # checkpoint runs/checkpoints/livesync.pth (runs/ is gitignored whole, the .prev
-# copy included), TensorBoard runs/livesync, a save every 250 episodes, and the
-# network on MPS where the Mac has it (CLASH_DEVICE=cpu to opt out). Stdout goes to runs/livesync_<timestamp>.log.
-#
-# MPS since 2026-11-19: 395 vs 184 updates/hour on the same checkpoint (rung 3,
-# full pool), after a same-batch CPU check (losses within 2.4e-7) and with the
-# PPO ratio self-check at 1e-5 levels (docs/TODO.md L11).
+# copy included), TensorBoard runs/livesync, a save every 250 episodes. Stdout goes to runs/livesync_<timestamp>.log.
 #
 # Why this script and not a bare `nohup python ... &`:
 # - A job started with `&` from a non-interactive shell inherits SIGINT as
@@ -32,10 +27,6 @@ export CLASH_DECK="${CLASH_DECK:-15,6,25,40,24,72,33,7}"
 export CLASH_WEIGHTS="${CLASH_WEIGHTS:-$REPO/runs/checkpoints/livesync.pth}"
 export CLASH_LOGDIR="${CLASH_LOGDIR:-$REPO/runs/livesync}"
 export CLASH_SAVE_EVERY="${CLASH_SAVE_EVERY:-250}"
-if [ -z "${CLASH_DEVICE:-}" ] && [ "${1:-}" = start ] \
-   && "$PY" -c 'import sys, torch; sys.exit(0 if torch.backends.mps.is_available() else 1)' 2>/dev/null; then
-    export CLASH_DEVICE=mps
-fi
 export PYTHONDONTWRITEBYTECODE=1
 LOGROOT="$(dirname "$CLASH_LOGDIR")"
 NAME="$(basename "$CLASH_LOGDIR")"
