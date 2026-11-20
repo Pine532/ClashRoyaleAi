@@ -21,7 +21,12 @@
 # - Phase 1 starts phase 2 as a subprocess and exits, so `caffeinate -i` wraps
 #   a waiter that outlives phase 1 and holds the no-sleep assertion until
 #   phase 2 ends too.
+# - Everything below is one { ... } group ending in `exit`, which bash parses
+#   whole before running. bash otherwise reads a script as it goes: the `_run`
+#   launcher waits hours inside it, then reads on from the same byte offset, so
+#   an edit made in place meanwhile would run from the middle of a line.
 set -u
+{
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 PY="$REPO/venv/bin/python"
 export CLASH_DECK="${CLASH_DECK:-15,6,25,40,24,72,33,7}"
@@ -119,3 +124,5 @@ row)
 *)
     sed -n 2,11p "$0"; exit 2 ;;
 esac
+exit
+}
