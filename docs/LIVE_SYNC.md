@@ -259,7 +259,7 @@ From the per-entry implementation notes and designs. "Not modelled" means the me
 - Omitted: defeat-before-activation elixir refund.
 - Omitted: +64% damage.
 
-**Hero Ice Wizard** (id 184, `a1304bc`; Snowman built 2026-11-20, uncommitted at time of writing)
+**Hero Ice Wizard** (id 184, `a1304bc`; Snowman built 2026-11-20 in `b0b8f46`)
 
 - Snowman hp 266 is single-source (RoyaleAPI developer-build write-up, per the user, 2026-11-20); the ~425 of timesaver was pre-release and is dropped.
 - Snowman lifetime 5 s. INFERENCE (launch 7 s; matched to the official 5 s freeze cap); no post-nerf figure published.
