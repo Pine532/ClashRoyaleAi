@@ -284,7 +284,17 @@ class PPOUpdater:
                 has_decision = bool(mb_decision.sum() > 0)
                 n_decision = mb_decision.sum().clamp(min=1.0)
 
-                ratios = torch.exp(new_logprobs - mb_old_logprobs)
+                # Rows outside `decision` are excluded here, on the log-ratio,
+                # with torch.where, not only by the `* mb_decision` below: a
+                # stored log-prob of -inf (an action drawn at probability 0,
+                # TODO L11) makes exp(new - old) inf, and inf * 0 is NaN in
+                # the loss and, through exp's backward, in the gradient. An
+                # excluded row's ratio is exactly 1 and its gradient exactly
+                # 0; a decision row's ratio is computed as before.
+                log_ratios = torch.where(mb_decision > 0,
+                                         new_logprobs - mb_old_logprobs,
+                                         torch.zeros_like(new_logprobs))
+                ratios = torch.exp(log_ratios)
                 if ratio_dev_first is None:
                     with torch.no_grad():
                         dev = ((ratios - 1.0).abs() * mb_decision)
