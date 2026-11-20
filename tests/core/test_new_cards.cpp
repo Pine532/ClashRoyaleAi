@@ -1273,6 +1273,42 @@ TEST_CASE("Hero Ice Wizard (184) refunds nothing once Frosty Fella has fired, or
     }
 }
 
+TEST_CASE("Hero Ice Wizard (184) a Clone copy of him armed is not armed: no second refund, no second Snowman",
+          "[new_card][hero_ice_wizard][refund][clone]") {
+    // The copy has no ability slot (becomeCloneCopy), so it never pressed the
+    // ability and never paid for it. Found by review 2026-11-20: the copy kept
+    // abilityArmed, so its death refunded 2 elixir on top of the original's.
+    GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    auto hero = deployedHeroIceWizard(game);
+    REQUIRE(hero != nullptr);
+    game.playerAI.elixir = 5.0f;
+    REQUIRE(game.activateChampionAbility(0, 1));
+    REQUIRE(hero->abilityArmed);
+    auto copy = std::dynamic_pointer_cast<CombatEntity>(hero->clone(game.getBoard().allocateId()));
+    REQUIRE(copy != nullptr);
+    CHECK_FALSE(copy->abilityArmed);
+    game.getBoard().addEntity(copy);
+    game.getBoard().commitPendingEntities();
+
+    // A slowed enemy hit by the copy: nothing fires.
+    auto enemy = std::make_shared<StationaryCombatant>(7777, copy->position.x, copy->position.y + 3.0f,
+                                                       5000, 1, 0.0f, 0, 1000);
+    game.getBoard().addEntity(enemy);
+    game.getBoard().commitPendingEntities();
+    enemy->applyFreeze(30, 0.70f);
+    const size_t before = game.getBoard().getEntities().size();
+    copy->abilityEffect->onOwnerHitLanded(game.getBoard(), *copy, enemy);
+    game.getBoard().commitPendingEntities();
+    CHECK(game.getBoard().getEntities().size() == before);
+
+    // The copy dies: no refund. The original is still armed.
+    const float afterPress = game.getElixirAI();
+    copy->hp = 0;
+    game.step();
+    CHECK(game.getElixirAI() - afterPress < 0.1f);   // regeneration only
+    CHECK(hero->abilityArmed);
+}
+
 TEST_CASE("Hero Ice Wizard (184) Frosty Fella costs 2 elixir and is single-use through GameManager",
           "[new_card][hero_ice_wizard]") {
     GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });

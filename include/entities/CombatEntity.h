@@ -513,7 +513,10 @@ public:
 
     // What every Clone copy shares (the leaf classes' clone()): a fresh id, 1
     // hp, and no claim on a Champion/Hero slot, so a cloned Champion or Hero
-    // never gets its ability (GameManager::trackSlotEntities).
+    // never gets its ability (GameManager::trackSlotEntities). Nor does it
+    // inherit an ability the original had already armed: the copy never
+    // pressed or paid for it, so it neither fires it nor refunds it
+    // (Hero Ice Wizard's Frosty Fella; found by review 2026-11-20).
     // 2026-09-01 balance update: clones can no longer be cloned
     // (isCloneCopy, read by AreaSpell's Clone targeting; docs/LIVE_SYNC.md).
     bool isCloneCopy = false;
@@ -522,6 +525,7 @@ public:
         hp = 1;
         isCloneCopy = true;
         abilitySlotCardId = 0;
+        abilityArmed = false;
     }
 
     // First-hit time (CardStats::firstHitTicks): the wind-up before a unit's
