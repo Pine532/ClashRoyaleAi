@@ -139,6 +139,23 @@ size, so the first two items gate any training.
       neither can see this fault.
     - Next: capture a batch that skips on MPS, replay the failing segment on CPU and MPS
       with anomaly detection, and find the first op that goes non-finite.
+    **Diagnosed 2026-11-19 22:10: MPS's sampler draws zero-probability actions.**
+    - A scratch MPS run from the episode-106,705 copy skipped on its 22nd update; the
+      update dropped one minibatch in each epoch, the same pattern as the live run.
+    - The update is not at fault. One stored row (step 458, env 5) has old logprob `-inf`.
+      Replaying the update on CPU fails identically, on the same single segment.
+    - That row is a wait step (the no-card action, the only legal card). Its placement is
+      cell 370, but only cells 0-287 were legal, and on both devices cell 370 recomputes to
+      probability exactly 0. The ratio becomes `-inf - (-inf)` = NaN, and the NaN spreads
+      to the whole minibatch.
+    - `Categorical(logits).sample()` on that row's own distribution, 20,000,000 draws each:
+      CPU 0 zero-probability samples, MPS 186 (9.3e-6). A planted illegal cell is detected,
+      so the counter can see one. At 4,000 rows per update that is about one bad batch
+      every 27 updates, matching the live rate (about 1 in 30).
+    - Sampling sites in the rollout: `rl/base_trainer.py:334` (card), `:339` (placement),
+      `rl/abilities.py:77` (abilities). Option, needs a yes (trainer code): sample from the
+      logits on CPU. On CPU that is a no-op, so CPU stays bit-identical.
+      Scripts: scratchpad `mpscheck/capture.py`, `replay.py`, `which_head.py`, `sampler.py`.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's
