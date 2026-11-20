@@ -92,13 +92,13 @@ All are gameplay-affecting additions with tests tagged `[new_card][<key>]`, each
 | 181 | Hero Berserker | `0be918a` | Savage Survival: 3 elixir, single use, 3.5 s, hit speed 0.2 s, hp floor 1, 75% less damage to Crown Towers (single-source numbers) | no |
 | 182 | Elite Barbarians Evolution | `aeed1d8` | Body of id 17 plus a 5 s spear (220, ground only, band 3-4.5 tiles); Rage path omitted | yes (partly built; flagged 2026-11-18) |
 | 183 | Minion Giant | `9da8008` | Flying building-targeter, 4 elixir, 1817 hp, 153 damage, 1.7 s, range 4.0, sight 6.5, Medium | no |
-| 184 | Hero Ice Wizard | `a1304bc` | Body of base Ice Wizard (id 34); Frosty Fella: 2 elixir, single use, 46 damage, 5 s freeze, radius 2.5 around the nearest slowed troop; the Snowman is omitted | yes (partly built; flagged 2026-11-18) |
+| 184 | Hero Ice Wizard | `a1304bc`; Snowman built 2026-11-20 | Body of base Ice Wizard (id 34); Frosty Fella (RoyaleAPI developer-build write-up, level 11, per the user, read in a browser 2026-11-20): 2 elixir, single use; pressing arms it and it fires when an enemy target his own slow is on is hit; Snowman 266 hp, 1 tile behind the target, centre of a 2.5-tile blast of 46 (Crown Tower 20, INFERENCE) and of a freeze held while it lives, capped at 5 s; Snowman lifetime 5 s (INFERENCE) | no (flag cleared 2026-11-20) |
 | 185 | Hero Electro Wizard | `38b510e` | Body of base Electro Wizard (id 35); Surging Strikes not built | yes |
 | 186 | Electro Giant Evolution | `ce7d206` | Base Electro Giant body (3952 hp, 184 dmg, 1.8 s, 1.0 s first hit) with the base card's periodic stun; the de-level pulse is omitted (no numbers) | yes (partly built; flagged 2026-11-18) |
 | 187 | Giant Evolution | `9c4d8bc` | Enrage at <= 50% hp (latched), Rage trail of the last 1.5 s of positions, radii 2/2.5/3/3.5 growing per attack, +30% move and attack speed for 1.5 s (single-source numbers) | no |
 | 188 | Mirror Evolution | `6501e2c` | Copies the last card played in its Evolved form at cost + 1; cycles to evolve 2 (single-source), evolved uses 1 (unsourced) | no |
 
-Abilities built: Hero Valkyrie, Hero Berserker and Hero Ice Wizard (their numbers are single-source or partial; see "Values to look up"). Ability-pending: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero Electro Wizard. Flagged with the same `abilityPending` on 2026-11-18 because they are only partly built: Elite Barbarians Evolution, Hero Ice Wizard, Electro Giant Evolution. Random decks deal none of these eight. Per-entry notes are in the commit messages (`git show <commit>`). Id 188 is not in the Evolution id range `123-163`, which is why `deck.py` now reads the `is_evolution` flag.
+Abilities built: Hero Valkyrie, Hero Berserker and Hero Ice Wizard (Frosty Fella with its Snowman, built 2026-11-20; their numbers are single-source or partial; see "Values to look up"). Ability-pending: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero Electro Wizard. Flagged with the same `abilityPending` on 2026-11-18 because they are only partly built: Elite Barbarians Evolution, Electro Giant Evolution (Hero Ice Wizard was flagged too until its Snowman was built on 2026-11-20). Random decks deal none of these seven; the flagged ids are 176-179, 182, 185, 186. Per-entry notes are in the commit messages (`git show <commit>`). Id 188 is not in the Evolution id range `123-163`, which is why `deck.py` now reads the `is_evolution` flag.
 
 ### Tower Troops: deferred
 
@@ -259,17 +259,15 @@ From the per-entry implementation notes and designs. "Not modelled" means the me
 - Omitted: defeat-before-activation elixir refund.
 - Omitted: +64% damage.
 
-**Hero Ice Wizard** (id 184, `a1304bc`)
+**Hero Ice Wizard** (id 184, `a1304bc`; Snowman built 2026-11-20, uncommitted at time of writing)
 
-- Snowman unit. hp contradicted (~425 timesaver vs 266 ldplayer); lifetime only pre-nerf.
+- Snowman hp 266 is single-source (RoyaleAPI developer-build write-up, per the user, 2026-11-20); the ~425 of timesaver was pre-release and is dropped.
+- Snowman lifetime 5 s. INFERENCE (launch 7 s; matched to the official 5 s freeze cap); no post-nerf figure published.
+- Crown Tower damage of the 46 blast = 20. INFERENCE (launch 38 of 89, -57%; 46 x 38/89 = 19.6, rounded); no post-nerf figure published.
+- The King Tower does not fire it: a reading of the source, which names no King Tower target.
 - Slow duration 3 s. engine base value, not in official posts.
-- Crown Tower damage of the 46. unpublished; 100% used.
-- Elixir refund if defeated before projectile hits (2026-10-27). new mechanic, no amount.
-- Activation with no slowed enemy. effect no-ops but elixir and use are spent; needs canActivate hook (UPSTREAM proposal).
-- Freeze centre (nearest slowed troop to hero vs to hero's target), 'behind' offset. unpublished.
-- Omitted: Snowman unit.
-- Omitted: freeze ending when Snowman dies.
-- Omitted: elixir refund on early death.
+- Not modelled by decision: the write-up's two release bugs (inconsistent slow stacking, double spawn damage); no evidence they shipped.
+- Not modelled: the 2026-10-27 elixir refund if defeated before the projectile hits. No window exists in this model (the Snowman appears the moment the slowed hit lands); per the write-up, dying while armed refunds nothing.
 
 **Hero Electro Wizard** (id 185, `38b510e`)
 
@@ -451,7 +449,7 @@ Built from `main` at `9ab9b45` with the documented Linux/macOS path (`pip instal
 | Entry | Kind | Released | Official numbers available | Main unresolved items |
 |---|---|---|---|---|
 | Minion Giant | card | 2026-09-07 | Damage 153; Hit speed 1.7 s; Targets Flying; targets buildings and… | Deploy time; First-hit time; Projectile speed / splash radius |
-| Hero Ice Wizard | hero | 2026-09-07 (DeckShop lists re… | Freeze duration 5s (launch 7s); Freeze damage (snowman spawn area damag… 46 (launch 89); Snowman spawn offset behind the nearest slowed tro…; Uses 1 per deployment | Snowman HP, lifetime, size, spawn offset; Freeze radius official value; Ability elixir cost official |
+| Hero Ice Wizard | hero | 2026-09-07 (DeckShop lists re… | Freeze duration 5s (launch 7s); Freeze damage (snowman spawn area damag… 46 (launch 89); Snowman spawn offset behind the nearest slowed tro…; Uses 1 per deployment | Snowman built 2026-11-20 (hp 266 single-source; lifetime 5 s and Crown Tower damage 20 are INFERENCES); Freeze radius official value; Ability elixir cost official; hero-specific hp/damage/hit speed/range |
 | Hero Electro Wizard | hero | 2026-10-05 | Damage 116; Deploy zap damage/radius 118 / 3.0 tiles, 0.5s stun | Ability duration, stun length, targeting radius, damage, cooldown; Base damage 116 vs 118; Hero hit speed / HP identical to base |
 | Hero Balloon | hero | 2026-04-06 | Skeletrooper landing damage (final) 230; Skeletrooper on-foot damage (final) 204; Skeletrooper hit speed (final) 1.1s; Uses single-use | Ability elixir cost; Skeletrooper hp, count, speed, targets, attack range vs sight; Hero-specific Balloon hp/damage/death damage |
 | Hero Dark Prince | hero | 2026-05-04 | Damage 266; Charge damage 532; Hit speed 1.4s; Deploy time 1s; Tiles needed for first charge 2.5 tiles; Base charge range (Dark Prince) 3 tiles | Rhino hitpoints, trample damage, speed; Dismount landing damage and radius; Ability elixir cost official confirmation |
@@ -509,7 +507,7 @@ Engine modelling: templates include/core/CardRegistry.h:607 Royal Giant (18): Ra
 
 Hero; base card id 34; released 2026-09-07 (DeckShop lists release as 2026-09-08 balance entry) ([new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/)); elixir 3.
 
-*Ability / evolution:* Frosty Fella: a snowman spawns behind the nearest slowed enemy troop while all troops in the area are frozen in place; opponent must defeat the snowman to free the push. LDPlayer (unfetched summary) says the snowman appears once the Hero hits an already-slowed target; unconfirmed.
+*Ability / evolution:* Frosty Fella: a snowman spawns behind the nearest slowed enemy troop while all troops in the area are frozen in place; opponent must defeat the snowman to free the push. LDPlayer (unfetched summary) says the snowman appears once the Hero hits an already-slowed target; unconfirmed. Built 2026-11-20 from RoyaleAPI's developer-build write-up (royaleapi.com/blog/hero-ice-wizard-september-2026, level 11; per the user, read in a browser, as RoyaleAPI refuses our fetches) plus the later official changes: pressing arms the ability and it fires when an enemy target hit by this Hero is under HIS slow (at once if one already is; his current target first, else the nearest); if his hit kills the target it stays armed; no refund if he dies while armed; enemies only (a slow reflected by Monk cannot fire it); targets are troops, buildings and Princess Towers (the King Tower does not fire it: a reading of the source, which names none). The Snowman is a stationary non-attacking troop, transform-immune, with hp draining linearly to 0 over its lifetime; it has the hitbox (and so mass) of Hero Magic Archer's decoy, can be damaged, and moves under knockback, Tornado and Evo Snowball. Every enemy inside the 2.5-tile blast at spawn is frozen like the Freeze spell, held while the Snowman lives (cap 5 s); later arrivals are not caught; units moved out stay frozen. It self-destructs 2 s after everything it froze has died.
 
 *elixir cost: 2 (secondary sources); uses: single-use per deployment; trigger: Player activation (hero ability slot)*
 
@@ -527,27 +525,29 @@ Hero; base card id 34; released 2026-09-07 (DeckShop lists release as 2026-09-08
 | Ability elixir cost | 2 | 2.0 | cross-checked | [trophycoach.com](https://trophycoach.com/heroes/hero-ice-wizard) |
 | Freeze duration | 5s (launch 7s) | 50 ticks | official | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
 | Freeze damage (snowman spawn area damage) | 46 (launch 89) | 46 | official | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
-| Freeze radius | ~2.5 tiles | 2.5 | single-source | [timesaver.gg](https://timesaver.gg/blog/clash-royale-hero-ice-wizard-explained-september-2026) |
-| Snowman hitpoints | ~425 | 425 | unresolved | [timesaver.gg](https://timesaver.gg/blog/clash-royale-hero-ice-wizard-explained-september-2026) |
-| Snowman spawn offset | behind the nearest slowed troop |  | official | Supercell 2026-09-07 post |
+| Freeze radius | ~2.5 tiles | 2.5 | single-source (also in the write-up) | [timesaver.gg](https://timesaver.gg/blog/clash-royale-hero-ice-wizard-explained-september-2026) |
+| Snowman hitpoints | 266 | 266 | single-source | RoyaleAPI developer-build write-up, royaleapi.com/blog/hero-ice-wizard-september-2026 (per the user, read in a browser, 2026-11-20); timesaver's ~425 was pre-release and is dropped |
+| Snowman lifetime | 5s (launch 7s) | 50 ticks | INFERENCE | matched to the official 5 s freeze cap; no post-nerf figure published |
+| Crown Tower damage of the blast | 20 (launch 38 of 89) | 20 | INFERENCE | 46 x 38/89 = 19.6, rounded; no post-nerf figure published |
+| Snowman spawn offset | 1 tile behind the target (far side from the Hero) | 1.0 | single-source | RoyaleAPI developer-build write-up (per the user, 2026-11-20); the Supercell 2026-09-07 post says only "behind" |
 | Uses | 1 per deployment | usesLimit 1 | official | [final-august-balance-changes-826](https://supercell.com/en/games/clashroyale/blog/news/final-august-balance-changes-826/) |
 
 Balance history: 2026-09-16 Freeze Duration 7s → 5s; 2026-10-06 Freeze Damage 89 → 46; 2026-10-27 Bug fix  → Hero Ice Wizard now….
 
 Unresolved:
 
-- Snowman HP, lifetime, size, spawn offset: Only a provisional ~425 from Timesaver; DeckShop has no stat tables for Hero Ice Wizard; RoyaleAPI, Fandom, StatsRoyale returned 403/402.
+- Snowman lifetime (5 s) and Crown Tower damage (20): INFERENCES, no published post-nerf figure; hp 266 and the 1-tile offset are single-source (RoyaleAPI developer build, per the user).
 - Freeze radius official value: Only community-measured 2.5 tiles.
 - Ability elixir cost official: Not in Supercell posts; 2 per three secondary sites.
 - Hero-specific base stats: Hero assumed to share base Ice Wizard; TrophyCoach only.
-- Meaning of 'freeze duration' vs snowman lifetime and whether freeze damage is hit by snowman spawn: Official text terse.
-- Crown Tower damage of freeze damage: Not published.
-- Elixir refund mechanic details: Only one line in Oct 27 post.
+- Meaning of 'freeze duration' vs snowman lifetime: read as a cap on a freeze held while the Snowman lives (write-up plus official text); the 5 s lifetime itself is an INFERENCE.
+- Crown Tower damage of freeze damage: not published; 20 is an INFERENCE (see above).
+- Elixir refund mechanic details (2026-10-27): only one line in the Oct 27 post; no window exists in this model, so not modelled (dying while armed refunds nothing per the write-up).
 - Hero Ice Wizard hp/damage/hit speed/range/speed/targets: Only base Ice Wizard values (689/90/1.7s/5.5/Medium) found; TrophyCoach says hero figures can differ; no hero source.
-- Freeze radius 2.5 and snowman hp ~425: Community only; unverified, removed as numbers.
+- Freeze radius 2.5: community-measured and in the write-up; not official.
 - Ice Wizard slow duration (3s): Not in official corpus.
 
-Engine modelling: templates include/core/HeroIceGolemSnowstormEffect.h (AreaSpell with FreezeOnHit), include/core/HeroMusketeer turret via SpawnOnAbility (CardRegistry.h:1611-1613), include/core/HeroWizardFieryFlightEffect.h, include/core/CardRegistry.h:563 (Ice Wizard), CombatEntity::applyFreeze (include/entities/CombatEntit…. New mechanics: Ability targets nearest slowed enemy troop (needs query of freezeSlow<1), Freeze held only while spawned snowman alive (freeze tied to a linked entity's life; applyFreeze is time-based) or fixed 5s, Elixir refund if hero dies before projectile hits (Projectile/ability tracking), Skeleton/Bat exclusion is just damage 46 killing nothing; no mechanic.
+Engine modelling: templates include/core/HeroIceGolemSnowstormEffect.h (AreaSpell with FreezeOnHit), include/core/HeroMusketeer turret via SpawnOnAbility (CardRegistry.h:1611-1613), include/core/HeroWizardFieryFlightEffect.h, include/core/CardRegistry.h:563 (Ice Wizard), CombatEntity::applyFreeze (include/entities/CombatEntit…. New mechanics: Ability targets nearest slowed enemy troop (needs query of freezeSlow<1), Freeze held only while spawned snowman alive (freeze tied to a linked entity's life; applyFreeze is time-based) or fixed 5s, Elixir refund if hero dies before projectile hits (Projectile/ability tracking), Skeleton/Bat exclusion is just damage 46 killing nothing; no mechanic. BUILT 2026-11-20: HeroIceWizardFrostyFellaEffect and FrostySnowman, with IAbilityEffect::wantsOwnerHits/onOwnerHitLanded (called from Projectile::applyHit), CombatEntity::abilityArmed, slowMarkOwnerId/slowMarkTicks, transformImmune, hasFreezeOfFactor, getCurrentTargetId, CardStats::withTransformImmunity and Board::findEntity.
 
 ### Hero Electro Wizard
 
@@ -2018,7 +2018,7 @@ One row per change line in an official post, oldest first, with what happened to
 | 2026-09-03 | Hero Valkyrie | hero |  | Ability damages an invisible Archer Queen | did not damage → damages | Hero Valkyrie not in engine | not_in_engine | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
 | 2026-09-03 | Ice Golem | base | 40, 175 | Refunds ability cost if defeated | no refund → refund | Hero Ice Golem ability charged on activation only (GameManager.h:621-… | no_engine_effect | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
 | 2026-09-03 | Rage | base | 108 | Now affects Towers correctly | towers unaffected → towers buffed | AreaSpell buffs any alive same-team CombatEntity incl. Tower (include… | already_applied | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
-| 2026-09-07 | Ice Wizard | hero |  | New Hero: Frosty Fella |  → ability freezes all troops in area and spawns a snowman beh… | Not registered (Ice Wizard base id 34) | not_in_engine | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
+| 2026-09-07 | Ice Wizard | hero |  | New Hero: Frosty Fella |  → ability freezes all troops in area and spawns a snowman beh… | Hero Ice Wizard 184 registered with Frosty Fella and its Snowman (built 2026-11-20; include/core/HeroIceWizardFrostyFellaEffect.h, include/entities/FrostySnowman.h) | already_applied | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
 | 2026-09-07 | Little Prince | champion | 120 | Ability (Royal Rescue / Guardienne) stats corrected | incorrect (unstated) → Little Prince's ability stats are now correct (no numbers g… | Guardienne: hp 1600, damage 217, hit 12 ticks, Medium-ish 0.5 speed l… | unresolved | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
 | 2026-09-07 | Little Prince | champion | 120 | Attack speed buff no longer reset after using ability | ramp reset on ability → not reset | Ramp is a hit-count ramp (withHitSpeedRamp, CardRegistry.h:1073-1076)… | already_applied | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
 | 2026-09-07 | Minion Giant | base |  | New card: flying win condition that targets buildings and t… |  → new flying ranged building-targeter | card absent (grep of include/ src/ docs/CARDS.md finds no Minion Gian… | not_in_engine | [new-season-minion-academy](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/) |
@@ -2047,7 +2047,7 @@ One row per change line in an official post, oldest first, with what happened to
 | 2026-09-08 | Zappies | base | 79 | Hit Speed | 2.2s → 2.3s | 21 ticks = 2.1s (include/core/CardRegistry.h:842; docs/CARDS.md 2.1 s) | to_apply | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
 | 2026-09-16 | Fire Spirit | base | 73, -15 | Damage | 207 → 215 | 215 (id 73 include/core/CardRegistry.h:814; Furnace spirit -15 :199) | already_applied | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
 | 2026-09-16 | Goblinstein | champion | 121 | Ability Duration (Lightning Link) | 4s → 3.5s | 40 ticks totalTicks = 4s (include/core/CardRegistry.h:1083) | to_apply | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
-| 2026-09-16 | Ice Wizard | hero |  | Freeze Duration | 7s → 5s | no Hero Ice Wizard id in engine (docs/CARDS.md heroes 166-175 only) | not_in_engine | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
+| 2026-09-16 | Ice Wizard | hero |  | Freeze Duration | 7s → 5s | freeze capped at 50 ticks while the Snowman lives; Snowman lifetime 50 ticks is an INFERENCE (include/core/CardRegistry.h, id 184) | already_applied | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
 | 2026-09-16 | Minion Giant | base |  | Damage | 189 → 168 | card absent (grep of include/ src/ docs/CARDS.md finds no Minion Gian… | superseded (2026-10-19) | [september-balance-changes-2027](https://supercell.com/en/games/clashroyale/blog/release-notes/september-balance-changes-2027/) |
 | 2026-10-05 | Electro Giant | evolution |  | New Evolution: expanding electric pulse that shrinks and de… |  → expanding pulse; shrinks and de-levels | Base id 84 registered (CardRegistry.h:874); no Evolution | not_in_engine | [new-season-shocktober](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/) |
 | 2026-10-05 | Electro Wizard | hero |  | New Hero: Surging Strikes |  → ability stuns two nearby enemies at once for a few seconds | Not registered (Electro Wizard base id 35) | not_in_engine | [new-season-shocktober](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/) |
@@ -2060,7 +2060,7 @@ One row per change line in an official post, oldest first, with what happened to
 | 2026-10-06 | Goblin Drill | base | 98, 153 | Crown Tower Spawn Damage | 0 → 20 | withSpawnEffect(2.0f,84) on id 98 (include/core/CardRegistry.h:947) a… | needs_new_mechanic | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
 | 2026-10-06 | Golden Knight | champion | 116 | Damage | 161 → 168 (+5%) | 161 (include/core/CardRegistry.h:1047) | to_apply | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
 | 2026-10-06 | Golden Knight | champion | 116 | Dash Range | 5.5 tiles → 5 tiles (-9%) | GoldenKnightDashEffect(335, 5.5f, 10) (include/core/CardRegistry.h:10… | to_apply | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
-| 2026-10-06 | Hero Ice Wizard | hero |  | Freeze Damage | 89 → 46 (-49%) | no Hero Ice Wizard (heroes are ids 166-175) | not_in_engine | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
+| 2026-10-06 | Hero Ice Wizard | hero |  | Freeze Damage | 89 → 46 (-49%) | blast 46 (include/core/CardRegistry.h, id 184); Crown Tower damage 20 is an INFERENCE (launch 38 of 89) | already_applied | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
 | 2026-10-06 | Lava Hound | base | 91 | Damage | 53 → 71 (+33%) | 53 (include/core/CardRegistry.h:908; docs/CARDS.md) | to_apply | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
 | 2026-10-06 | Lava Hound | base | 91 | Hit Speed | 1.3s → 1.5s (+15%) | 13 ticks (include/core/CardRegistry.h:908) | to_apply | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
 | 2026-10-06 | Minion Giant | base |  | Hit Speed | 1.5s → 1.7s (+13%) | card absent (grep of include/ src/ docs/CARDS.md finds no Minion Gian… | not_in_engine | [october-balance-changes-2026](https://supercell.com/en/games/clashroyale/blog/release-notes/october-balance-changes-2026/) |
@@ -2090,7 +2090,7 @@ One row per change line in an official post, oldest first, with what happened to
 | 2026-10-27 | Evolved Battle Ram | evolution | 161 | Charge interrupted by Zap and similar when pushing itself b… | not interrupted → interrupted | No self-pushback between charges is modelled; sticky charge keeps dou… | no_engine_effect | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
 | 2026-10-27 | Evolved Wall Breakers | evolution | 123 | Now deal death damage while being pulled in by Fisherman | no death damage when hooked → death damage applies | Death effect (AreaDamageOnDeath 1.5/150) fires on any death (include/… | already_applied | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
 | 2026-10-27 | Giant | evolution |  | New Evolution: enrages at damage threshold, leaves a Rage t… |  → enrage + growing Rage trail | Base id 2 registered; no Evolution (docs/CARDS.md:52) | not_in_engine | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
-| 2026-10-27 | Hero Ice Wizard | hero |  | Refunds Elixir if defeated before projectile hits | no refund → refund | Hero Ice Wizard not in engine | not_in_engine | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
+| 2026-10-27 | Hero Ice Wizard | hero |  | Refunds Elixir if defeated before projectile hits | no refund → refund | not modelled: no window in this model (the Snowman appears the moment the slowed hit lands; dying while armed refunds nothing per the RoyaleAPI write-up); status is the closest existing word | no_engine_effect | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
 | 2026-10-27 | Mega Knight | base | 48 | No longer immune to Evolved Hunter's net while jumping | immune while jumping → netted | Engine jump is instantaneous; no immunity window (CombatEntity.h:820-… | already_applied | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
 | 2026-10-27 | Mega Knight | evolution | 160 | No longer immune to Tornado while attacking | immune while attacking → pulled by Tornado | Tornado knockback has no immunity flag for the Evo; Evo 160 identical… | already_applied | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |
 | 2026-10-27 | Mirror | evolution |  | New Evolution: copies last card played in its Evolution for… |  → Evolved copy of last played card | Mirror id 164 copies last-played card; no evolved-copy branch (includ… | not_in_engine | [new-season-king-vs-king](https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-king-vs-king/) |

@@ -30,6 +30,7 @@ protected:
         auto arrow = std::make_shared<Projectile>(
             board.allocateId(), position.x, position.y, team, target, 1.5f, getCurrentDamage(), onHitEffects,
             boomerang, boomerangReturnDelayTicks, id, cardId, splashRadius, lineSplash, lineSplashRange);
+        arrow->notifyOwnerOnHit = abilityEffect && abilityEffect->wantsOwnerHits();
         board.addEntity(arrow);
     }
 };

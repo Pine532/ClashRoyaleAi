@@ -827,6 +827,11 @@ TEST_CASE("Minion Giant (183) takes damage from Archers but none from a Knight i
 }
 
 // ---------------- Hero Ice Wizard (184) ----------------
+// Frosty Fella with its Snowman, built 2026-11-20 from RoyaleAPI's
+// developer-build write-up (relayed by the user) plus the later official
+// changes; docs/LIVE_SYNC.md. Pressing arms it; it fires on an enemy under his
+// own slow; the Snowman sits 1 tile behind that target, the centre of a
+// 46-damage blast and of a freeze held while it lives (capped at 5 s).
 
 namespace {
 
@@ -839,21 +844,45 @@ struct FrostyRig {
         hero = live_sync::firstCombat(live_sync::spawnBare(board, 184, 5.0f, 5.0f, 0));
         hero->deployTicksRemaining = 0;
     }
-    std::shared_ptr<StationaryCombatant> unit(float x, float y, int team, int hp = 500, bool slowed = false) {
+    std::shared_ptr<StationaryCombatant> unit(float x, float y, int team, int hp = 500) {
         auto u = std::make_shared<StationaryCombatant>(nextId++, x, y, hp, team, 0.0f, 0, 1000);
         board.addEntity(u);
         board.commitPendingEntities();
-        if (slowed) u->applyFreeze(30, 0.70f);
         return u;
     }
-    // Cast, then run the blast (an AreaSpell with no delay) for one update.
-    void cast() {
+    // One of his hits as his projectile delivers it (Projectile::applyHit):
+    // the damage, his on-hit slow, then the ability's hook.
+    void hit(const std::shared_ptr<CombatEntity>& target, int damage = 0) {
+        target->takeDamage(damage);
+        target->applyFreeze(30, 0.70f);
+        hero->abilityEffect->onOwnerHitLanded(board, *hero, target);
+        board.commitPendingEntities();
+    }
+    void press() {
         REQUIRE(hero->activateAbility(board));
         board.commitPendingEntities();
-        for (const auto& e : board.getEntities())
-            if (auto a = std::dynamic_pointer_cast<AreaSpell>(e)) a->update(board);
     }
-    size_t count() { return board.getEntities().size(); }
+    std::shared_ptr<FrostySnowman> snowman() {
+        for (const auto& e : board.getEntities())
+            if (auto s = std::dynamic_pointer_cast<FrostySnowman>(e)) return s;
+        return nullptr;
+    }
+    std::shared_ptr<AreaSpell> blastSpell() {
+        for (const auto& e : board.getEntities())
+            if (auto a = std::dynamic_pointer_cast<AreaSpell>(e)) return a;
+        return nullptr;
+    }
+    // Whole ticks for everything but the Hero (who would otherwise start
+    // shooting the test units): update, commit, sweep the dead.
+    void tick(int n = 1) {
+        for (int i = 0; i < n; ++i) {
+            auto all = board.getEntities();
+            for (const auto& e : all)
+                if (e != hero && e->isAlive()) e->update(board);
+            board.commitPendingEntities();
+            board.cleanDeadEntities();
+        }
+    }
 };
 
 } // namespace
@@ -865,7 +894,7 @@ TEST_CASE("Hero Ice Wizard (184) is registered with base Ice Wizard's body and a
     CHECK(def->name == "Hero Ice Wizard");
     CHECK(def->cost == Catch::Approx(3.0f));
     CHECK(def->isHero);
-    CHECK(def->abilityPending);  // the Snowman is not built (2026-11-18)
+    CHECK_FALSE(def->abilityPending);  // the Snowman is built (2026-11-20)
 
     Board a, b;
     auto base = live_sync::mainBody(a, 34);
@@ -884,58 +913,269 @@ TEST_CASE("Hero Ice Wizard (184) is registered with base Ice Wizard's body and a
     CHECK(hero->abilityUsesRemaining == 1);
 }
 
-TEST_CASE("Hero Ice Wizard (184) Frosty Fella damages 46 and freezes 50 ticks around the nearest slowed troop",
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella, pressed with no enemy under his slow, arms and spawns nothing",
           "[new_card][hero_ice_wizard]") {
     FrostyRig r;
-    auto a = r.unit(5.0f, 10.0f, 1, 500, true);
-    auto b = r.unit(5.0f, 12.0f, 1);   // 2.0 from A, unslowed
-    auto c = r.unit(5.0f, 13.0f, 1);   // 3.0 from A, outside 2.5
-    r.cast();
-    CHECK(a->hp == 500 - 46);
-    CHECK(b->hp == 500 - 46);
-    CHECK(c->hp == 500);
-    CHECK(a->freezeTicks == 50);
-    CHECK(b->freezeTicks == 50);
-    CHECK(b->freezeSlow == Catch::Approx(0.0f));
-    CHECK(c->freezeTicks == 0);
+    auto enemy = r.unit(5.0f, 10.0f, 1);
+    const size_t before = r.board.getEntities().size();
+    r.press();
+    CHECK(r.hero->abilityArmed);
+    CHECK(r.hero->abilityUsesRemaining == 0);  // spent on the press: no refund later
+    CHECK(r.board.getEntities().size() == before);
+    CHECK(enemy->freezeTicks == 0);
 }
 
-TEST_CASE("Hero Ice Wizard (184) Frosty Fella centres on the nearest slowed troop to the hero",
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires on his next slowed hit, 1 tile behind the target",
           "[new_card][hero_ice_wizard]") {
-    FrostyRig r;
-    auto far = r.unit(12.0f, 14.0f, 1, 500, true);
-    auto farNeighbour = r.unit(12.0f, 15.0f, 1);
-    auto near = r.unit(5.0f, 9.0f, 1, 500, true);
-    auto nearNeighbour = r.unit(5.0f, 10.0f, 1);
-    r.cast();
-    CHECK(near->freezeTicks == 50);
-    CHECK(nearNeighbour->freezeTicks == 50);
-    CHECK(far->hp == 500);
-    CHECK(farNeighbour->freezeTicks == 0);
+    SECTION("straight ahead") {
+        FrostyRig r;
+        auto target = r.unit(5.0f, 10.0f, 1);
+        r.press();
+        r.hit(target);
+        auto s = r.snowman();
+        REQUIRE(s != nullptr);
+        CHECK_FALSE(r.hero->abilityArmed);
+        CHECK(s->team == 0);
+        CHECK(s->hp == 266);
+        CHECK(s->transformImmune);
+        CHECK(s->position.x == Catch::Approx(5.0f));
+        CHECK(s->position.y == Catch::Approx(11.0f));
+    }
+    SECTION("on the diagonal: behind, seen from the Hero") {
+        FrostyRig r;
+        auto target = r.unit(8.0f, 9.0f, 1);   // (3, 4) from the Hero: 5 tiles
+        r.press();
+        r.hit(target);
+        auto s = r.snowman();
+        REQUIRE(s != nullptr);
+        CHECK(s->position.x == Catch::Approx(8.6f));
+        CHECK(s->position.y == Catch::Approx(9.8f));
+    }
 }
 
-TEST_CASE("Hero Ice Wizard (184) Frosty Fella ignores friendly and unslowed troops and adds no blast",
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella: 46 to enemy air and ground within 2.5 of the Snowman, all of them frozen",
           "[new_card][hero_ice_wizard]") {
     FrostyRig r;
-    auto friendlySlowed = r.unit(5.0f, 9.0f, 0, 500, true);
-    auto enemyPlain = r.unit(5.0f, 10.0f, 1);
-    const size_t before = r.count();
-    REQUIRE(r.hero->activateAbility(r.board));
-    r.board.commitPendingEntities();
-    CHECK(r.count() == before);
-    CHECK(friendlySlowed->hp == 500);
-    CHECK(enemyPlain->hp == 500);
-    CHECK(enemyPlain->freezeTicks == 0);
+    auto target = r.unit(5.0f, 10.0f, 1);   // Snowman lands at (5, 11)
+    auto inside = r.unit(5.0f, 13.0f, 1);   // 2.0 from it
+    auto air = r.unit(6.0f, 12.0f, 1);
+    air->isFlying = true;
+    auto outside = r.unit(5.0f, 15.0f, 1);  // 4.0 from it
+    auto ally = r.unit(4.5f, 11.0f, 0);
+    r.press();
+    r.hit(target);
+    auto blast = r.blastSpell();
+    REQUIRE(blast != nullptr);
+    CHECK(blast->crownTowerDamage == 20);  // inference: 46 x 38/89, rounded
+    r.tick();
+    for (const auto& u : { target, inside, air }) {
+        CHECK(u->hp == 500 - 46);
+        CHECK(u->freezeTicks > 0);
+        CHECK(u->freezeSlow == Catch::Approx(0.0f));
+    }
+    CHECK(outside->hp == 500);
+    CHECK(outside->freezeTicks == 0);
+    CHECK(ally->hp == 500);
+    CHECK(ally->freezeTicks == 0);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires at once when pressed if an enemy is already under his slow",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto nearer = r.unit(5.0f, 8.0f, 1);
+    auto farther = r.unit(5.0f, 10.0f, 1);
+    r.hit(nearer);
+    r.hit(farther);
+    REQUIRE(r.snowman() == nullptr);  // unarmed hits only mark his slow
+    CHECK(nearer->slowMarkOwnerId == r.hero->id);
+    r.press();
+    auto s = r.snowman();
+    REQUIRE(s != nullptr);
+    CHECK_FALSE(r.hero->abilityArmed);
+    CHECK(s->position.y == Catch::Approx(9.0f));  // behind the nearer one
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella counts only his own slow",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto target = r.unit(5.0f, 10.0f, 1);
+    target->applyFreeze(30, 0.70f);   // the same strength from someone else
+    r.press();
+    CHECK(r.snowman() == nullptr);
+    CHECK(r.hero->abilityArmed);
+    r.hit(target);                    // now his own
+    CHECK(r.snowman() != nullptr);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella stays armed when his hit kills the target",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto weak = r.unit(5.0f, 10.0f, 1, 10);
+    auto next = r.unit(6.0f, 10.0f, 1);
+    r.press();
+    r.hit(weak, 10);
+    CHECK(r.snowman() == nullptr);
+    CHECK(r.hero->abilityArmed);
+    r.board.cleanDeadEntities();
+    r.hit(next);
+    CHECK(r.snowman() != nullptr);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella never fires on an ally (a slow Monk reflects)",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto ally = r.unit(5.0f, 10.0f, 0);
+    r.press();
+    r.hit(ally);
+    CHECK(r.snowman() == nullptr);
+    CHECK(r.hero->abilityArmed);
+    CHECK(ally->slowMarkOwnerId == -1);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires behind a Princess Tower, never on the King Tower",
+          "[new_card][hero_ice_wizard]") {
+    live_sync::Match m;
+    auto hero = live_sync::firstCombat(m.spawnCard(184, 9.0f, 20.0f, 0));
+    REQUIRE(hero != nullptr);
+    hero->deployTicksRemaining = 0;
+    std::shared_ptr<CombatEntity> king, princess;
+    for (const auto& e : m.board().getEntities())
+        if (auto t = std::dynamic_pointer_cast<Tower>(e))
+            if (t->team == 1) {
+                if (t->symbol == 'R') king = t;
+                else if (t->position.x < 9.0f) princess = t;
+            }
+    REQUIRE(king);
+    REQUIRE(princess);
+    auto snowmen = [&] {
+        m.board().commitPendingEntities();
+        int n = 0;
+        for (const auto& e : m.board().getEntities())
+            if (std::dynamic_pointer_cast<FrostySnowman>(e)) ++n;
+        return n;
+    };
+    REQUIRE(hero->activateAbility(m.board()));
+    king->applyFreeze(30, 0.70f);
+    hero->abilityEffect->onOwnerHitLanded(m.board(), *hero, king);
+    CHECK(snowmen() == 0);
+    CHECK(hero->abilityArmed);
+    princess->applyFreeze(30, 0.70f);
+    hero->abilityEffect->onOwnerHitLanded(m.board(), *hero, princess);
+    CHECK(snowmen() == 1);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires from a real projectile hit",
+          "[new_card][hero_ice_wizard]") {
+    // The whole path: RangedTroop flags the shot, Projectile::applyHit lands
+    // the slow and calls the ability.
+    FrostyRig r;
+    auto target = r.unit(5.0f, 9.0f, 1, 5000);
+    r.press();
+    std::shared_ptr<FrostySnowman> s;
+    for (int i = 0; i < 60 && !s; ++i) {
+        auto all = r.board.getEntities();
+        for (const auto& e : all)
+            if (e->isAlive()) e->update(r.board);
+        r.board.commitPendingEntities();
+        r.board.cleanDeadEntities();
+        s = r.snowman();
+    }
+    REQUIRE(s != nullptr);
+    CHECK(s->position.y == Catch::Approx(10.0f));
+    CHECK(target->slowMarkOwnerId == r.hero->id);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Snowman holds the freeze while it lives, wherever the unit is moved",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto target = r.unit(5.0f, 10.0f, 1, 5000);
+    r.press();
+    r.hit(target);
+    auto s = r.snowman();
+    REQUIRE(s != nullptr);
+    r.tick(10);
+    CHECK(target->freezeSlow == Catch::Approx(0.0f));
+    pushAway(*target, s->position, 6.0f);         // moved well out of the area
+    r.tick(10);
+    CHECK(target->freezeSlow == Catch::Approx(0.0f));
+    auto late = r.unit(5.0f, 11.5f, 1);           // arrives after the spawn
+    r.tick(2);
+    CHECK(late->freezeTicks == 0);
+    s->hp = 0;                                    // killed early: the freeze ends with it
+    r.board.cleanDeadEntities();
+    r.tick(2);
+    CHECK(target->freezeSlow > 0.0f);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Snowman drains to 0 over 5 s and the freeze ends with it",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto target = r.unit(5.0f, 10.0f, 1, 5000);
+    r.press();
+    r.hit(target);
+    auto s = r.snowman();
+    REQUIRE(s != nullptr);
+    r.tick(25);
+    CHECK(s->hp >= 132);   // 266 x 25/50 = 133, to float rounding
+    CHECK(s->hp <= 134);
+    r.tick(24);
+    CHECK(s->isAlive());
+    CHECK(target->freezeSlow == Catch::Approx(0.0f));
+    r.tick(1);
+    CHECK(r.snowman() == nullptr);
+    r.tick(2);
+    CHECK(target->freezeTicks == 0);  // his 3 s slow has long expired too
+}
+
+TEST_CASE("Hero Ice Wizard (184) Snowman self-destructs 2 s after everything it froze has died",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto target = r.unit(5.0f, 10.0f, 1);
+    r.press();
+    r.hit(target);
+    r.tick();
+    target->hp = 0;
+    r.board.cleanDeadEntities();
+    r.tick(19);
+    CHECK(r.snowman() != nullptr);
+    r.tick();
+    CHECK(r.snowman() == nullptr);
+}
+
+TEST_CASE("Hero Ice Wizard (184) Snowman is never turned into a Cursed Hog, but is pushed like any troop",
+          "[new_card][hero_ice_wizard]") {
+    FrostyRig r;
+    auto target = r.unit(5.0f, 10.0f, 1);
+    r.press();
+    r.hit(target);
+    auto s = r.snowman();
+    REQUIRE(s != nullptr);
+    CursedHogOnHit curse(1.3f, 60, CardStats{});
+    curse.apply(s);
+    CHECK_FALSE(s->curseDeathSpawnAttached);
+    CHECK(s->deathEffect == nullptr);
+    CHECK(s->curseDamageTakenMultiplier == Catch::Approx(1.3f));  // the debuff still lands
+    // Control: an ordinary unit is armed to turn.
+    auto plain = r.unit(12.0f, 20.0f, 0);
+    curse.apply(plain);
+    CHECK(plain->curseDeathSpawnAttached);
+    // Knockback moves it: a troop, not a building.
+    const Vector2D before = s->position;
+    pushAway(*s, Vector2D{ before.x, before.y - 1.0f }, 1.0f);
+    CHECK(s->position.distanceTo(before) == Catch::Approx(1.0f));
 }
 
 TEST_CASE("Hero Ice Wizard (184) Frosty Fella no longer kills 81 hp Skeletons or Bats",
           "[new_card][hero_ice_wizard]") {
-    // Official 2026-10-06: 89 -> 46 so the freeze stops killing Skeletons/Bats.
+    // Official 2026-10-06: 89 -> 46 so the blast stops killing Skeletons/Bats.
     FrostyRig r;
-    auto decoy = r.unit(5.0f, 10.0f, 1, 500, true);
-    auto skel = r.unit(5.0f, 11.0f, 1, 81);
-    auto bat = r.unit(6.0f, 10.0f, 1, 81);
-    r.cast();
+    auto target = r.unit(5.0f, 10.0f, 1);
+    auto skel = r.unit(5.0f, 12.0f, 1, 81);
+    auto bat = r.unit(6.0f, 11.0f, 1, 81);
+    bat->isFlying = true;
+    r.press();
+    r.hit(target);
+    r.tick();
     CHECK(skel->isAlive());
     CHECK(skel->hp == 35);
     CHECK(bat->hp == 35);
@@ -965,18 +1205,6 @@ TEST_CASE("Hero Ice Wizard (184) Frosty Fella costs 2 elixir and is single-use t
     REQUIRE(game.activateChampionAbility(0, 1));
     CHECK(game.getElixirAI() == Catch::Approx(8.0f));
     REQUIRE_FALSE(game.activateChampionAbility(0, 1));
-}
-
-TEST_CASE("Hero Ice Wizard (184) freeze lasts exactly 50 ticks",
-          "[new_card][hero_ice_wizard]") {
-    FrostyRig r;
-    auto a = r.unit(5.0f, 10.0f, 1, 500, true);
-    r.cast();
-    REQUIRE(a->freezeTicks == 50);
-    for (int i = 0; i < 49; ++i) a->update(r.board);
-    CHECK(a->freezeTicks > 0);
-    a->update(r.board);
-    CHECK(a->freezeTicks == 0);
 }
 
 // ---------------- Hero Electro Wizard (185) ----------------
@@ -1025,22 +1253,22 @@ TEST_CASE("Hero Electro Wizard (185) is flagged ability-pending and is never dea
     CHECK(withHero == 0);
 }
 
-TEST_CASE("Random decks never deal a partly built entry (182, 184, 186); finished new entries still appear",
+TEST_CASE("Random decks never deal a partly built entry (182, 186); finished new entries still appear",
           "[new_card][random_deck][partly_built]") {
     const auto& reg = CardRegistry::getInstance();
-    for (int id : { 182, 184, 186 }) CHECK(reg.getCard(id)->abilityPending);
+    for (int id : { 182, 186 }) CHECK(reg.getCard(id)->abilityPending);
     // Controls that MUST appear: the finished new entries, one per pool
-    // (Evolution 187, Hero 180, plain 183).
-    for (int id : { 180, 183, 187 }) CHECK_FALSE(reg.getCard(id)->abilityPending);
+    // (Evolution 187, Heroes 180 and 184 (Snowman built 2026-11-20), plain 183).
+    for (int id : { 180, 183, 184, 187 }) CHECK_FALSE(reg.getCard(id)->abilityPending);
 
     std::mt19937 rng(9001);
     std::map<int, int> seen;
     for (int i = 0; i < 4000; ++i)
         for (int id : sampleRandomDeck(rng)) ++seen[id];
     CHECK(seen[182] == 0);
-    CHECK(seen[184] == 0);
     CHECK(seen[186] == 0);
     CHECK(seen[180] > 0);
+    CHECK(seen[184] > 0);
     CHECK(seen[183] > 0);
     CHECK(seen[187] > 0);
 }

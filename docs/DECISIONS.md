@@ -8271,3 +8271,29 @@ gradient (60% of decisions; 1.5x the real placements' gradient, uncorrelated wit
   with the decision rule fixed in advance (TODO L18). It is adopted only if it does at least
   as well. If adopted, that is where earlier win rates stop being comparable.
 
+
+## 2026-11-20: the new deck's cards, before the deck switch (user decisions)
+
+The user chose to fine-tune from the Hog checkpoint onto Evo Cannon, Hero Ice Wizard, Evo Bats,
+Minion Giant, Knight, Lightning, Skeletons and Barbarian Barrel. First, the deck's cards were brought
+up to date in one batch, applied at the same restart as the deck switch and the (c) decision, so
+that win-rate comparability breaks once.
+
+- **Lightning stuns its three struck targets for 0.5 s.** Sourced from theriagames (fetched),
+  noff.gg and Fandom (read by the user; both refuse our fetches), and recorded as Section A. A
+  struck Crown Tower is stunned too; no source says either way.
+- **Hero Ice Wizard's Snowman is built**, so 184 is no longer flagged and random decks can deal it.
+  - The spec is RoyaleAPI's developer-build write-up, read by the user, plus the later official
+    changes. Pressing arms the ability; it fires on an enemy under his own slow.
+  - The Snowman (266 hp) sits 1 tile behind the target. It is the centre of a 46-damage, 2.5-tile
+    blast and of a freeze it holds while it lives, capped at 5 s.
+  - Two values are inferences, marked everywhere: the 5 s lifetime (launch was 7 s), and the
+    Crown Tower damage of 20 (46 scaled by the launch ratio 38/89).
+  - Not modelled, by decision: the write-up's two release bugs. The King Tower does not fire it,
+    because the source names troops, buildings and Princess Towers only.
+  - The official 2026-10-27 refund (if he is defeated before the projectile hits) has no window
+    in this model, so it does not apply.
+- **The Evo Cannon barrage's knockback stays unmodelled.** Sources confirm it knocks back, but none
+  gives a distance.
+- **The other unresolved values are left as they are**, by the user's decision: Minion Giant, Evo
+  Bats, Skeletons, Barbarian Barrel.

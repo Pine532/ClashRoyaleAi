@@ -63,12 +63,15 @@ Freshness check on Liquipedia: for each first-hit value, I compared the page's *
 | Hero Dark Prince (177) | Rhino stats | About Ram Rider's stats minus 20% HP and damage | https://trophycoach.com/guides/hero-dark-prince-guide | Approximate. The two Rhino figures in the ledger still conflict |
 | Champions | Cooldown when a new Champion is placed | Resets instantly (ability ready) | https://clashroyale.fandom.com/wiki/Cards | Moot for single-use abilities |
 | Monk (119) | Third-hit knockback | 1.8 tiles | timesaver (already in ledger) | Liquipedia doesn't state it |
+| Hero Ice Wizard (184) | Snowman HP (RESOLVED 2026-11-20; was section C, conflicting 266 vs 425) | 266 | RoyaleAPI developer-build write-up, royaleapi.com/blog/hero-ice-wizard-september-2026 (level 11), relayed by the user on 2026-11-20, read in a browser (RoyaleAPI refuses our fetches) | Single source; agrees with the 266 of note.com and ldplayer.net. The 425 (riggedroyale; timesaver called it provisional) is dropped. Applied |
+| Hero Ice Wizard (184) | Snowman spawn offset, behaviour | 1 tile behind the target (far side from the Hero); stationary, non-attacking, transform-immune; freeze held while it lives; self-destructs 2 s after everything it froze has died | Same write-up, relayed by the user 2026-11-20 | Single source. King Tower not firing the ability is a reading of the source (it names no King Tower target). Applied |
+| Hero Ice Wizard (184) | Snowman lifetime | 5 s (INFERENCE) | No source states a post-nerf figure; launch value was 7 s (the write-up) and the official freeze cap went 7 -> 5 s on 2026-09-16 | INFERENCE, not a sourced value: matched to the freeze cap. Applied as such |
+| Hero Ice Wizard (184) | Crown Tower damage of the 46 blast | 20 (INFERENCE) | No post-nerf figure published; the write-up gives 38 of 89 at launch (-57%), so 46 x 38/89 = 19.6, rounded | INFERENCE, not a sourced value. Applied as such |
 
 ## C. Still unresolved (new information only)
 
 | Card (ids) | Stat | What I found |
 |---|---|---|
-| Hero Ice Wizard (184) | Snowman HP | Still conflicting: 266 (note.com, ldplayer) vs 425 (riggedroyale; timesaver calls 425 "pre-release, provisional"). Snowman lifetime is probably the 5 s freeze cap, but that's my inference |
 | Hero Electro Wizard (185) | Beam damage and range | Not published anywhere I could read |
 | Electro Giant Evolution (186) | First pulse time; cycles | note.com hints at a first pulse around 5.5 s. Fandom's Evolution table says 1 cycle, but it names a different ability ("Lightning Rod"), so it may be stale |
 | Minion Giant (183) | Deploy time, projectile speed, splash, range, speed | Not found in any readable source |

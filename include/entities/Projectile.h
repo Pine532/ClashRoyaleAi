@@ -3,6 +3,7 @@
 #include "CombatEntity.h"
 #include "Board.h"
 #include "OnHitEffect.h"
+#include "AbilityEffect.h"
 #include "StatsEvents.h"
 #include <memory>
 #include <unordered_map>
@@ -21,6 +22,14 @@ private:
     // arrival.
     int attackerId;
     int attackerCardId;
+
+public:
+    // Set by the shooter when its ability wants its own hits
+    // (IAbilityEffect::wantsOwnerHits): on arrival the projectile looks the
+    // shooter up by id and calls onOwnerHitLanded, if it is still alive.
+    bool notifyOwnerOnHit = false;
+
+private:
 
     // The shooter's splash radius (CombatEntity::applySplashDamage); 0 is a
     // single-target hit.
@@ -126,6 +135,14 @@ private:
                     effect->apply(combatTarget);
                 }
             }
+        }
+        // After the on-hit effects, so the ability sees the slow this hit
+        // landed. A dead shooter hears nothing.
+        if (notifyOwnerOnHit) {
+            auto combatTarget = std::dynamic_pointer_cast<CombatEntity>(t);
+            auto owner = std::dynamic_pointer_cast<CombatEntity>(board.findEntity(attackerId));
+            if (combatTarget && owner && owner->isAlive() && owner->abilityEffect)
+                owner->abilityEffect->onOwnerHitLanded(board, *owner, combatTarget);
         }
         if (lineSplash) {
             applyLineSplashDamage(board, origin, t->position, lineSplashRange, splashRadius,

@@ -344,6 +344,8 @@ struct CardStats {
     float burstKnockback = 0.0f;
     // Immune to every knockback source (see Entity::knockbackImmune).
     bool knockbackImmune = false;
+    // Never transformed on death (see CombatEntity::transformImmune).
+    bool transformImmune = false;
 
     // An effect on taking damage (some Evolutions, e.g. Barbarians).
     std::shared_ptr<IOnDamageTakenEffect> onDamageTaken;
@@ -681,6 +683,10 @@ struct CardStats {
     }
     CardStats& withKnockbackImmunity() {
         knockbackImmune = true;
+        return *this;
+    }
+    CardStats& withTransformImmunity() {
+        transformImmune = true;
         return *this;
     }
     CardStats& withOnDamageTaken(std::shared_ptr<IOnDamageTakenEffect> effect) {

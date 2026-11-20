@@ -428,6 +428,17 @@ private:
     static CardStats heroMagicArcherDecoyStats() {
         return troop(-46, "Decoy", 0.0f, Archetype::MeleeSquad, 271, 0.0f, 1.0f, 0, 100, 'd');
     }
+    // Hero Ice Wizard's Snowman (Frosty Fella; FrostySnowman holds the decay,
+    // the freeze and the self-destruct). 266 hp (RoyaleAPI developer-build
+    // write-up, royaleapi.com/blog/hero-ice-wizard-september-2026, relayed by
+    // the user 2026-11-20). Stationary and non-attacking, with the decoy's
+    // hitbox above (the same archetype, so the same collision radius and mass).
+    // Live on arrival. Never transformed (Mother Witch; Goblin Curse models no
+    // transform). Its lifetime is set by the effect.
+    static CardStats heroIceWizardSnowmanStats() {
+        return troop(-49, "Snowman", 0.0f, Archetype::MeleeSquad, 266, 0.0f, 1.0f, 0, 100, '^')
+            .withDeployTime(0).withTransformImmunity();
+    }
     // Lumberjack Evolution's death-spawn ghost. The real one is invincible
     // while inside its own Rage zone; here it is just invisible.
     static CardStats lumberjackGhostStats() {
@@ -2365,21 +2376,40 @@ private:
         // forms and nothing contradicts, so base figures are used (single source
         // for the base figures: trophycoach.com/heroes/hero-ice-wizard). The 3 s
         // slow duration is the engine's existing base value, not in any official
-        // post. "Frosty Fella": 2 elixir (trophycoach, timesaver.gg, ldplayer.net;
-        // not official, not contradicted), single use (official 2026-08-04),
-        // 46 damage (official 2026-10-06, 89 -> 46), 5 s freeze (official
-        // 2026-09-16, 7 s -> 5 s), radius ~2.5 tiles (ldplayer.net and
-        // timesaver.gg, community-measured; unofficial, not contradicted).
-        // Not modelled: the Snowman (hp contradicted: ~425 timesaver vs 266
-        // ldplayer), its "behind the troop" offset, the freeze ending when it
-        // dies, a separate Crown Tower damage figure (unpublished, so 100%), and
-        // the 2026-10-27 elixir refund when defeated before the projectile lands.
-        add(troop(184, "Hero Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i').withFirstHit(5)
-            .withTargetsAir().withSplash(1.5f).withSightRange(5.5f)
-            .withOnHit(std::make_shared<FreezeOnHit>(30, 0.70f))
-            .withHeroAbility(2.0f, 0, std::make_shared<HeroIceWizardFrostyFellaEffect>(2.5f, 46, 50), 1));
-        // Partly built (no Snowman), so random decks never deal it.
-        markAbilityPending(184);
+        // post. "Frosty Fella" (HeroIceWizardFrostyFellaEffect, FrostySnowman),
+        // built 2026-11-20 from RoyaleAPI's developer-build write-up
+        // (royaleapi.com/blog/hero-ice-wizard-september-2026, level 11, relayed
+        // by the user; RoyaleAPI refuses our fetches) plus the later official
+        // changes:
+        // - 2 elixir (trophycoach, timesaver.gg, ldplayer.net; not official, not
+        //   contradicted), single use (official 2026-08-04). Pressing arms it; it
+        //   fires on an enemy under his own slow (see the effect).
+        // - Snowman 266 hp, 1 tile behind the target, the decoy's hitbox; the
+        //   centre of a 2.5-tile blast (air and ground) and of the freeze.
+        // - 46 damage (official 2026-10-06, 89 -> 46). Crown Tower damage 20 is
+        //   an INFERENCE: launch was 38 of 89 (-57%), no post-nerf figure is
+        //   published, so 46 x 38/89 = 19.6, rounded.
+        // - Freeze while the Snowman lives, capped at 5 s (official 2026-09-16,
+        //   7 s -> 5 s). Snowman lifetime 5 s, its hp draining to 0 over it, is
+        //   an INFERENCE (launch 7 s; matched to the freeze cap). It
+        //   self-destructs 2 s after everything it froze has died.
+        // - Not modelled, by decision: the write-up's two release bugs
+        //   (inconsistent slow stacking, double spawn damage). The 2026-10-27
+        //   official "refunds elixir if defeated before projectile hits" has no
+        //   window here: the Snowman appears the moment the slowed hit lands,
+        //   and dying while armed refunds nothing (the write-up).
+        {
+            // His slow, shared with the effect so it can recognise its own.
+            const float heroSlowFactor = 0.70f;
+            const int heroSlowTicks = 30;
+            add(troop(184, "Hero Ice Wizard", 3.0f, Archetype::RangedSquad, 689, SPEED_MEDIUM, 5.5f, 90, 17, 'i').withFirstHit(5)
+                .withTargetsAir().withSplash(1.5f).withSightRange(5.5f)
+                .withOnHit(std::make_shared<FreezeOnHit>(heroSlowTicks, heroSlowFactor))
+                .withHeroAbility(2.0f, 0, std::make_shared<HeroIceWizardFrostyFellaEffect>(
+                    /*radius=*/2.5f, /*damage=*/46, /*crownTowerDamage=*/20, /*behindTiles=*/1.0f,
+                    heroSlowFactor, heroSlowTicks, heroIceWizardSnowmanStats(),
+                    /*lifetimeTicks=*/50, /*freezeCapTicks=*/50, /*selfDestructTicks=*/20), 1));
+        }
 
         // Hero Electro Wizard (base: id 35), released 2026-10-05
         // (https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-shocktober/).

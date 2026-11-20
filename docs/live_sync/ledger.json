@@ -3333,7 +3333,7 @@
    "tests_pinning_old_value": [],
    "verifier": "user-directed",
    "confidence": "sourced (2+ sources)",
-   "applied_in": "2026-11-20 (uncommitted at time of writing)"
+   "applied_in": "ff07147"
   },
   {
    "family": "Little Prince",
@@ -7811,24 +7811,20 @@
      },
      {
       "stat": "Snowman hitpoints",
-      "value_level11": "~425",
-      "engine_units": "425",
-      "source_url": "https://timesaver.gg/blog/clash-royale-hero-ice-wizard-explained-september-2026",
-      "as_of": "pre-release",
-      "confidence": "unresolved",
-      "note": "Labelled provisional pre-release community data.",
-      "verifier": {
-       "status": "unsupported",
-       "detail": "Community/no source re-found (TrophyCoach lists no radius or snowman stats). Moved to unresolved."
-      }
+      "value_level11": "266",
+      "engine_units": "266",
+      "source_url": "royaleapi.com/blog/hero-ice-wizard-september-2026",
+      "as_of": "2026-11-20",
+      "confidence": "single-source",
+      "note": "RoyaleAPI developer-build write-up relayed by the user 2026-11-20; the earlier ~425 (timesaver, pre-release) is dropped."
      },
      {
       "stat": "Snowman spawn offset",
-      "value_level11": "behind the nearest slowed troop",
-      "engine_units": "",
-      "source_url": "Supercell 2026-09-07 post",
-      "as_of": "2026-09-07",
-      "confidence": "official",
+      "value_level11": "1 tile behind the target",
+      "engine_units": "1.0",
+      "source_url": "royaleapi.com/blog/hero-ice-wizard-september-2026 (per the user); Supercell 2026-09-07 says \"behind\"",
+      "as_of": "2026-11-20",
+      "confidence": "single-source",
       "note": "Distance behind not published.",
       "verifier": {
        "status": "verified",
@@ -7847,6 +7843,22 @@
        "status": "verified",
        "detail": "Official 2026-08-04 post: all abilities except Boss Bandit single-use."
       }
+     },
+     {
+      "stat": "Snowman lifetime",
+      "value_level11": "5s",
+      "engine_units": "50 ticks",
+      "confidence": "INFERENCE",
+      "as_of": "2026-11-20",
+      "note": "Launch 7 s; matched to the official 5 s freeze cap; no post-nerf figure."
+     },
+     {
+      "stat": "Crown Tower damage of the blast",
+      "value_level11": "20",
+      "engine_units": "20",
+      "confidence": "INFERENCE",
+      "as_of": "2026-11-20",
+      "note": "Launch 38 of 89 (-57%); 46 x 38/89 = 19.6, rounded; no post-nerf figure."
      }
     ],
     "trigger": "Player activation (hero ability slot)",
@@ -7879,11 +7891,11 @@
      "verifier": "verified: 2026-10-27 post line 'Hero Ice Wizard now refunds Elixir if defeated before his projectile hits the target' (rule). Release 2026-09-07 post confirmed; Sep 16 and Oct 6 entries confirmed in order."
     }
    ],
-   "final_values_note": "Only official, dated numbers kept: freeze duration 5s, freeze damage 46, single use, elixir refund rule. All else unresolved or base-only.",
+   "final_values_note": "Only official, dated numbers kept: freeze duration 5s, freeze damage 46, single use, elixir refund rule. All else unresolved or base-only. UPDATE 2026-11-20: Snowman built; see lookup_2026_11_20 (hp 266 single-source; lifetime 5 s and Crown Tower damage 20 are INFERENCES).",
    "unresolved": [
     {
-     "item": "Snowman HP, lifetime, size, spawn offset",
-     "why": "Only a provisional ~425 from Timesaver; DeckShop has no stat tables for Hero Ice Wizard; RoyaleAPI, Fandom, StatsRoyale returned 403/402."
+     "item": "Snowman lifetime and Crown Tower damage (INFERENCES, built 2026-11-20)",
+     "why": "hp 266 and the 1-tile offset are single-source (RoyaleAPI developer build, per the user); lifetime 5 s and Crown Tower damage 20 are inferences, no published post-nerf figure."
     },
     {
      "item": "Freeze radius official value",
@@ -7903,19 +7915,19 @@
     },
     {
      "item": "Crown Tower damage of freeze damage",
-     "why": "Not published."
+     "why": "Not published; 20 applied as an INFERENCE (launch 38 of 89)."
     },
     {
      "item": "Elixir refund mechanic details",
-     "why": "Only one line in Oct 27 post."
+     "why": "Only one line in Oct 27 post; not modelled (no window in this model)."
     },
     {
      "item": "Hero Ice Wizard hp/damage/hit speed/range/speed/targets",
      "why": "Only base Ice Wizard values (689/90/1.7s/5.5/Medium) found; TrophyCoach says hero figures can differ; no hero source."
     },
     {
-     "item": "Freeze radius 2.5 and snowman hp ~425",
-     "why": "Community only; unverified, removed as numbers."
+     "item": "Freeze radius 2.5",
+     "why": "Community-measured and in the RoyaleAPI write-up (per the user); not official."
     },
     {
      "item": "Ice Wizard slow duration (3s)",
@@ -7950,17 +7962,49 @@
     ]
    },
    "engine_check": {
-    "hero_in_engine": "No 'Hero Ice Wizard' anywhere in include/ or docs/CARDS.md; ids end at 175 (Hero Ice Golem) -> card_missing / not_in_engine.",
+    "hero_in_engine": "Registered as id 184 (a1304bc); Frosty Fella with its Snowman built 2026-11-20; no longer abilityPending.",
     "templates": "HeroIceGolemSnowstormEffect.h exists (AreaSpell+FreezeOnHit, spellTowerDamageMultiplier). HeroWizardFieryFlightEffect.h exists. withHeroAbility(elixir,cooldownTicks,effect,usesLimit) exists (CardStats.h:602). SpawnOnAbility used at CardRegistry.h:1613 (Hero Musketeer) - claimed lines roughly right. Claim 'AreaSpell damage with freeze (factor 0)' fits template; linked-lifetime freeze and nearest-slowed targeting do not exist (unverified, plausible needs_new_mechanic).",
     "base_drift_found": [
      "Ice Wizard slow 35%->30% (2025-10-24 official) not applied: engine 0.65 should be 0.70 (CardRegistry.h:565).",
      "Ice Wizard attack splash radius 1->1.5 (2024-08-06 official): engine Ice Wizard (CardRegistry.h:563-565) has no withSplash; not modelled."
     ]
    },
-   "implemented_in": "a1304bc",
+   "implemented_in": "a1304bc (body, Freeze, radius); Snowman and arming built 2026-11-20 (uncommitted in the engine-wt worktree at time of writing)",
    "implemented_id": 184,
    "ability_pending": false,
-   "lookup_2026_11_19": "A (no engine change; already matching): ability cost 2, freeze only on targets already slowed, Snowman spawn damage 46, radius 2.5. Snowman left out by decision (hp 266 vs 425 still conflicts, section C)."
+   "lookup_2026_11_19": "A (no engine change; already matching): ability cost 2, freeze only on targets already slowed, Snowman spawn damage 46, radius 2.5. Snowman was left out by decision on 2026-11-19; BUILT 2026-11-20 (see lookup_2026_11_20).",
+   "lookup_2026_11_20": {
+    "status": "applied",
+    "source": "RoyaleAPI developer-build write-up, royaleapi.com/blog/hero-ice-wizard-september-2026 (level 11), relayed by the user 2026-11-20, read in a browser (RoyaleAPI refuses automated fetches)",
+    "single_source_values": {
+     "snowman_hp": 266,
+     "spawn_offset_tiles_behind_target": 1.0,
+     "blast_radius_tiles": 2.5,
+     "freeze": "every enemy inside at spawn, held while the Snowman lives, capped at 5 s (official 2026-09-16)",
+     "snowman_behaviour": "stationary, non-attacking, transform-immune; hitbox of Hero Magic Archer's decoy; hp drains linearly to 0 over its lifetime; self-destructs 2 s after everything it froze has died",
+     "arming": "press arms it; fires when an enemy target hit by this Hero is under HIS slow; kills do not fire it; no refund if he dies armed; enemies only; troop, building or Princess Tower (King Tower not firing it is a reading of the source)"
+    },
+    "official_values": {
+     "blast_damage": 46,
+     "freeze_cap_s": 5
+    },
+    "inferences": [
+     {
+      "what": "Snowman lifetime 5 s (50 ticks)",
+      "basis": "launch 7 s; matched to the official 5 s freeze cap; no post-nerf figure published"
+     },
+     {
+      "what": "Crown Tower damage of the blast 20",
+      "basis": "launch 38 of 89 (-57%); 46 x 38/89 = 19.6, rounded; no post-nerf figure published"
+     }
+    ],
+    "not_modelled": [
+     "the write-up's two release bugs (inconsistent slow stacking, double spawn damage): by decision, no evidence they shipped",
+     "2026-10-27 official 'refunds elixir if defeated before projectile hits': no window in this model (the Snowman appears the moment the slowed hit lands; dying while armed refunds nothing per the write-up)"
+    ],
+    "engine_plumbing": "IAbilityEffect::wantsOwnerHits/onOwnerHitLanded called from Projectile::applyHit; CombatEntity::abilityArmed, slowMarkOwnerId/slowMarkTicks, transformImmune, hasFreezeOfFactor, getCurrentTargetId; CardStats::withTransformImmunity; Board::findEntity; include/core/HeroIceWizardFrostyFellaEffect.h, include/entities/FrostySnowman.h",
+    "gameplay_affecting": "yes; voids win-rate history"
+   }
   },
   {
    "name": "Hero Electro Wizard",
@@ -11402,7 +11446,7 @@
  ],
  "values_lookup_2026_11_19": {
   "source": "docs/live_sync/values-lookup-results.md",
-  "policy": "Section A applied as sourced; section B applied as single-source (commented in code); section C recorded as notes only; the Hero Ice Wizard Snowman left out (user decision 2026-11-19).",
+  "policy": "Section A applied as sourced; section B applied as single-source (commented in code); section C recorded as notes only; the Hero Ice Wizard Snowman was left out on 2026-11-19 (user decision) and built on 2026-11-20.",
   "applied": [
    {
     "commit": "997fbaa",
@@ -11455,10 +11499,16 @@
     "what": "Minion Giant 183 knockback immune."
    },
    {
-    "commit": null,
+    "commit": "ff07147",
     "date": "2026-11-20",
     "section": "A",
     "what": "Lightning 31: 0.5 s (5 ticks) stun on each of its three struck targets, a struck Crown Tower included (no source either way); theriagames.com, noff.gg and Fandom (per the user), cr-api-data description."
+   },
+   {
+    "commit": null,
+    "date": "2026-11-20",
+    "section": "B (single-source) + two INFERENCES",
+    "what": "Hero Ice Wizard 184 Frosty Fella with its Snowman: 266 hp, 1 tile behind the target, 2.5-tile blast of 46, freeze held while it lives capped at 5 s, arms on press and fires on an enemy under his slow (RoyaleAPI developer-build write-up, per the user, read in a browser 2026-11-20); INFERENCES: Snowman lifetime 5 s and Crown Tower damage 20. abilityPending cleared. Commit not yet made."
    }
   ],
   "not_applied": [
@@ -11487,8 +11537,8 @@
     "why": "Numbers still missing (section C or unpublished); building them would mean guessing. Recorded as notes on new_entries."
    },
    {
-    "what": "Hero Ice Wizard Snowman",
-    "why": "Left out by user decision (hp still conflicts: 266 vs 425)."
+    "what": "Hero Ice Wizard Snowman (2026-11-19 entry)",
+    "why": "Superseded: built 2026-11-20 (see applied). Still not modelled: the write-up's two release bugs and the 2026-10-27 refund (no window in this model)."
    }
   ],
   "section_C_notes": "Recorded on the matching new_entries (lookup_2026_11_19) and in values_to_look_up.md. Also new: Cannon level-11 damage disagrees between Liquipedia (202) and Fandom (212); the engine holds 202."

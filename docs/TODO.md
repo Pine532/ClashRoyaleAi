@@ -53,14 +53,16 @@ size, so the first two items gate any training.
 4. **Unfinished entries (`CardDefinition::abilityPending`; random decks never deal them).**
    Body-only Heroes: Hero Balloon, Hero Dark Prince, Hero Bowler, Hero Tombstone, Hero
    Electro Wizard. Partly built (flagged 2026-11-18): Elite Barbarians Evolution 182 (Rage
-   path), Hero Ice Wizard 184 (Snowman), Electro Giant Evolution 186 (de-level pulse).
-   Finish each, then clear its flag.
+   path), Electro Giant Evolution 186 (de-level pulse). Hero Ice Wizard 184 was built
+   with its Snowman on 2026-11-20 (RoyaleAPI developer-build write-up, per the user) and
+   is no longer flagged; its Snowman lifetime (5 s) and Crown Tower damage (20) are
+   INFERENCES. Finish each of the rest, then clear its flag.
 5. **Tower Troops** (14 items) are deferred to a separate change by decision.
    `include/core/TowerTroops.h` is untouched: its troops are level 11 while the default
    towers are level 9, and its "Tower Princess" option is mislabelled.
 6. **Changes that need a new engine mechanic**: `LIVE_SYNC.md` section 3. Also the
    Minion Horde Evolution hit-speed slowdown, the Elite Barbarians Rage path, the
-   Electro Giant de-level pulse (no numbers) and the Ice Wizard Snowman.
+   Electro Giant de-level pulse (no numbers). (The Ice Wizard Snowman was built 2026-11-20.)
 7. ~~**Bug: buildings never run deploy effects**~~ FIXED 2026-11-18 (`abccf30`, with the
    user's go-ahead): Goblin Drill, Cannon Evolution, Tesla Evolution. Burst Crown Tower
    damage `b069d65` (Drill 20); the skipped values `58785df`. Gameplay-affecting
@@ -183,7 +185,8 @@ size, so the first two items gate any training.
       move in a saved replay. Found in review.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
-    `sample_random_deck` never deals them. Original note: Phase 2's
+    `sample_random_deck` never deals them. (Update 2026-11-20: 184's Snowman was built and
+    its flag removed, so random decks can now deal it; 182 and 186 stay flagged.) Original note: Phase 2's
     scripted bots take `clash_royale_env.sample_random_deck()` (`envs/selfplay_env.py:147`).
     It skips the 5 ability-pending Heroes but can deal ids 180-184 and 186-188, including
     the partly implemented Evo Elite Barbarians (182), Hero Ice Wizard (184) and Evo

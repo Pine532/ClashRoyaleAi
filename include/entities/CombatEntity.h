@@ -235,6 +235,16 @@ public:
     // Latch: Mother Witch's hog spawn is armed once (see CursedHogOnHit); the
     // curse's duration still refreshes.
     bool curseDeathSpawnAttached = false;
+    // Never transformed on death: Mother Witch's Cursed Hog is not armed on it
+    // (Hero Ice Wizard's Snowman). The curse's damage-taken debuff still
+    // applies. Set from CardStats::transformImmune.
+    bool transformImmune = false;
+    // "Under this unit's slow": the id of the last unit whose own hit landed a
+    // slow on this one, and how long that slow runs (Hero Ice Wizard's Frosty
+    // Fella triggers only on his own slow; a freeze slot carries no source).
+    // Counts down in update(); -1 / 0 when none.
+    int slowMarkOwnerId = -1;
+    int slowMarkTicks = 0;
     // Latch: the Royal Chef serves each ally once (see RoyalChefBuffEffect).
     bool royalChefServed = false;
 
@@ -376,6 +386,10 @@ public:
     std::shared_ptr<IAbilityEffect> abilityEffect;
     // -1 is unlimited; otherwise a hard cap on activations (Boss Bandit: 2).
     int abilityUsesRemaining = -1;
+    // An activated ability that waits for a condition instead of firing at
+    // once (Hero Ice Wizard's Frosty Fella). Set by the effect's apply(),
+    // cleared when it fires; lost if the unit dies.
+    bool abilityArmed = false;
     // The deck card whose slot owns this ability when it is not cardId (Hero
     // Barbarian Barrel's Barbarian: 174). 0 = cardId. See
     // CardStats::abilitySlotCardId and GameManager::trackSlotEntities.
@@ -635,6 +649,16 @@ public:
         }
     }
 
+    // The locked target's id (-1 when none). Read-only.
+    int getCurrentTargetId() const { return currentTargetId; }
+
+    // Is a freeze or slow of exactly this factor in force? Read-only.
+    bool hasFreezeOfFactor(float slowFactor) const {
+        for (const auto& s : freezeSlots)
+            if (s.ticks > 0 && s.factor == slowFactor) return true;
+        return false;
+    }
+
     // Composes extra behaviour onto every successful attack.
     void addOnHitEffect(std::shared_ptr<IOnHitEffect> effect) {
         onHitEffects.push_back(std::move(effect));
@@ -646,6 +670,7 @@ public:
         // time-stopped: poison, cooldowns and buffs keep ticking.
         const bool deploying = deployTicksRemaining > 0;
         if (deploying) deployTicksRemaining--;
+        if (slowMarkTicks > 0 && --slowMarkTicks == 0) slowMarkOwnerId = -1;
 
         // Captured before the decrement, so the last tick of a freeze still
         // counts as frozen, at its own strength, for the ramp reset, the

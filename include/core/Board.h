@@ -176,6 +176,14 @@ public:
         return activeEntities;
     }
 
+    // An active entity by id, or nullptr. A linear scan: for the rare caller
+    // that holds an id (ids survive deepCopy; pointers would not).
+    std::shared_ptr<Entity> findEntity(int entityId) const {
+        for (const auto& e : activeEntities)
+            if (e->id == entityId) return e;
+        return nullptr;
+    }
+
     void cleanDeadEntities(int tick = 0) {
         // Nothing died: skip the three passes below, which would all be no-ops.
         // Most ticks take this branch.

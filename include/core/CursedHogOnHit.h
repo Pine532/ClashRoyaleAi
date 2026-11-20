@@ -25,8 +25,9 @@ public:
 
         // The hog spawn is armed once; re-arming nested a new composite per hit
         // and spawned one hog per hit. See
-        // CombatEntity::curseDeathSpawnAttached.
-        if (target->curseDeathSpawnAttached) return;
+        // CombatEntity::curseDeathSpawnAttached. A transform-immune unit
+        // (Hero Ice Wizard's Snowman) keeps the debuff but never turns.
+        if (target->curseDeathSpawnAttached || target->transformImmune) return;
         target->curseDeathSpawnAttached = true;
 
         auto spawnEffect = std::make_shared<SpawnOnDeathForEnemyTeam>(cursedHogStats);
