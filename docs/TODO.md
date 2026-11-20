@@ -257,6 +257,28 @@ size, so the first two items gate any training.
       - If so, adopt (c): make the switch's default off, with a test. Restart the live run
         from its own pre-arms checkpoint. Mark that point in DECISIONS and in
         `runs/HOURLY_STATUS.md` as where earlier win rates stop being comparable.
+    - **Result, 2026-11-20 13:51-14:51 (run early: the user moved the deck switch up).**
+      Both arms started from the final Hog checkpoint (episode 300,433, rung 5) at HEAD
+      `b106eaa`. Matched at U = 221 updates; 0 skips and 0 bad samples in either arm.
+      - (b): rungs 5→6→5→6→5 (updates 36, 84, 156, 213), 902/4857 = 0.186 overall;
+        rung 5 602/2528 = 0.238, rung 6 300/2329.
+      - (b)+(c): rungs 5→4→5 (updates 16, 186), 1390/4997 = 0.278 overall;
+        rung 4 1210/3835, rung 5 180/1162 = 0.155.
+      - Placement-gradient coherence 0.125 (b) vs 0.151 (c), as expected by construction.
+      - The rule as written says adopt: same end rung, both demoted, and 0.278 clears
+        0.186 − 1.96 × 0.008 = 0.169. But the overall win rate mixes rungs: (b) spent
+        half its games on rung 6, (c) most of its games on rung 4. On the one shared rung,
+        rung 5, (c) fails the same test (0.155 against a bar of 0.212), and (b) reached
+        rung 6 twice while (c) dropped below its start rung for 170 of 221 updates.
+      - **The user's decision: keep (b) only.** (c) is not adopted; the switch stays at
+        its default (on). Lesson for any rerun: compare win rates within a rung, never an
+        overall rate across arms that played different rungs. (Scratchpad
+        `mpscheck/l18/judge_l18.py`, `verdict.json`.)
+      - **Rerun (the user, 2026-11-20):** later, on the Minion Giant deck, only if there is
+        spare machine time, and not during the weekend run. Judge the arms on the fixed
+        200-game benchmark (`runs/tools_scratch/bench.py`: frozen copies of each arm's
+        checkpoint, the same 17 opponents), not on curriculum win rates. This applies to
+        every future A/B test.
 
 ---
 

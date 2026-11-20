@@ -8341,3 +8341,48 @@ All three change gameplay, so they void win-rate comparability with the earlier 
   per update at 12 and 16 games (350- and 250-step rollouts). GAE's lookahead is about 10 steps,
   so a rollout boundary truncates about 2% of rows at 500 steps and 4% at 250. The LSTM is
   unaffected: its state carries across rollouts and chunks stay 50 steps.
+
+**The deck switch, 2026-11-20 afternoon (the user moved it up from the evening).**
+- *The Hog run ends.* It was paused at 13:50 at episode 300,433, saved on rung 5. It had
+  reached rungs 5 (about 09:15) and 6 (about 10:30) for the first time that day. The final
+  checkpoint is kept read-only as `runs/checkpoints/hog_final_20261120_ep300433.pth`. The day's
+  rung report was written from the data up to the pause (`runs/RUNG_CHECK_2026-11-20.md`).
+  - Same-rung win rates against the 2026-11-19 baseline: rung 3 went 0.33 → 0.45 and rung 4
+    0.17 → 0.25. After rung 5 was first reached: rung 4 0.32, rung 5 0.18, rung 6 0.09.
+- *Wait steps (TODO L18).* The (c) experiment was run from that checkpoint. The rule fixed in
+  advance said adopt, but only because the arms played different rungs; on the shared rung (c)
+  did worse (TODO L18 has the numbers). The user's decision: keep (b) only. Nothing changes in
+  the code; the switch keeps its default. From now on, A/B arms are judged on the fixed 200-game
+  benchmark (frozen copies, the same opponents), not on curriculum win rates, which rung changes
+  confound. A (c) rerun on the new deck waits for spare machine time, after the weekend.
+- *A review before installing.* Six Sonnet agents reviewed the engine batch, the plumbing and
+  the weekend scripts, and verified each finding adversarially.
+  - Nothing was found in the Lightning stun, the Evo Cannon knockback, the mirror share, the
+    re-deck tool or the rollout-length override.
+  - A Clone copy of an armed Hero Ice Wizard inherited `abilityArmed`, so it could fire a
+    second Snowman or refund the 2 elixir a second time. Fixed in `becomeCloneCopy`
+    (`0f4cca1`). No pool deck plays Clone.
+  - The weekend watchdog had four faults, all fixed with a before/after scenario each:
+    - It did not look again after a minutes-long benchmark, so a crash during one could be
+      followed by a pool change that relaunched the crashed trainer.
+    - It did not confirm that a stop had worked, in either a halt or a pool change.
+    - A failed ranking run was retried every tick, and on the stall path it counted as the
+      stall response.
+    - It could not see the trainer's own handoff to random-opponent / phase-2 training.
+- *Phase 1 is pinned for the weekend.* `runs/minigiant.env` sets
+  `CLASH_PHASE2_ENTRY_WIN_RATE=1.01` (the documented "above 1.0 pins a run to the mirror").
+  Without it, a 0.60 window at rung 4 or higher would leave the staged pool for random decks
+  and then hand off to phase 2, which the watchdog cannot watch and the user's plan does not
+  include. If it happens anyway, the watchdog halts with a note.
+- *Games per update.* The scaling test (5 min each on the converted checkpoint, machine idle,
+  MPS, about 4,000 rows per update):
+  - 8x500: 408 updates/h, 11,393 games/h.
+  - 12x350: 468 updates/h, 13,907 games/h.
+  - 16x250: 582 updates/h, 16,515 games/h.
+  - CPU stayed at 18-19% of 18 cores in all three. Ratio self-check 9.2e-5 (limit 1e-3), critic
+    0.098-0.103, 0 skips and 0 bad samples in each. The run uses 16x250. The shorter rollout
+    moves the GAE truncation from about 2% of rows to about 4%. The LSTM is unaffected (state
+    carries across rollouts, chunks stay 50 steps).
+- *The new run* started 17:14 in mirror mode from the converted checkpoint
+  (`runs/checkpoints/minigiant_start_20261120.pth` keeps the start read-only), with the weekend
+  watchdog running. Win rates from here are not comparable with the Hog run's.
