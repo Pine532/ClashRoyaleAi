@@ -14,6 +14,7 @@ from torch.distributions import Categorical
 from python_ai.rl import abilities as ability_mod
 from python_ai.rl import base_trainer
 from python_ai.rl import coverage as coverage_mod
+from python_ai.rl import replay as replay_mod
 from python_ai.rl.sampling import sample_categorical, sample_multinomial
 from python_ai.tests.test_rl_base_trainer import (  # noqa: F401  (fixtures)
     _never_touch_the_live_checkpoint, _phase1, workdir)
@@ -174,3 +175,29 @@ def test_on_mps_the_coverage_draw_never_picks_a_zero_weight_entry():
                     "in 2,000,000 draws; this test can no longer see the fix")
     assert zero_weight_draws(sample_multinomial) == 0, f"torch's own MPS draw: {naive}"
     assert sample_multinomial(rows[:4], 1).device.type == "mps"
+
+
+def test_the_demo_replay_draws_through_the_cpu_sampler(workdir, monkeypatch):
+    """The periodic demo replay samples the training policy too (on MPS during
+    a run): card and cell, two draws per decision."""
+    import os
+    sizes = []
+
+    def spy(logits):
+        sizes.append(logits.shape[-1])
+        return sample_categorical(logits)
+    monkeypatch.setattr(replay_mod, "sample_categorical", spy)
+    trainer = _phase1()
+    env = trainer.build_replay_env()
+    steps = {"n": 0}
+    real_step = env.step
+
+    def counted_step(*a, **k):
+        steps["n"] += 1
+        return real_step(*a, **k)
+    env.step = counted_step
+    os.makedirs("replays", exist_ok=True)
+    replay_mod.record_greedy_replay(trainer.net, env, torch.device("cpu"), "replays/t.json")
+    assert steps["n"] > 0
+    assert sizes.count(trainer.net.hand_size + 1) == steps["n"], "card draws"
+    assert sizes.count(trainer.net.placement_cells) == steps["n"], "placement draws"

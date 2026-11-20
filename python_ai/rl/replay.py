@@ -3,9 +3,8 @@ import json
 
 import numpy as np
 import torch
-from torch.distributions import Categorical
-
 from python_ai.models.policy_io import LSTM_HIDDEN
+from python_ai.rl.sampling import sample_categorical
 
 #: Ticks per decision in a recorded replay: the training rollout's
 #: `skip_frames`.
@@ -35,7 +34,9 @@ def annotate_replay_with_agent_info(filepath, decisions, skip_frames):
 def record_greedy_replay(net, env, device, path, skip_frames=REPLAY_SKIP_FRAMES):
     """Play one episode with `env`, save its log to `path`, and annotate it.
 
-    Sampled, not argmax: it shows the policy that is actually training.
+    Sampled, not argmax: it shows the policy that is actually training. The
+    draws are made on the CPU, as the rollout's are: MPS's sampler can draw a
+    zero-probability (illegal) card or cell (rl/sampling.py).
     """
     obs, _ = env.reset()
     hx = torch.zeros(1, LSTM_HIDDEN).to(device)
@@ -49,10 +50,10 @@ def record_greedy_replay(net, env, device, path, skip_frames=REPLAY_SKIP_FRAMES)
             features, card_embeds, spatial = net.extract_features(obs_t)
             logits, _, _, value, (hx, cx) = net.step_lstm_and_card(
                 features, (hx, cx), mask)
-            idx = Categorical(logits=logits).sample()
+            idx = sample_categorical(logits)
             place_logits = net.placement_given_card(
                 hx, card_embeds, idx, obs_t, spatial)
-            cell = Categorical(logits=place_logits).sample()
+            cell = sample_categorical(place_logits)
             x, y = net.cell_to_xy(cell)
         card_idx = int(idx.item())
         hand = env.game.get_hand()
