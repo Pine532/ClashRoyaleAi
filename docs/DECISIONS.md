@@ -8246,3 +8246,10 @@ the ratio self-check and loss levels in line with CPU, so the live run moved to 
 102,047 (TODO L11). The win-rate history carries on: the device moves numbers by float32
 roundoff, not what is learned.
 
+**Back to CPU, 21:19.** MPS was not in line with CPU after all. The trainer's non-finite
+guard dropped one segment's minibatch in every epoch of 4 of the 130 MPS updates. On CPU it
+never fired in 2,778 updates. The ratio self-check and the losses looked normal throughout,
+because they only see the minibatches that survive. The user's condition for MPS was "in line
+with CPU", so the run is back on CPU from episode 106,705 and MPS waits on a diagnosis
+(TODO L11).
+

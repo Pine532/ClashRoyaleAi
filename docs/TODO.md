@@ -77,8 +77,8 @@ size, so the first two items gate any training.
 10. **Perception for the new cards.** `card_map` rows exist (6820f16) and need review
     flags confirmed against the recorded build; detector labels, hand templates and
     the deck pools (`meta_decks.json`) do not cover the 13 new entries yet.
-11. ~~**Decision: MPS for training.**~~ DONE 2026-11-19: the live run trains on MPS (2.14x;
-    details at the end of this item). Measured 2026-11-18 on Apple Silicon (torch 2.13):
+11. **Decision: MPS for training.** REOPENED 2026-11-19 21:19: back on CPU, because MPS drops
+    minibatches to non-finite gradients (end of this item). Measured 2026-11-18 on Apple Silicon (torch 2.13):
     a live-size PPO update takes 9.18 s on CPU and 4.06 s on MPS, about 55% of a 16.7 s
     cycle, so roughly 1.4x end to end; rollout inference is no faster (1.38 vs 1.30 ms).
     MPS is not numerically equal to CPU (critic loss 0.00085 vs 0.00102 on one batch).
@@ -126,6 +126,19 @@ size, so the first two items gate any training.
       inside the CPU window's range.
     - Live run switched at episode 102,047. `tools/mac_training.sh` now defaults to MPS
       where available.
+    **Reopened 2026-11-19 21:19: MPS produces non-finite gradients; the live run is back on CPU.**
+    - `Loss/NonFinite_Skips` ("must stay 0") was 0 in all 2,778 CPU updates of this run. On
+      MPS it fired in 1 of 119 updates (17:24-17:42; missed at the time) and 3 of the first
+      11 after the 21:17 resume. Every time it is exactly 4: minibatches are reshuffled each
+      epoch, so one segment of the batch goes non-finite on MPS in every one of the 4 epochs.
+      The guard drops those minibatches before the step, so the weights stayed intact.
+    - The live run went back to CPU at episode 106,705 (copy
+      `runs/checkpoints/livesync.pth.pause_20261119-2119_mps_skips_ep106705`).
+      `d01c05c` reverts the MPS default; `CLASH_DEVICE=mps` still opts in.
+    - The ratio self-check (3e-5 to 5e-5) and the loss levels were in line throughout, so
+      neither can see this fault.
+    - Next: capture a batch that skips on MPS, replay the failing segment on CPU and MPS
+      with anomaly detection, and find the first op that goes non-finite.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's
