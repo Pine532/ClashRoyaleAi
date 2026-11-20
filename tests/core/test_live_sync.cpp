@@ -1859,6 +1859,32 @@ TEST_CASE("Lightning strikes only the three highest-HP enemies in the area",
     for (size_t i = 1; i < victims.size(); ++i) REQUIRE(m.rec->totalTo(victims[i]->id) > 0);
 }
 
+// Lightning's stun, 0.5 s (5 ticks) on each struck target (2026-11-20; ledger
+// section A: theriagames.com/?p=78055, noff.gg and Fandom's Epic cards page).
+// The spared fourth target is the control: the stun follows the top-3 cut.
+TEST_CASE("Lightning stuns each of its three struck targets for 0.5 s",
+          "[live_sync][patch-2026-11-20]") {
+    Board board;
+    std::vector<std::shared_ptr<StationaryCombatant>> units;
+    const int hps[4] = { 100, 200, 300, 400 };
+    for (int i = 0; i < 4; ++i) {
+        auto u = std::make_shared<StationaryCombatant>(i + 1, 9.0f + 0.5f * i, 21.0f, hps[i], 1, 0.0f, 0, 1000);
+        spawn(board, u);
+        units.push_back(u);
+    }
+    CardRegistry::getInstance().getCard(31)->spawnEntity(10.0f, 21.0f, 0, board);
+    board.commitPendingEntities();
+    auto spell = std::dynamic_pointer_cast<AreaSpell>(board.getEntities().back());
+    REQUIRE(spell != nullptr);
+    while (spell->isAlive()) spell->update(board);
+
+    CHECK(units[0]->freezeTicks == 0);
+    for (int i = 1; i < 4; ++i) {
+        CHECK(units[i]->freezeTicks == 5);
+        CHECK(units[i]->freezeSlow == Catch::Approx(0.0f));
+    }
+}
+
 // Monk is a 5-elixir Champion (DeckShop).
 TEST_CASE("Monk costs 5 elixir", "[live_sync][patch-undated]") {
     const CardDefinition* def = CardRegistry::getInstance().getCard(119);

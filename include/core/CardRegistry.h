@@ -787,8 +787,15 @@ private:
         // buildings with the most hitpoints in the target area"; the official
         // Sep 2025 / Sep 2026 notes presuppose it). Same mechanism as Vines.
         // Crown Tower damage 265 per strike (official June 2026 notes, Lightning 286 -> 265; item 29).
+        // Each struck target is stunned for 0.5 s (5 ticks): theriagames.com/?p=78055
+        // ("disables the struck targets for 0.5 seconds"), noff.gg and Fandom's
+        // Epic cards page (per the user; both refuse our fetches), and the
+        // cr-api-data description's "damage and stun". FreezeOnHit runs only on
+        // the top-3 survivors of the cut, so exactly the struck targets. A
+        // struck Crown Tower is stunned too; no source says either way.
         add(spell(31, "Lightning", 6.0f, 3.5f, 1057, 5, 'j')
-            .withSpellTopHpTargets(3).withCrownTowerDamage(265));
+            .withSpellTopHpTargets(3).withCrownTowerDamage(265)
+            .withSpellOnHit(std::make_shared<FreezeOnHit>(5, 0.0f)));
         // Poison: 92 damage every second for 8 s; whoever stands in it takes
         // each pulse. A Crown Tower takes 21 per pulse (168 in all: official
         // June 2026 notes, fixed in game on 26 Aug), and enemy troops inside

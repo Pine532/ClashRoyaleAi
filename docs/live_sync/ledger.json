@@ -3258,14 +3258,14 @@
     31
    ],
    "stat": "Crown Tower Damage",
-   "engine_current": "1057 to towers, no withCrownTowerDamage (include/core/CardRegistry.h:641)",
+   "engine_current": "withCrownTowerDamage(265) per strike (applied 6cd86d0; include/core/CardRegistry.h:807-809)",
    "target": "withCrownTowerDamage(265) per strike",
    "target_verbatim": "Lightning: 286 → 265 (-7%)",
    "as_of": "2026-06-01",
    "source_url": "https://supercell.com/en/games/clashroyale/blog/release-notes/june-balance-changes-2026/",
-   "status": "to_apply",
+   "status": "applied",
    "corroboration": "official chain + drift agree",
-   "notes": "Earlier values 318->286 (Jun 2025) superseded. Only meaningful with top-3 targeting: today the engine hits every unit in radius.",
+   "notes": "Earlier values 318->286 (Jun 2025) superseded. Applied (6cd86d0); top-3 targeting applied too (fd7fa90).",
    "tests_pinning_old_value": [],
    "verifier": "confirmed",
    "confidence": "official",
@@ -3279,20 +3279,19 @@
     31
    ],
    "stat": "Shield-aware ranking and centre tie-break for top-HP selection (Lightning and Vines)",
-   "engine_current": "AreaSpell.h:181-186 sorts by hp only (shieldHp ignored, shieldHp at CombatEntity.h:159), unstable, no centre tie-break",
+   "engine_current": "applied: AreaSpell.h:193-205 ranks by hp + shieldHp (shieldHp at CombatEntity.h:159) and breaks ties by nearest spell centre (f7ec3ac)",
    "target": "rank by hp+shieldHp; equal hp: nearest spell centre first",
    "target_verbatim": "Vines and Lightning now consider shields when targeting the highest HP troops (2025-09-25); ... target the enemies closest to the center of the spell deploy area when choosing between troops that have the same hitpoints (2026-09-01)",
    "as_of": "2026-09-01",
    "source_url": "https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/",
-   "status": "needs_new_mechanic",
+   "status": "applied",
    "mechanic": "shield-aware, centre-tie-broken top-HP selection in AreaSpell",
    "corroboration": "official only",
    "notes": "Shared with Vines (id 105, other family). Split out by the verifier from the unresolved Lightning row.",
    "tests_pinning_old_value": [],
    "verifier": "added",
    "confidence": "official",
-   "applied_in": null,
-   "not_applied_reason": "Needs a new engine mechanic that this change did not build."
+   "applied_in": "f7ec3ac"
   },
   {
    "family": "Lightning",
@@ -3302,18 +3301,39 @@
     31
    ],
    "stat": "Top-HP target selection (hits only the 3 highest-HP targets)",
-   "engine_current": "hits everything in radius 3.5, no withSpellTopHpTargets (include/core/CardRegistry.h:641); selection sorts hp only (AreaSpell.h:181-186)",
+   "engine_current": "applied: .withSpellTopHpTargets(3) (include/core/CardRegistry.h:807-808, fd7fa90); AreaSpell.h:193-205 ranks by hp + shield, ties by spell centre",
    "target": ".withSpellTopHpTargets(3) on spell 31",
    "target_verbatim": "cr-api-data description: \"Bolts of lightning damage and stun up to three enemy troops or buildings with the most hitpoints in the target area.\"",
    "as_of": "unknown (standing card behaviour; Sep 2025 / Sep 2026 official posts presuppose it)",
    "source_url": "https://github.com/RoyalAPI/cr-api-data (scratchpad/web/champ/cards.json); official: https://supercell.com/en/games/clashroyale/blog/release-notes/new-season-minion-academy/",
-   "status": "to_apply",
+   "status": "applied",
    "corroboration": "cr-api-data card description (three) + official posts that presuppose highest-HP targeting; Vines already uses withSpellTopHpTargets(3) (CardRegistry.h:978-981)",
-   "notes": "Mechanic exists (CardStats.h:550, AreaSpell.h:181-186). Engine currently hits everything in radius 3.5 (CardRegistry.h:641). Gameplay-affecting: voids win-rate history. Pairs with the Crown Tower 265 entry.",
+   "notes": "Mechanic exists (CardStats.h:550, AreaSpell.h:181-186). Applied in fd7fa90 (CardRegistry.h:807-808). Gameplay-affecting: voids win-rate history. Pairs with the Crown Tower 265 entry.",
    "tests_pinning_old_value": [],
    "verifier": "corrected: unresolved -> to_apply (count 3 found in cr-api-data description; mechanic exists)",
    "confidence": "derived",
    "applied_in": "fd7fa90"
+  },
+  {
+   "family": "Lightning",
+   "card": "Lightning",
+   "form": "base",
+   "engine_ids": [
+    31
+   ],
+   "stat": "Stun on each of its three struck targets",
+   "engine_current": ".withSpellOnHit(std::make_shared<FreezeOnHit>(5, 0.0f)) (include/core/CardRegistry.h:807-809)",
+   "target": "0.5 s (5 ticks) stun on each struck target; a struck Crown Tower is stunned too (no source either way)",
+   "target_verbatim": "theriagames.com: \"disables the struck targets for 0.5 seconds\"; cr-api-data description: \"Bolts of lightning damage and stun up to three enemy troops or buildings with the most hitpoints in the target area.\"",
+   "as_of": "2026-11-20",
+   "source_url": "https://theriagames.com/?p=78055 ; https://noff.gg/clash-royale/card/lightning and Fandom's Epic cards page (per the user, 2026-11-20; both refuse automated fetches)",
+   "status": "applied",
+   "corroboration": "values-lookup Section A (2+ sources): theriagames.com, noff.gg and Fandom (the last two read by the user in a browser), plus the cr-api-data description",
+   "notes": "Applied 2026-11-20 (values-lookup Section A, docs/live_sync/values-lookup-results.md). Test: tests/core/test_live_sync.cpp, [live_sync][patch-2026-11-20]. Gameplay-affecting: voids win-rate history.",
+   "tests_pinning_old_value": [],
+   "verifier": "user-directed",
+   "confidence": "sourced (2+ sources)",
+   "applied_in": "2026-11-20 (uncommitted at time of writing)"
   },
   {
    "family": "Little Prince",
@@ -5997,7 +6017,7 @@
     105
    ],
    "stat": "Tie-break among equal-HP targets",
-   "engine_current": "std::sort by hp only (include/entities/AreaSpell.h:181-186)",
+   "engine_current": "std::sort by hp + shieldHp, equal ranking by distance to the spell centre (applied f7ec3ac; include/entities/AreaSpell.h:193-205)",
    "target": "closest to spell centre wins ties",
    "target_verbatim": "target the enemies closest to the center of the spell deploy area when choosing between troops that have the same hitpoints",
    "as_of": "2026-09-01",
@@ -6019,7 +6039,7 @@
     105
    ],
    "stat": "Top-HP target ranking includes shields",
-   "engine_current": "sort by hp only (include/entities/AreaSpell.h:181-186)",
+   "engine_current": "sort by hp + shieldHp (applied 901d09a; include/entities/AreaSpell.h:193-205)",
    "target": "rank by hp + shieldHp",
    "target_verbatim": "Vines and Lightning now consider shields when targeting the highest HP troops",
    "as_of": "2025-09-25",
@@ -11433,6 +11453,12 @@
     "commit": "a6b4fb2",
     "section": "A",
     "what": "Minion Giant 183 knockback immune."
+   },
+   {
+    "commit": null,
+    "date": "2026-11-20",
+    "section": "A",
+    "what": "Lightning 31: 0.5 s (5 ticks) stun on each of its three struck targets, a struck Crown Tower included (no source either way); theriagames.com, noff.gg and Fandom (per the user), cr-api-data description."
    }
   ],
   "not_applied": [
