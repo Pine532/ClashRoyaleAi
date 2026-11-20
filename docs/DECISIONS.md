@@ -8253,3 +8253,12 @@ because they only see the minibatches that survive. The user's condition for MPS
 with CPU", so the run is back on CPU from episode 106,705 and MPS waits on a diagnosis
 (TODO L11).
 
+**MPS again, 23:01.** The diagnosis found the fault in the rollout, not the update: MPS's
+sampler occasionally draws an action of probability exactly 0 (about 1 in 10^5 placement
+draws), and that row's ratio turns NaN in the update. The user approved drawing on the CPU.
+CPU training stayed bit-identical through a whole seeded rollout and update. MPS then ran 2.04x
+with no fault in 63 updates, so the live run moved back to MPS at episode 116,042. Two open
+questions came out of it for the user (TODO L11, L18). The coverage slot draw still samples on
+the device. And wait steps' never-placed cells drive the PPO ratio and the placement head's
+gradient (60% of decisions; 1.5x the real placements' gradient, uncorrelated with it).
+

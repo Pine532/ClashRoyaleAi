@@ -77,8 +77,8 @@ size, so the first two items gate any training.
 10. **Perception for the new cards.** `card_map` rows exist (6820f16) and need review
     flags confirmed against the recorded build; detector labels, hand templates and
     the deck pools (`meta_decks.json`) do not cover the 13 new entries yet.
-11. **Decision: MPS for training.** REOPENED 2026-11-19 21:19: back on CPU, because MPS drops
-    minibatches to non-finite gradients (end of this item). Measured 2026-11-18 on Apple Silicon (torch 2.13):
+11. ~~**Decision: MPS for training.**~~ DONE again 2026-11-19 23:01: the live run trains on
+    MPS with the rollout's draws on the CPU (end of this item). Measured 2026-11-18 on Apple Silicon (torch 2.13):
     a live-size PPO update takes 9.18 s on CPU and 4.06 s on MPS, about 55% of a 16.7 s
     cycle, so roughly 1.4x end to end; rollout inference is no faster (1.38 vs 1.30 ms).
     MPS is not numerically equal to CPU (critic loss 0.00085 vs 0.00102 on one batch).
@@ -156,6 +156,28 @@ size, so the first two items gate any training.
       `rl/abilities.py:77` (abilities). Option, needs a yes (trainer code): sample from the
       logits on CPU. On CPU that is a no-op, so CPU stays bit-identical.
       Scripts: scratchpad `mpscheck/capture.py`, `replay.py`, `which_head.py`, `sampler.py`.
+    **Fixed 2026-11-19 (user-approved): the draws run on the CPU; the live run is on MPS again.**
+    - `dde8e1a`: `rl/sampling.sample_categorical` serves the card, placement and ability
+      draws. On MPS, 2,000,000 draws hit no zero-probability cell; torch's own MPS draw hit
+      17 (the control), and a mutant helper that draws on the device fails the test.
+    - `5edf61d`: the rollout prints and counts any sampled action with a non-finite log-prob
+      (`Rollout/NonFinite_Sampled_LogProb`, must stay 0). `7174f68`: `mac_training.sh status`
+      and the new hourly `row` show both counters and warn on nonzero.
+    - CPU bit-identity, whole rollout and update: in-process envs with every generator
+      seeded (the teacher's `default_rng(None)` from a counter), 2 rollouts and 2 updates,
+      205 outputs (actions, log-probs, hidden states, coverage, weights, stats, RNG states).
+      Old vs new identical; old code twice identical; a 1-ulp weight nudge changes 141.
+    - 10-minute timing, machine to itself, from episode 116,042: 376.4 updates/h vs CPU
+      184.3 (2.04x), 0 skip updates and 0 bad samples over 63 updates, ratio self-check max
+      9.2e-5, critic/entropy/clip-fraction means inside the CPU log's last-60 range. At the
+      old fault rate 0 skips in 63 updates had about a 12% chance, so the sampler test is
+      the strong evidence and the window the end-to-end confirmation.
+    - Live run on MPS from episode 116,042 (23:01). A plain `start` uses CPU since
+      `d01c05c`; `CLASH_DEVICE=mps` selects MPS.
+    - Still on the device: the coverage slot draw (`rl/coverage.py:41`, `torch.multinomial`),
+      outside the approval. A zero-probability draw there would pick an unaffordable slot for
+      the coverage term; whether that can go non-finite is unmeasured (the one skip traced
+      came from a placement draw). The same CPU draw would cover it; needs a yes.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's
@@ -184,6 +206,26 @@ size, so the first two items gate any training.
     `NUM_CARD_IDS = CARD_ID_COUNT`. The stub's `observation_size()` and boundary mode's
     no-engine fallback also omit the two opponent-cycle blocks (13891 instead of 14403),
     and the boundary default `n = 13606` is stale. Only affects a box with no built engine.
+18. **Decision: wait steps' placement in the PPO ratio** (found 2026-11-19 tracing L11;
+    measured, NOT changed, because it changes what the policy learns). On a decision row
+    where the no-op arm is drawn, the rollout still samples a cell, which the engine ignores.
+    That cell's log-prob enters the ratio and the actor gradient (`rl/ppo.py`:
+    `new_logprobs` = card + placement on every row). Only the placement entropy excludes it
+    (the `placed` mask, DECISIONS 2026-08-11). Captured live batch, episode 107,454, rung 3,
+    one live-config update on CPU (scratchpad `mpscheck/waitstep.py`):
+    - 1,290 of 2,141 decision rows (60%) are waits.
+    - On wait rows the placement part of the log-ratio averages 0.246 against 0.034 for
+      the card part, so the ratio mostly measures a cell that never reaches the board.
+    - It decides clipping. With the placement part, 69.7% of wait rows pass gradient;
+      card part alone, 96.3%. It flips 28% of wait rows.
+    - The placement head's actor gradient from wait rows (adv x log pi(cell), inputs
+      detached) is 1.53x the norm of that from real placements, with cosine -0.001: noise
+      in the parameters every card's placement uses.
+    - Related, safe either way: non-decision rows are excluded by multiplying with
+      `mb_decision`. A row whose stored log-prob is -inf (the L11 sampler fault) gives
+      inf x 0 = NaN. `torch.where` would exclude it without changing any finite result.
+    - Options: leave it; drop the placement term from the ratio on no-op rows (changes
+      learning, and voids the comparability of the win-rate history); `torch.where` only.
 
 ---
 
