@@ -132,6 +132,11 @@ class BaseTrainer:
         self.entropy = EntropyController(entropy_cfg or self._default_entropy())
         self.episodes_completed = 0
         self.full_resume = False
+        #: Sampled actions whose log-prob was not finite, i.e. the sampler drew
+        #: an arm of probability 0: since the process started, and in the
+        #: rollout being collected (logged with the update). Must stay 0.
+        self.nonfinite_samples_total = 0
+        self.nonfinite_samples_rollout = 0
         self.net = None
         self.optimizer = None
         self.envs = None
@@ -340,8 +345,9 @@ class BaseTrainer:
                     hires_map=hires_map)
                 placement_dist = Categorical(logits=placement_logits)
                 placement_cell = sample_categorical(placement_logits)
-                total_logprob = (card_dist.log_prob(card_idx)
-                                 + placement_dist.log_prob(placement_cell))
+                card_logprob = card_dist.log_prob(card_idx)
+                placement_logprob = placement_dist.log_prob(placement_cell)
+                total_logprob = card_logprob + placement_logprob
                 # Champion abilities are part of the joint action, sampled
                 # under the readiness reported with this observation.
                 ability_ready = self._ability_ready.to(self.device)
@@ -350,6 +356,16 @@ class BaseTrainer:
                     ability_logits, ability_ready)
                 if ability_logits:
                     total_logprob = total_logprob + ability_logprob
+
+            # A sampled action had probability > 0, so its log-prob is finite.
+            # If not, the sampler drew a masked arm; the update would turn the
+            # row's ratio NaN and drop its minibatch. Caught here, where it
+            # happens, rather than as a skip one update later.
+            bad = ~torch.isfinite(total_logprob)
+            if bool(bad.any()):
+                self._note_nonfinite_samples(
+                    bad, card_idx, placement_cell, card_logprob, placement_logprob,
+                    ability_logprob if ability_logits else None)
 
             target_x, target_y = net.cell_to_xy(placement_cell)
             action = {
@@ -598,6 +614,23 @@ class BaseTrainer:
             ids = hand.gather(1, cards[placed].view(-1, 1)).squeeze(1)
             self._modal_share.add_update(ids.tolist(), cells[placed].tolist())
 
+    def _note_nonfinite_samples(self, bad, card_idx, placement_cell,
+                                card_logprob, placement_logprob, ability_logprob):
+        """Count and print each sampled action whose log-prob is not finite."""
+        def at(x, i):
+            return None if x is None else float(x[i])
+        for i in bad.nonzero(as_tuple=True)[0].tolist():
+            self.nonfinite_samples_total += 1
+            self.nonfinite_samples_rollout += 1
+            print(f"  [WARN] non-finite log-prob for a sampled action (env {i}, "
+                  f"episode {self.episodes_completed}): card arm "
+                  f"{int(card_idx[i])} log-prob {at(card_logprob, i)}, cell "
+                  f"{int(placement_cell[i])} log-prob {at(placement_logprob, i)}, "
+                  f"abilities log-prob {at(ability_logprob, i)}. The sampler drew "
+                  f"an action of probability 0; the update will drop this "
+                  f"row's minibatch. {self.nonfinite_samples_total} since start.",
+                  flush=True)
+
     def log_update(self, stats):
         """TensorBoard series shared by both pipelines, plus the controller step."""
         w, ep = self.writer, self.episodes_completed
@@ -641,6 +674,11 @@ class BaseTrainer:
                   f"gradient(s) dropped this update. The weights are intact, "
                   f"but something upstream produced NaN/inf -- check the "
                   f"reward stream and the PPO ratio.", flush=True)
+        # Must be 0: sampled actions with a non-finite log-prob in the rollout
+        # this update trained on (each one was printed when it happened).
+        w.add_scalar("Rollout/NonFinite_Sampled_LogProb",
+                     self.nonfinite_samples_rollout, ep)
+        self.nonfinite_samples_rollout = 0
 
         frozen_before = self.entropy.frozen_updates
         target_placement = self.entropy.update(

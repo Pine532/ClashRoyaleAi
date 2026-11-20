@@ -55,6 +55,38 @@ def test_the_rollout_draws_card_and_placement_through_the_cpu_sampler(workdir, m
     steps = trainer.cfg.update_timestep
     assert sizes.count(trainer.net.hand_size + 1) == steps, "card draws"
     assert sizes.count(trainer.net.placement_cells) == steps, "placement draws"
+    assert trainer.nonfinite_samples_total == 0
+
+
+def test_a_zero_probability_draw_is_counted_and_printed_where_it_happens(
+        workdir, monkeypatch, capsys):
+    """Plant one masked cell in the rollout: the trainer must say so at that
+    step, count it, and log the rollout's count with the update."""
+    from torch.utils.tensorboard import SummaryWriter
+    planted = {}
+
+    def masked_cell_once(logits):
+        drawn = sample_categorical(logits)
+        if not planted and logits.shape[-1] > 5:              # a placement draw
+            masked = (logits[0] == NEG_INF).nonzero()
+            if len(masked):
+                drawn = drawn.clone()
+                drawn[0] = planted["cell"] = int(masked[0, 0])
+        return drawn
+    monkeypatch.setattr(base_trainer, "sample_categorical", masked_cell_once)
+    scalars = []
+    real_add = SummaryWriter.add_scalar
+    monkeypatch.setattr(SummaryWriter, "add_scalar",
+                        lambda self, tag, value, *a, **k: (scalars.append((tag, value)),
+                                                           real_add(self, tag, value, *a, **k))[1])
+    trainer = _phase1()
+    assert planted, "no placement draw had a masked cell to plant"
+    assert trainer.nonfinite_samples_total == 1
+    assert ("Rollout/NonFinite_Sampled_LogProb", 1) in scalars
+    assert trainer.nonfinite_samples_rollout == 0, "the per-rollout count resets once logged"
+    out = capsys.readouterr().out
+    assert "[WARN] non-finite log-prob for a sampled action (env 0" in out
+    assert f"cell {planted['cell']} log-prob -inf" in out
 
 
 def test_ability_draws_go_through_the_cpu_sampler(monkeypatch):
