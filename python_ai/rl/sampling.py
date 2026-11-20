@@ -9,10 +9,14 @@ The CPU drew none. A masked (illegal) action then reaches the buffer with
 log-prob -inf, and the update's ratio for that row is NaN, which drops the
 whole minibatch.
 
-So every rollout draw is made on the CPU, whatever device the network runs on.
-On a CPU tensor this is exactly `Categorical(logits=logits).sample()`: the same
-samples and the same generator state, so CPU training is unchanged.
+So every rollout draw is made on the CPU, whatever device the network runs on:
+the card, placement and ability actions (`sample_categorical`) and the
+coverage slot (`sample_multinomial`; torch.multinomial on MPS drew a
+zero-weight entry 17 times in 2,000,000 over 612 weights). On a CPU tensor each
+is exactly the torch call it replaces: the same samples and the same generator
+state, so CPU training is unchanged.
 """
+import torch
 from torch.distributions import Categorical
 
 
@@ -22,3 +26,11 @@ def sample_categorical(logits):
     if logits.device.type == "cpu":
         return Categorical(logits=logits).sample()
     return Categorical(logits=logits.detach().cpu()).sample().to(logits.device)
+
+
+def sample_multinomial(probs, num_samples=1):
+    """`torch.multinomial(probs, num_samples)` (rows of non-negative weights),
+    drawn on the CPU and returned on `probs`' device."""
+    if probs.device.type == "cpu":
+        return torch.multinomial(probs, num_samples)
+    return torch.multinomial(probs.detach().cpu(), num_samples).to(probs.device)

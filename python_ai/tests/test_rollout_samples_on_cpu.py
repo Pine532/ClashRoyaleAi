@@ -5,6 +5,7 @@ exactly 0 (2026-11-19: about 1 in 10^5 on a masked 612-cell distribution, none
 on the CPU). A masked action then enters the buffer with log-prob -inf, the
 update's ratio for that row is NaN, and the minibatch is dropped. The live run
 lost one minibatch per epoch on about 1 update in 30 that way (docs/TODO.md L11).
+The coverage slot draw (torch.multinomial over hand-slot weights) goes the same way.
 """
 import pytest
 import torch
@@ -12,7 +13,8 @@ from torch.distributions import Categorical
 
 from python_ai.rl import abilities as ability_mod
 from python_ai.rl import base_trainer
-from python_ai.rl.sampling import sample_categorical
+from python_ai.rl import coverage as coverage_mod
+from python_ai.rl.sampling import sample_categorical, sample_multinomial
 from python_ai.tests.test_rl_base_trainer import (  # noqa: F401  (fixtures)
     _never_touch_the_live_checkpoint, _phase1, workdir)
 
@@ -124,3 +126,51 @@ def test_on_mps_no_draw_lands_on_a_zero_probability_cell():
     assert zero_probability_draws(sample_categorical) == 0, (
         f"zero-probability draws through sample_categorical (torch's own MPS draw: {naive})")
     assert sample_categorical(rows[:4]).device.type == "mps"
+
+
+def test_on_the_cpu_the_coverage_draw_is_exactly_torch_multinomial():
+    weights = [
+        torch.tensor([[1.0, 0.0, 2.0, 0.0], [1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 3.0]] * 20),
+        torch.softmax(_placement_like(), -1).expand(64, -1).contiguous(),
+    ]
+    for probs in weights:
+        torch.manual_seed(321)
+        want = torch.multinomial(probs, 1)
+        want_state = torch.get_rng_state()
+        torch.manual_seed(321)
+        got = sample_multinomial(probs, 1)
+        assert torch.equal(got, want)
+        assert torch.equal(torch.get_rng_state(), want_state)
+
+
+def test_the_rollout_draws_the_coverage_slot_through_the_cpu_sampler(workdir, monkeypatch):
+    shapes = []
+
+    def spy(probs, num_samples=1):
+        shapes.append(tuple(probs.shape))
+        return sample_multinomial(probs, num_samples)
+    monkeypatch.setattr(coverage_mod, "sample_multinomial", spy)
+    trainer = _phase1()
+    want = (trainer.cfg.num_envs, trainer.net.hand_size)
+    assert shapes.count(want) == trainer.cfg.update_timestep, shapes[:3]
+
+
+@needs_mps
+def test_on_mps_the_coverage_draw_never_picks_a_zero_weight_entry():
+    weights = torch.rand(612, generator=torch.Generator().manual_seed(0))
+    weights[288:] = 0.0
+    zero = weights == 0
+    rows = weights.to("mps").expand(100_000, -1).contiguous()
+
+    def zero_weight_draws(draw):
+        torch.manual_seed(0)
+        return sum(int(zero[draw(rows, 1).squeeze(-1).cpu()].sum()) for _ in range(20))
+
+    # The control must fire: torch.multinomial on MPS picks a zero weight about
+    # 17 times in these 2,000,000 draws (torch 2.13).
+    naive = zero_weight_draws(torch.multinomial)
+    if naive == 0:
+        pytest.skip(f"torch {torch.__version__}'s MPS multinomial drew no zero-weight entry "
+                    "in 2,000,000 draws; this test can no longer see the fix")
+    assert zero_weight_draws(sample_multinomial) == 0, f"torch's own MPS draw: {naive}"
+    assert sample_multinomial(rows[:4], 1).device.type == "mps"

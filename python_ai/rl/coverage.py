@@ -10,6 +10,8 @@ import os
 
 import torch
 
+from python_ai.rl.sampling import sample_multinomial
+
 # Env-overridable so the term can be ablated with byte-identical code (0 =
 # control arm).
 PLACEMENT_COVERAGE_COEF = float(os.environ.get("CLASH_PLACEMENT_COVERAGE_COEF", 0.02))
@@ -38,6 +40,7 @@ def placement_coverage_slots(card_mask_seq, hand_size, slot_weights=None):
     # The all-zero rows get a dummy distribution so multinomial cannot raise;
     # they are overwritten below.
     probs = torch.where(none.unsqueeze(-1), torch.ones_like(playable), playable)
-    idx = torch.multinomial(probs, 1).squeeze(-1)
+    # Drawn on the CPU: MPS can draw a zero-weight slot (rl/sampling.py).
+    idx = sample_multinomial(probs, 1).squeeze(-1)
     idx = torch.where(none, torch.full_like(idx, hand_size), idx)
     return idx.view(L, B)
