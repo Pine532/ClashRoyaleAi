@@ -55,8 +55,10 @@ size, so the first two items gate any training.
    Electro Wizard. Partly built (flagged 2026-11-18): Elite Barbarians Evolution 182 (Rage
    path), Electro Giant Evolution 186 (de-level pulse). Hero Ice Wizard 184 was built
    with its Snowman on 2026-11-20 (RoyaleAPI developer-build write-up, per the user) and
-   is no longer flagged; its Snowman lifetime (5 s) and Crown Tower damage (20) are
-   INFERENCES. Finish each of the rest, then clear its flag.
+   is no longer flagged; its Snowman lifetime (5 s), Crown Tower damage (20) and King
+   Tower targeting are INFERENCES. The 2026-10-27 refund (official, amount a reading: 2
+   elixir) and the Evo Cannon barrage knockback (1 tile, single source) were applied
+   2026-11-20 (`bd59bf0`, `be08a38`). Finish each of the rest, then clear its flag.
 5. **Tower Troops** (14 items) are deferred to a separate change by decision.
    `include/core/TowerTroops.h` is untouched: its troops are level 11 while the default
    towers are level 9, and its "Tower Princess" option is mislabelled.

@@ -7891,7 +7891,7 @@
      "verifier": "verified: 2026-10-27 post line 'Hero Ice Wizard now refunds Elixir if defeated before his projectile hits the target' (rule). Release 2026-09-07 post confirmed; Sep 16 and Oct 6 entries confirmed in order."
     }
    ],
-   "final_values_note": "Only official, dated numbers kept: freeze duration 5s, freeze damage 46, single use, elixir refund rule. All else unresolved or base-only. UPDATE 2026-11-20: Snowman built; see lookup_2026_11_20 (hp 266 single-source; lifetime 5 s and Crown Tower damage 20 are INFERENCES).",
+   "final_values_note": "Only official, dated numbers kept: freeze duration 5s, freeze damage 46, single use, elixir refund rule (applied 2026-11-20, amount a reading). All else unresolved or base-only. UPDATE 2026-11-20: Snowman built; see lookup_2026_11_20 (hp 266 single-source; lifetime 5 s and Crown Tower damage 20 are INFERENCES).",
    "unresolved": [
     {
      "item": "Snowman lifetime and Crown Tower damage (INFERENCES, built 2026-11-20)",
@@ -7919,7 +7919,7 @@
     },
     {
      "item": "Elixir refund mechanic details",
-     "why": "Only one line in Oct 27 post; not modelled (no window in this model)."
+     "why": "Only one line in Oct 27 post, no amount. Applied 2026-11-20 (official): refunds the ability's 2 elixir when he dies armed; the amount is a reading."
     },
     {
      "item": "Hero Ice Wizard hp/damage/hit speed/range/speed/targets",
@@ -7982,7 +7982,7 @@
      "blast_radius_tiles": 2.5,
      "freeze": "every enemy inside at spawn, held while the Snowman lives, capped at 5 s (official 2026-09-16)",
      "snowman_behaviour": "stationary, non-attacking, transform-immune; hitbox of Hero Magic Archer's decoy; hp drains linearly to 0 over its lifetime; self-destructs 2 s after everything it froze has died",
-     "arming": "press arms it; fires when an enemy target hit by this Hero is under HIS slow; kills do not fire it; no refund if he dies armed; enemies only; troop, building or Princess Tower (King Tower not firing it is a reading of the source)"
+     "arming": "press arms it; fires when an enemy target hit by this Hero is under HIS slow; kills do not fire it; refunds 2 elixir (a reading; official 2026-10-27, applied 2026-11-20) if he dies armed; enemies only; any target incl. the King Tower (INFERENCE from RoyaleAPI 'a troop, a building or even a Princess Tower', user decision 2026-11-20)"
     },
     "official_values": {
      "blast_damage": 46,
@@ -8000,7 +8000,7 @@
     ],
     "not_modelled": [
      "the write-up's two release bugs (inconsistent slow stacking, double spawn damage): by decision, no evidence they shipped",
-     "2026-10-27 official 'refunds elixir if defeated before projectile hits': no window in this model (the Snowman appears the moment the slowed hit lands; dying while armed refunds nothing per the write-up)"
+     "the 2026-10-27 refund is now applied (2026-11-20); see applied"
     ],
     "engine_plumbing": "IAbilityEffect::wantsOwnerHits/onOwnerHitLanded called from Projectile::applyHit; CombatEntity::abilityArmed, slowMarkOwnerId/slowMarkTicks, transformImmune, hasFreezeOfFactor, getCurrentTargetId; CardStats::withTransformImmunity; Board::findEntity; include/core/HeroIceWizardFrostyFellaEffect.h, include/entities/FrostySnowman.h",
     "gameplay_affecting": "yes; voids win-rate history"
@@ -11509,6 +11509,30 @@
     "date": "2026-11-20",
     "section": "B (single-source) + two INFERENCES",
     "what": "Hero Ice Wizard 184 Frosty Fella with its Snowman: 266 hp, 1 tile behind the target, 2.5-tile blast of 46, freeze held while it lives capped at 5 s, arms on press and fires on an enemy under his slow (RoyaleAPI developer-build write-up, per the user, read in a browser 2026-11-20); INFERENCES: Snowman lifetime 5 s and Crown Tower damage 20. abilityPending cleared."
+   },
+   {
+    "commit": "bd59bf0",
+    "date": "2026-11-20",
+    "status": "applied",
+    "confidence": "official (refund rule; amount is a reading)",
+    "section": "official 2026-10-27",
+    "what": "Hero Ice Wizard 184 refunds Elixir if defeated before his projectile hits the target: refunds the ability's 2 elixir (capped at 10) when he dies armed. The amount is a READING of 'refunds Elixir' (no amount stated). Supersedes the write-up's launch-era 'no refund while armed'."
+   },
+   {
+    "commit": "bd59bf0",
+    "date": "2026-11-20",
+    "status": "applied",
+    "confidence": "inference",
+    "section": "INFERENCE",
+    "what": "Hero Ice Wizard 184: a slowed King Tower fires Frosty Fella like a Princess Tower, from RoyaleAPI's 'a troop, a building or even a Princess Tower' read as any target (user decision)."
+   },
+   {
+    "commit": "be08a38",
+    "date": "2026-11-20",
+    "status": "applied",
+    "confidence": "single-source",
+    "section": "B (single-source)",
+    "what": "Evo Cannon 129 Deploy Barrage knockback: 1 tile, away from the Cannon; Sportskeeda (launch-era) 'pushing enemies back by one tile', https://opera.sportskeeda.com/mobile-games/clash-royale-cannon-evolution-ability-stats. Buildings and knockback-immune units (Minion Giant) not moved; other units hit are moved, air included (engine behaviour, unsourced)."
    }
   ],
   "not_applied": [
@@ -11538,7 +11562,7 @@
    },
    {
     "what": "Hero Ice Wizard Snowman (2026-11-19 entry)",
-    "why": "Superseded: built 2026-11-20 (see applied). Still not modelled: the write-up's two release bugs and the 2026-10-27 refund (no window in this model)."
+    "why": "Superseded: built 2026-11-20 (see applied). Still not modelled: the write-up's two release bugs. The 2026-10-27 refund was applied 2026-11-20 (official; 2-elixir amount a reading)."
    }
   ],
   "section_C_notes": "Recorded on the matching new_entries (lookup_2026_11_19) and in values_to_look_up.md. Also new: Cannon level-11 damage disagrees between Liquipedia (202) and Fandom (212); the engine holds 202."

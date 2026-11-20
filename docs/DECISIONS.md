@@ -8290,10 +8290,29 @@ that win-rate comparability breaks once.
   - Two values are inferences, marked everywhere: the 5 s lifetime (launch was 7 s), and the
     Crown Tower damage of 20 (46 scaled by the launch ratio 38/89).
   - Not modelled, by decision: the write-up's two release bugs. The King Tower does not fire it,
-    because the source names troops, buildings and Princess Towers only.
+    because the source names troops, buildings and Princess Towers only. (Reversed the same day,
+    see the addendum below.)
   - The official 2026-10-27 refund (if he is defeated before the projectile hits) has no window
-    in this model, so it does not apply.
+    in this model, so it does not apply. (Reversed the same day, see the addendum below.)
 - **The Evo Cannon barrage's knockback stays unmodelled.** Sources confirm it knocks back, but none
-  gives a distance.
+  gives a distance. (Reversed the same day, see the addendum below.)
 - **The other unresolved values are left as they are**, by the user's decision: Minion Giant, Evo
   Bats, Skeletons, Barbarian Barrel.
+
+Addendum, 2026-11-20 (three further user decisions, later the same day; they supersede the three
+notes above).
+
+- **Hero Ice Wizard refunds Elixir when defeated armed.** The official 2026-10-27 line ("refunds
+  Elixir if defeated before his projectile hits the target") is applied. It supersedes the
+  write-up's launch-era "no refund while armed". He refunds when he dies with the ability armed,
+  that is, before the firing hit has landed: no shot in flight, a kill left it armed, or a shot
+  still flying (a dead Hero's shot fires nothing). The post states no amount, so the 2 elixir of
+  the ability is a READING, flagged; capped at 10.
+- **A slowed King Tower fires Frosty Fella like a Princess Tower.** An INFERENCE from RoyaleAPI's
+  wording "a troop, a building or even a Princess Tower", read as any target.
+- **The Evo Cannon barrage knocks back 1 tile, away from the Cannon.** One source only (Sportskeeda,
+  launch-era, "pushing enemies back by one tile"), flagged. Buildings and knockback-immune units
+  (Minion Giant) are not moved; whatever else the burst hits is moved, air included, because its
+  damage hits air (engine behaviour, unsourced).
+
+All three change gameplay, so they void win-rate comparability with the earlier restart.
