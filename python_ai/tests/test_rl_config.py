@@ -99,3 +99,21 @@ def test_the_two_entropy_configs_differ_only_where_they_are_meant_to():
     differing = {k for k in a if a[k] != b[k]}
     assert differing == {"target_placement_start", "adapt_rate_placement",
                          "coef_step_max", "coef_ceil_placement"}
+
+
+def test_the_rollout_length_follows_CLASH_UPDATE_TIMESTEP():
+    """The scaling test (2026-11-20): more envs, shorter rollouts, the same
+    rows per update. Read at import, so checked in a fresh interpreter."""
+    import os
+    import subprocess
+    import sys
+    code = ("from python_ai.rl.config import PPOConfig; c = PPOConfig(); "
+            "print(c.update_timestep, c.num_envs, c.num_envs * c.update_timestep)")
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    env = dict(os.environ, CLASH_UPDATE_TIMESTEP="250", CLASH_NUM_ENVS="16")
+    out = subprocess.run([sys.executable, "-c", code], env=env, cwd=root,
+                         capture_output=True, text=True, check=True).stdout.split()
+    assert out == ["250", "16", "4000"]
+    bad = dict(os.environ, CLASH_UPDATE_TIMESTEP="333")   # not a multiple of the 50-step chunk
+    r = subprocess.run([sys.executable, "-c", code], env=bad, cwd=root, capture_output=True, text=True)
+    assert r.returncode != 0 and "divisible by bptt_chunk" in r.stderr

@@ -37,8 +37,11 @@ class PPOConfig:
     eps_clip: float = 0.2
     lr: float = 3e-4
 
-    #: Steps collected per environment before an update.
-    update_timestep: int = 500
+    #: Steps collected per environment before an update. With more envs, a
+    #: shorter rollout keeps the update's size (num_envs x update_timestep
+    #: rows); must stay a multiple of bptt_chunk. GAE's lookahead (gamma x
+    #: gae_lambda ~ 0.9, about 10 steps) is what a rollout boundary truncates.
+    update_timestep: int = int(os.environ.get("CLASH_UPDATE_TIMESTEP", 500))
 
     #: Truncated BPTT: each (chunk, env) pair is a training segment starting
     #: from the hidden state stored during the rollout. The chunk is also the
