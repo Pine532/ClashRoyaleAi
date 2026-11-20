@@ -20,6 +20,10 @@ public:
     // provided the owner is still alive. Default: not interested, so no other
     // projectile pays for the owner lookup.
     virtual bool wantsOwnerHits() const { return false; }
+    // Optional: an ability still armed (CombatEntity::abilityArmed) when its
+    // owner dies never fired; true gives its elixir back
+    // (GameManager::refundArmedAbilities). Default: no refund.
+    virtual bool refundsIfOwnerDiesArmed() const { return false; }
     virtual void onOwnerHitLanded(Board& /*board*/, CombatEntity& /*owner*/,
                                   const std::shared_ptr<CombatEntity>& /*target*/) const {}
 };

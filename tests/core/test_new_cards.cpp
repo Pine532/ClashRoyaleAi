@@ -1032,8 +1032,10 @@ TEST_CASE("Hero Ice Wizard (184) Frosty Fella never fires on an ally (a slow Mon
     CHECK(ally->slowMarkOwnerId == -1);
 }
 
-TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires behind a Princess Tower, never on the King Tower",
+TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires behind any slowed tower, the King Tower included",
           "[new_card][hero_ice_wizard]") {
+    // "a troop, a building or even a Princess Tower" (RoyaleAPI) read as any
+    // target; the King Tower is an inference (user decision 2026-11-20).
     live_sync::Match m;
     auto hero = live_sync::firstCombat(m.spawnCard(184, 9.0f, 20.0f, 0));
     REQUIRE(hero != nullptr);
@@ -1054,14 +1056,19 @@ TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires behind a Princess Tower, nev
             if (std::dynamic_pointer_cast<FrostySnowman>(e)) ++n;
         return n;
     };
-    REQUIRE(hero->activateAbility(m.board()));
-    king->applyFreeze(30, 0.70f);
-    hero->abilityEffect->onOwnerHitLanded(m.board(), *hero, king);
-    CHECK(snowmen() == 0);
-    CHECK(hero->abilityArmed);
-    princess->applyFreeze(30, 0.70f);
-    hero->abilityEffect->onOwnerHitLanded(m.board(), *hero, princess);
-    CHECK(snowmen() == 1);
+    SECTION("the King Tower") {
+        REQUIRE(hero->activateAbility(m.board()));
+        king->applyFreeze(30, 0.70f);
+        hero->abilityEffect->onOwnerHitLanded(m.board(), *hero, king);
+        CHECK(snowmen() == 1);
+        CHECK_FALSE(hero->abilityArmed);
+    }
+    SECTION("a Princess Tower") {
+        REQUIRE(hero->activateAbility(m.board()));
+        princess->applyFreeze(30, 0.70f);
+        hero->abilityEffect->onOwnerHitLanded(m.board(), *hero, princess);
+        CHECK(snowmen() == 1);
+    }
 }
 
 TEST_CASE("Hero Ice Wizard (184) Frosty Fella fires from a real projectile hit",
@@ -1190,6 +1197,80 @@ TEST_CASE("Hero Ice Wizard (184) Frosty Fella no longer kills 81 hp Skeletons or
     board.commitPendingEntities();
     blast->update(board);
     CHECK(s->hp <= 0);
+}
+
+namespace {
+// A deployed Hero Ice Wizard in slot 1 of team 0, through GameManager.
+std::shared_ptr<CombatEntity> deployedHeroIceWizard(GameManager& game) {
+    game.playerAI.hand[1] = 184;
+    game.playerAI.elixir = 100.0f;
+    game.playCard(0, 184, 9.0f, 10.0f);
+    for (int i = 0; i < 12; ++i) game.step();
+    for (const auto& e : game.getBoard().getEntities())
+        if (e->cardId == 184 && e->team == 0) return std::dynamic_pointer_cast<CombatEntity>(e);
+    return nullptr;
+}
+}  // namespace
+
+TEST_CASE("Hero Ice Wizard (184) refunds the 2 elixir when defeated while armed (official 2026-10-27)",
+          "[new_card][hero_ice_wizard][refund]") {
+    // "Hero Ice Wizard now refunds Elixir if defeated before his projectile
+    // hits the target." Armed = the firing hit has not landed yet.
+    GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+    auto hero = deployedHeroIceWizard(game);
+    REQUIRE(hero != nullptr);
+    game.playerAI.elixir = 5.0f;
+    REQUIRE(game.activateChampionAbility(0, 1));
+    REQUIRE(hero->abilityArmed);
+    const float afterPress = game.getElixirAI();
+    CHECK(afterPress == Catch::Approx(3.0f));
+    hero->hp = 0;
+    game.step();
+    // The 2 back, on top of one tick of regeneration.
+    CHECK(game.getElixirAI() - afterPress == Catch::Approx(2.0f).margin(0.1f));
+    CHECK(game.getElixirAI() > afterPress + 1.9f);
+}
+
+TEST_CASE("Hero Ice Wizard (184) refunds nothing once Frosty Fella has fired, or if never pressed",
+          "[new_card][hero_ice_wizard][refund]") {
+    SECTION("fired, then defeated") {
+        GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+        auto hero = deployedHeroIceWizard(game);
+        REQUIRE(hero != nullptr);
+        auto enemy = std::make_shared<StationaryCombatant>(7777, hero->position.x, hero->position.y + 3.0f,
+                                                           5000, 1, 0.0f, 0, 1000);
+        game.getBoard().addEntity(enemy);
+        game.getBoard().commitPendingEntities();
+        game.playerAI.elixir = 5.0f;
+        REQUIRE(game.activateChampionAbility(0, 1));
+        enemy->applyFreeze(30, 0.70f);
+        hero->abilityEffect->onOwnerHitLanded(game.getBoard(), *hero, enemy);
+        REQUIRE_FALSE(hero->abilityArmed);   // fired
+        const float before = game.getElixirAI();
+        hero->hp = 0;
+        game.step();
+        CHECK(game.getElixirAI() - before < 0.1f);   // regeneration only
+    }
+    SECTION("never pressed") {
+        GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+        auto hero = deployedHeroIceWizard(game);
+        REQUIRE(hero != nullptr);
+        game.playerAI.elixir = 5.0f;
+        hero->hp = 0;
+        game.step();
+        CHECK(game.getElixirAI() - 5.0f < 0.1f);
+    }
+    SECTION("the refund respects the 10-elixir cap") {
+        GameManager game({ 1, 184, 2, 3, 4, 5, 6, 7 }, { 0, 1, 2, 3, 4, 5, 6, 7 });
+        auto hero = deployedHeroIceWizard(game);
+        REQUIRE(hero != nullptr);
+        game.playerAI.elixir = 10.0f;
+        REQUIRE(game.activateChampionAbility(0, 1));
+        game.playerAI.elixir = 9.5f;
+        hero->hp = 0;
+        game.step();
+        CHECK(game.getElixirAI() == Catch::Approx(10.0f));
+    }
 }
 
 TEST_CASE("Hero Ice Wizard (184) Frosty Fella costs 2 elixir and is single-use through GameManager",

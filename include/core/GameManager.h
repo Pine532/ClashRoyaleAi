@@ -121,6 +121,21 @@ private:
     // Once per tick per team: copies the tracked Champion's live cooldown into
     // persistedCooldownRemaining. After it dies the last value stays (it is
     // not inherited by a newly placed Champion: see trackSlotEntities).
+    // An ability armed but not yet fired when its owner dies gives its elixir
+    // back, if the ability says so (IAbilityEffect::refundsIfOwnerDiesArmed;
+    // Hero Ice Wizard, official 2026-10-27). Capped at 10 like every grant.
+    void refundArmedAbilities() {
+        for (const auto& e : board.getEntities()) {
+            if (e->isAlive()) continue;
+            auto c = std::dynamic_pointer_cast<CombatEntity>(e);
+            if (!c || !c->abilityArmed || !c->abilityEffect
+                || !c->abilityEffect->refundsIfOwnerDiesArmed()) continue;
+            c->abilityArmed = false;
+            PlayerState& player = (c->team == 0) ? playerAI : playerOpponent;
+            player.elixir = std::min(player.elixir + c->abilityElixirCost, 10.0f);
+        }
+    }
+
     void syncChampionCooldowns(int team) {
         PlayerState& player = (team == 0) ? playerAI : playerOpponent;
         const std::vector<int>& deckConfig = (team == 0) ? aiDeckConfig : oppDeckConfig;
@@ -752,6 +767,9 @@ public:
         // died this tick persists its final cooldown).
         syncChampionCooldowns(0);
         syncChampionCooldowns(1);
+
+        // Before cleanDeadEntities, which erases the dead owner.
+        refundArmedAbilities();
 
         board.cleanDeadEntities(currentTick);
     }

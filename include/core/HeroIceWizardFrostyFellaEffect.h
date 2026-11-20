@@ -14,11 +14,19 @@
 // (royaleapi.com/blog/hero-ice-wizard-september-2026, level 11, relayed by the
 // user 2026-11-20) plus the later official changes; docs/LIVE_SYNC.md.
 //
-// Pressing ARMS it (the elixir and the single use are spent then, so dying
-// while armed refunds nothing). It fires on an enemy that this Hero's own hit
-// has slowed: at once if one already is when pressed, else on the next hit of
-// his that lands his slow. A target his hit kills (no slow lands) leaves it
-// armed for the next. Only his own slow counts (CombatEntity::slowMarkOwnerId,
+// Pressing ARMS it (the elixir and the single use are spent then). It fires on
+// an enemy that this Hero's own hit has slowed: at once if one already is when
+// pressed, else on the next hit of his that lands his slow. A target his hit
+// kills (no slow lands) leaves it armed for the next.
+//
+// Refund, official 2026-10-27 (supersedes the write-up's launch-era "no refund
+// while armed"): "Hero Ice Wizard now refunds Elixir if defeated before his
+// projectile hits the target". Armed means the projectile that fires it has
+// not hit yet, so he refunds exactly when he dies armed, whether no shot was
+// in flight, a kill left it armed, or a shot was still flying (a dead Hero's
+// shot fires nothing). The amount is the ability's 2 elixir: a reading of
+// "refunds Elixir", which states none. GameManager::refundArmedAbilities pays
+// it. Only his own slow counts (CombatEntity::slowMarkOwnerId,
 // set here from his hits), so a slow from anyone else, or one Monk reflects
 // back at his side, cannot trigger it.
 //
@@ -29,8 +37,9 @@
 // the Freeze spell, for as long as the Snowman lives, capped. Units arriving
 // later are not caught; frozen units moved out stay frozen.
 //
-// Targets: a troop, a building or a Princess Tower. The source names no King
-// Tower, so a slowed King Tower does not fire it.
+// Targets: any enemy he slows, the King Tower included. RoyaleAPI's wording ("a
+// troop, a building or even a Princess Tower") reads as any target; the King
+// Tower is an INFERENCE from it (user decision, 2026-11-20).
 class HeroIceWizardFrostyFellaEffect : public IAbilityEffect {
     float radius;
     int damage;
@@ -52,6 +61,7 @@ public:
           lifetimeTicks(lifetimeTicks), freezeCapTicks(freezeCapTicks), selfDestructTicks(selfDestructTicks) {}
 
     bool wantsOwnerHits() const override { return true; }
+    bool refundsIfOwnerDiesArmed() const override { return true; }
 
     // Press: arm, and fire at once on an eligible target already under his
     // slow (his current target first, else the nearest; ties: lowest id).
@@ -86,13 +96,8 @@ public:
         if (owner.abilityArmed && eligible(owner, *target)) fire(board, owner, *target);
     }
 
-    // The King Tower is identified as MatchRules does (a Tower with symbol 'R').
-    static bool isKingTower(const CombatEntity& unit) {
-        return unit.isTower() && unit.symbol == 'R';
-    }
-
     bool eligible(const CombatEntity& owner, const CombatEntity& unit) const {
-        return unit.isAlive() && unit.isTargetable() && unit.team != owner.team && !isKingTower(unit)
+        return unit.isAlive() && unit.isTargetable() && unit.team != owner.team
             && unit.slowMarkOwnerId == owner.id && unit.slowMarkTicks > 0
             && unit.hasFreezeOfFactor(slowFactor);
     }
