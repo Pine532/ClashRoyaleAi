@@ -8262,3 +8262,12 @@ questions came out of it for the user (TODO L11, L18). The coverage slot draw st
 the device. And wait steps' never-placed cells drive the PPO ratio and the placement head's
 gradient (60% of decisions; 1.5x the real placements' gradient, uncorrelated with it).
 
+**The user's answers, the same night.**
+- The coverage draw moved to the CPU, and MPS is the default again.
+- Non-decision rows are now excluded with `torch.where` on the log-ratio (option b). It
+  changes no finite result, so win rates stay comparable across it.
+- Leaving wait steps' placement out of the ratio (option c) does change what the policy
+  learns. It is therefore tested first: two seeded arms after the 2026-11-20 rung report,
+  with the decision rule fixed in advance (TODO L18). It is adopted only if it does at least
+  as well. If adopted, that is where earlier win rates stop being comparable.
+

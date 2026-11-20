@@ -174,10 +174,13 @@ size, so the first two items gate any training.
       the strong evidence and the window the end-to-end confirmation.
     - Live run on MPS from episode 116,042 (23:01). A plain `start` uses CPU since
       `d01c05c`; `CLASH_DEVICE=mps` selects MPS.
-    - Still on the device: the coverage slot draw (`rl/coverage.py:41`, `torch.multinomial`),
-      outside the approval. A zero-probability draw there would pick an unaffordable slot for
-      the coverage term; whether that can go non-finite is unmeasured (the one skip traced
-      came from a placement draw). The same CPU draw would cover it; needs a yes.
+    - The coverage slot draw (`rl/coverage.py`, `torch.multinomial`) moved to the CPU too
+      (`cdb8eb2`, user-approved; MPS picked zero weights 17 in 2M over 612, 1 in 20M over 4).
+      `mac_training.sh` defaults to MPS again (`7a6a992`). Live restarted on that code at
+      episode 123,242 (23:35, rung 4).
+    - Left on the device, outside the approval: the periodic demo replay
+      (`rl/replay.py:52,55`). It never feeds training; a bad draw would only put an illegal
+      move in a saved replay. Found in review.
 12. ~~**Decision before phase 2: partly implemented cards reach opponents.**~~ DONE
     2026-11-18 (user's decision): 182, 184 and 186 are flagged `abilityPending`, so
     `sample_random_deck` never deals them. Original note: Phase 2's
@@ -226,6 +229,29 @@ size, so the first two items gate any training.
       inf x 0 = NaN. `torch.where` would exclude it without changing any finite result.
     - Options: leave it; drop the placement term from the ratio on no-op rows (changes
       learning, and voids the comparability of the win-rate history); `torch.where` only.
+    **2026-11-19, the user's decision:** (b) now, (c) tested first.
+    - (b) is in (`cfe2182`). The log-ratio is masked with `torch.where` before exp; a mask on
+      the surrogate alone would still send 0 x inf back through exp. CPU stays bit-identical.
+      The live run has it since 23:35.
+    - (c) is a switch, default unchanged (`048e48f`): `CLASH_NOOP_PLACEMENT_IN_RATIO=0` leaves
+      a no-op row's placement out of the stored and the recomputed log-prob alike.
+    - **The test, fixed before running. Start 2026-11-20, after the 16:40 rung report.**
+      - Pause the live run and copy its checkpoint. From that copy, two arms side by side
+        for 60 minutes each, on MPS with the HEAD code: (b) with the switch unset, (b)+(c)
+        with it at 0.
+      - Seeding as in the bit-identity check: in-process envs, `cfg.seed` 1234, and the
+        teacher's `default_rng(None)` from a counter. Harness: scratchpad `mpscheck/armrun.py`.
+      - Compare at matched updates U = min of the two arms' update counts.
+        - Win rate over all episodes of updates 1..U, with W100 every 10 updates.
+        - Placement-head gradient coherence: the norm of the summed minibatch gradients
+          over the sum of their norms, averaged over updates 1..U. Expected higher under (c).
+      - Rung first. If the arms end on different rungs, the higher rung wins. If only one
+        arm was demoted, it loses.
+      - On the same rung, (c) is "at least as good" if its win rate is at least (b)'s minus
+        1.96 standard errors of the difference (two proportions, unpooled).
+      - If so, adopt (c): make the switch's default off, with a test. Restart the live run
+        from its own pre-arms checkpoint. Mark that point in DECISIONS and in
+        `runs/HOURLY_STATUS.md` as where earlier win rates stop being comparable.
 
 ---
 
