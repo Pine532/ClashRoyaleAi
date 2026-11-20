@@ -8316,3 +8316,28 @@ notes above).
   damage hits air (engine behaviour, unsourced).
 
 All three change gameplay, so they void win-rate comparability with the earlier restart.
+
+**The deck switch's plumbing (2026-11-20, overnight).**
+- *Mirror games once the pool is on.* About a quarter of games stay mirrors (the user's figure),
+  through `CLASH_PHASE1_POOL_MIRROR_SHARE`, default 0.25 (`3f883a7`). The new deck has a Hero and
+  the pool refuses Hero decks, so this is the only way it keeps meeting itself. Mirror results
+  never move a pool deck's win-rate estimate.
+- *Starting the new lineage from the Hog weights.* This is done by `tools/redeck_checkpoint.py`
+  (`572046d`).
+  - It keeps every weight. It also keeps Adam's moments, matched by name: the new Hero ability
+    head shifts the parameter positions, so matching by position would put moments on the wrong
+    tensors.
+  - It resets the curriculum to rung 0, the outcome window, the plateau tracker and the pool
+    estimates.
+  - It also resets the entropy coefficients (to 0.05 and 0.06) and the episode counter. The user
+    agreed the card coefficient and left placement to the assistant. Placement is reset too: the
+    counter is the placement anneal clock, and the Hog checkpoint (episode 142,124) sat at the
+    tight end of the anneal (target 0.25) with its coefficient at the 0.01 floor. That leaves
+    almost no placement exploration for seven cards it has never placed. Resetting restarts the
+    anneal at 0.65.
+  - Checked on a copy of the live checkpoint. The real trainer resumed it at episode 0, rung 0,
+    with its optimizer restored (53 Adam states) and a clean update.
+- *Rollout length.* `CLASH_UPDATE_TIMESTEP` (`f66a2b3`) lets the scaling test keep about 4,000 rows
+  per update at 12 and 16 games (350- and 250-step rollouts). GAE's lookahead is about 10 steps,
+  so a rollout boundary truncates about 2% of rows at 500 steps and 4% at 250. The LSTM is
+  unaffected: its state carries across rollouts and chunks stay 50 steps.
