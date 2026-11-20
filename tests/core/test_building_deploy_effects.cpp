@@ -105,6 +105,33 @@ TEST_CASE("Cannon Evolution's Deploy Barrage deals 261 in a 2.0-tile radius",
     CHECK(burstOnNeighbour(129, true, 2.6f)->hp == 100000);        // 2025-05-05
 }
 
+TEST_CASE("Cannon Evolution's Deploy Barrage knocks what it hits 1 tile away from the Cannon",
+          "[deploy_effect][building][live_sync_values]") {
+    // Single source, launch-era (Sportskeeda: "pushing enemies back by one
+    // tile"); values-lookup section B, user decision 2026-11-20.
+    CHECK(burstOnNeighbour(129, true, 1.0f)->position.y == Catch::Approx(12.0f));   // 1 -> 2 tiles away
+    // Control: the un-evolved Cannon has no barrage, so nothing moves.
+    CHECK(burstOnNeighbour(129, false, 1.0f)->position.y == Catch::Approx(11.0f));
+}
+
+TEST_CASE("Cannon Evolution's Deploy Barrage does not move a knockback-immune unit (Minion Giant)",
+          "[deploy_effect][building][live_sync_values]") {
+    auto board = std::make_shared<Board>();
+    auto giant = firstCombat(spawnBare(*board, 183, 9.0f, 11.0f, 1));
+    REQUIRE(giant != nullptr);
+    REQUIRE(giant->knockbackImmune);
+    const int hpBefore = giant->hp;
+    spawnBare(*board, 129, 9.0f, 10.0f, 0, true);
+    std::vector<std::shared_ptr<Entity>> bursts;
+    for (const auto& e : board->getEntities())
+        if (std::dynamic_pointer_cast<AreaSpell>(e)) bursts.push_back(e);
+    REQUIRE_FALSE(bursts.empty());
+    for (const auto& b : bursts)
+        for (int t = 0; t < 30 && b->isAlive(); ++t) b->update(*board);
+    CHECK(giant->hp < hpBefore);          // hit by the barrage...
+    CHECK(giant->position.y == Catch::Approx(11.0f));   // ...but not moved
+}
+
 TEST_CASE("Tesla Evolution's Electro Pulse deals 148", "[deploy_effect][building][live_sync_values]") {
     CHECK(100000 - burstOnNeighbour(154, true, 4.0f)->hp == 148);  // 2026-05-04
 }

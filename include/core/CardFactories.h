@@ -146,9 +146,12 @@ inline float placementRadius(Archetype archetype) {
 // point, once per card rather than per squad member. Most cards set none.
 inline void spawnDeployEffect(const CardStats& stats, float x, float y, int team, Board& board) {
     if (stats.spawnEffectRadius <= 0.0f) return;
+    // Every argument before the knockback at AreaSpell's own default.
     auto effect = std::make_shared<AreaSpell>(
         board.allocateId(), x, y, team, stats.spawnEffectRadius, stats.spawnEffectDamage,
-        0, stats.symbol, stats.spawnEffectOnHit);
+        0, stats.symbol, stats.spawnEffectOnHit, /*groundOnly=*/false, /*remainingHits=*/1,
+        /*tickInterval=*/0, /*buffsAllies=*/false, /*buffMultiplier=*/1.0f, /*buffDurationTicks=*/0,
+        /*knockback=*/stats.spawnEffectKnockback);
     effect->name = stats.name;
     effect->cardId = stats.id;
     effect->crownTowerDamage = stats.spawnEffectCrownTowerDamage;

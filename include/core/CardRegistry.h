@@ -1523,12 +1523,18 @@ private:
 
         // Cannon ("Deploy Barrage"): a one-time burst on deploy: radius 2.0
         // (2025-05-05 balance update, 2.5 -> 2), damage 261 (2026-10-06 balance
-        // update, 281 -> 261; docs/LIVE_SYNC.md). Knockback is not modelled.
+        // update, 281 -> 261; docs/LIVE_SYNC.md). Knockback 1 tile, away from
+        // the Cannon: SINGLE SOURCE, launch-era (Sportskeeda, "pushing enemies
+        // back by one tile",
+        // https://opera.sportskeeda.com/mobile-games/clash-royale-cannon-evolution-ability-stats;
+        // values-lookup section B, user decision 2026-11-20). Buildings and
+        // knockback-immune units (Minion Giant) are not moved; whatever else the
+        // burst hits is (air included, as its damage is).
         addEvolution(129,
             // First hit 1.0 s (10 ticks), the same as its hit speed: https://liquipedia.net/clashroyale/Cannon ; https://clashroyale.fandom.com/wiki/Cannon
             building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10).withFirstHit(10),
             building(25, "Cannon", 3.0f, 824, 'C', 5.5f, 202, 10).withFirstHit(10)
-                .withSpawnEffect(2.0f, 261),
+                .withSpawnEffect(2.0f, 261).withSpawnEffectKnockback(1.0f),
             2, 1);
 
         // Firecracker: the real center and shrapnel sparks (low damage every

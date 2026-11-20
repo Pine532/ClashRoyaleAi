@@ -143,6 +143,9 @@ struct CardStats {
     // crownTowerDamage; -1 = the full spawnEffectDamage. Goblin Drill's
     // emergence: 20 (2026-10-06 balance update, docs/LIVE_SYNC.md).
     int spawnEffectCrownTowerDamage = -1;
+    // Tiles the deploy burst pushes what it hits, away from its centre
+    // (AreaSpell's knockback; 0 = none). Cannon Evolution's barrage: 1.
+    float spawnEffectKnockback = 0.0f;
 
     // Fired once when a unit of this card dies (e.g. Golem's Golemites).
     // Concrete effects live in core/.
@@ -400,6 +403,10 @@ struct CardStats {
     }
     CardStats& withOnHit(std::shared_ptr<IOnHitEffect> effect) {
         onHit = std::move(effect);
+        return *this;
+    }
+    CardStats& withSpawnEffectKnockback(float tiles) {
+        spawnEffectKnockback = tiles;
         return *this;
     }
     CardStats& withSpawnEffect(float radius, int damage, std::shared_ptr<IOnHitEffect> effect = nullptr) {
