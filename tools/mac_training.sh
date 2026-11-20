@@ -2,7 +2,8 @@
 # Run the phase-1 -> phase-2 training pipeline in the background on macOS.
 #
 #   tools/mac_training.sh start    start, or resume (same CLASH_WEIGHTS -> "Resumed from ...")
-#   tools/mac_training.sh status   process, phase, latest progress and loss lines
+#   tools/mac_training.sh status   process, phase, latest progress and loss lines, non-finite counts
+#   tools/mac_training.sh row      one markdown table row for an hourly log (header: row-header)
 #   tools/mac_training.sh stop     SIGINT to the trainer's main process only; it saves, then exits
 #
 # Defaults (export a variable first to override it): the 2.6 Hog Cycle deck,
@@ -37,6 +38,12 @@ P2_PATTERN="trainers/train_selfplay.py"
 SHIM='import os, signal, sys; signal.signal(signal.SIGINT, signal.SIG_DFL); os.execv(sys.argv[1], sys.argv[1:])'
 
 alive() { [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }
+# Lines in the current log matching $1 (0 when there is no log).
+count() { local n; n=$(grep -c -- "$1" "$LOG" 2>/dev/null); echo "${n:-0}"; }
+# Both must stay 0 (docs/TODO.md L11): updates that dropped a minibatch to a
+# non-finite gradient, and sampled actions whose log-prob was not finite.
+SKIP_LINE="non-finite minibatch"
+SAMPLE_LINE="non-finite log-prob for a sampled action"
 
 case "${1:-}" in
 start)
@@ -90,7 +97,25 @@ status)
     grep -h "Update @" "$LOG" 2>/dev/null | tail -1
     grep -h "Checkpoint saved" "$LOG" 2>/dev/null | tail -1
     grep -h "FLOOR\|ALARM\|Traceback\|Error" "$LOG" 2>/dev/null | tail -3
+    skips=$(count "$SKIP_LINE"); samples=$(count "$SAMPLE_LINE")
+    echo "non-finite: $skips update(s) with dropped minibatches, $samples bad sample(s) in this log"
+    if [ "$skips" != 0 ] || [ "$samples" != 0 ]; then
+        echo "WARNING: non-finite counts must be 0 (docs/TODO.md L11); grep the log for [WARN]"
+    fi
+    ;;
+row-header)
+    echo "| Time | Trainer | Last progress line | Advances | Demotions | [FLOOR] | Skip updates | Bad samples | Non-finite |"
+    echo "|---|---|---|---|---|---|---|---|---|"
+    ;;
+row)
+    LOG="$(cat "$LOGLINK" 2>/dev/null)"
+    state="stopped"; alive && state="running"
+    # The progress line has pipes of its own; escaped, or they split the cells.
+    last="$(grep -h "^Episodes: " "$LOG" 2>/dev/null | tail -1 | cut -c1-80 | sed 's/|/\\|/g')"
+    skips=$(count "$SKIP_LINE"); samples=$(count "$SAMPLE_LINE")
+    flag="ok"; { [ "$skips" != 0 ] || [ "$samples" != 0 ]; } && flag="**WARNING**"
+    echo "| $(date +%H:%M) | $state | \`$last\` | $(count "Curriculum advanced") | $(count DEMOTED) | $(count "\[FLOOR\]") | $skips | $samples | $flag |"
     ;;
 *)
-    sed -n 2,10p "$0"; exit 2 ;;
+    sed -n 2,11p "$0"; exit 2 ;;
 esac
