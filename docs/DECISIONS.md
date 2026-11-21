@@ -8386,3 +8386,84 @@ All three change gameplay, so they void win-rate comparability with the earlier 
 - *The new run* started 17:14 in mirror mode from the converted checkpoint
   (`runs/checkpoints/minigiant_start_20261120.pth` keeps the start read-only), with the weekend
   watchdog running. Win rates from here are not comparable with the Hog run's.
+
+## 2026-11-21: Lightning's placement rule, the harder benchmark, the floor A/B (user decisions)
+
+**Why.** The Saturday 03:30 check found Lightning almost unplayed. Over 100 rung-10 mirror games on each
+benchmark's frozen copy (05:28 / 11:29 / 17:31): Lightning 0.18 / 0.12 / 0.09 plays per game, Evo Cannon
+0.57 / 0.33 / 0.47, Hero Ice Wizard 1.24 / 1.28 / 2.11; the other five cards about 6-7. The engine's
+Lightning matches the ledger (1057 per strike, radius 3.5 plus the target's body, the top three by HP, 265
+Crown Tower damage, a 0.5 s stun). The advisor target that trains its placement head scored it like a
+Fireball.
+
+**Option A (approved): Lightning's placement rule.**
+- The engine (AreaSpell's top-HP rule) ranks every enemy whose body overlaps the area, towers and buildings
+  included, by HP plus shield, and strikes the top three; a tower takes its Crown Tower damage. The advisor
+  target summed every troop in the area (`tactics.spell_catch_map`, Fireball's rule). It overvalued a clump
+  of four or more and ignored the slot a tower takes. Measured: with four Knights at a Princess Tower and
+  three in the open, it preferred the tower cell (logit 12.0 vs 8.6); the engine deals 2,379 there and
+  3,171 in the open.
+- Now a spell with a measured target cap is scored by `tactics.spell_top_targets_map`.
+  `card_probes.spell_max_targets` finds the cap: Lightning 3, Vines 3, every other damaging spell none.
+  - The score is the top-cap enemies in the area by HP: min(hp, damage) for a troop or building, min(hp,
+    tower damage) for a tower.
+  - Each tower's reach is measured on that tower (`spell_tower_reach`): Lightning 5.5 from the King, 5.0
+    from a Princess Tower, against 3.75 for a Knight.
+- What does not change:
+  - Uncapped spells (Fireball) keep the old map bit for bit.
+  - The teacher still aims with `spell_catch_map`, so the opponents and both benchmarks are unchanged.
+- The assistant's choices in the code:
+  - A sleeping King takes a slot but scores 0, since the hit wakes it.
+  - The rule declines when no enemy troop or building is on the board. A tower's chip alone is the same
+    in every quiet state, the constant the gate exists to refuse.
+  - A cell counting more bodies than it has troop channels copies its smallest troop channel.
+  - Shields are not observed.
+- Tests: `python_ai/tests/test_advisor_top_hp_spell.py`, 10 cases. Each expected value is what the engine
+  deals when the spell is cast there.
+  - The behavioural case fails on the old rule.
+  - A Sonnet review (three lenses, each finding adversarially verified) confirmed two low-severity
+    faults, both fixed with a test that failed first: the King's wider reach, and a building on a fallen
+    tower's cell being dropped.
+  - Python suite: the same three known arm64 compaction failures before and after.
+- No gameplay, observation or reward change: the target feeds an auxiliary placement KL outside the PPO
+  ratio. Win rates stay comparable across the restart that applies it (time and episode below, with the
+  A/B's result).
+
+**The harder benchmark.** The rung-3 benchmark read 0.92 at 11:29 and 17:31, near its ceiling.
+- `runs/tools_scratch/bench.py --rung 10` plays the same 200-game round-robin against the rung-10 (top)
+  teacher.
+- The watchdog runs it every 6 h on the same frozen copy as the rung-3 row and appends it to
+  `runs/PROGRESS_MINIGIANT_R10.md`. The rung-3 table continues.
+- Baseline on the 17:30 frozen copy (episode 443,564, before option A): 144/200 = 0.720 (Wilson
+  0.654-0.778); giant_double_dragon 0/12.
+- A first attempt read 6/200. A relative path made `weights_path()` look under python_ai/, so a random
+  net played. bench.py now makes its paths absolute and refuses to play unless the copy loaded.
+
+**Option B, the per-card floor, as an A/B. The rule, written before it ran:**
+- *Arms.* Both start from the same post-A checkpoint at the restart.
+  - Control: the live run (option A only).
+  - B: the same checkpoint and settings plus `CLASH_DECK_COVERAGE_COEF=0.05` (floor 0.02, threat-gated,
+    `rl/deck_coverage.py` as shipped).
+  - Both run side by side on this Mac, MPS, 16 games x 250 steps.
+- *Why 0.05.* It is the smallest coefficient on record. In August it cost 0.18 win-rate points
+  (ungated, Hog deck) while the placement head was untrained ("fix placement first"). The threat gate
+  came later, and option A fixes placement for the card the floor pushes hardest.
+- *Budget.* 600 PPO updates per arm, counted in each arm's own log from the restart (about 21,000
+  episodes at 35 per update).
+  - Each arm's frozen copy is its first checkpoint save at or after update 600.
+  - Arm B stops once its copy is taken.
+- *Judge.* `bench.py --rung 10`, 200 games, on each copy. **Adopt B if and only if B's wins >= the
+  control's wins.** Otherwise the live run continues without the floor.
+- *Reported, not deciding.* The rung-3 benchmark, and plays per card and Hero presses over 100 rung-10
+  mirror games (`preweekend_check.py`).
+- *If B is adopted,* the live run restarts from arm B's frozen copy, with the floor set in
+  `runs/minigiant.env`.
+- *Power.* At about 0.72, 200 games per arm put the difference's standard error near 0.045, so the rule
+  cannot separate arms within about 5 points. It is the user's rule ("at least as good"), applied as
+  written.
+- Harness: `runs/tools_scratch/ab_floor.py`; output in `runs/ab_floor/`.
+
+**Not done.**
+- Option C (card-entropy target 0.35 → 0.40) is skipped (the user).
+- The plateau window is approved in principle for after the weekend, as proposed, and not changed now
+  (docs/TODO.md L20).

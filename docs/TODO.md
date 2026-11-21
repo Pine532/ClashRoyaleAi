@@ -279,6 +279,21 @@ size, so the first two items gate any training.
         200-game benchmark (`runs/tools_scratch/bench.py`: frozen copies of each arm's
         checkpoint, the same 17 opponents), not on curriculum win rates. This applies to
         every future A/B test.
+19. **Lightning's placement rule and the per-card floor (2026-11-21).** Option A is done:
+    the advisor target scores a top-HP spell by the engine's rule (`tactics.spell_top_targets_map`;
+    docs/DECISIONS.md 2026-11-21). Option B, `CLASH_DECK_COVERAGE_COEF=0.05`, runs as an A/B
+    from the post-A checkpoint. The rule was written before it ran: adopt only if B's wins on
+    `bench.py --rung 10` (200 games) >= the control's. Record the result here.
+20. **The plateau window, scaled to throughput: after the weekend** (the user approved it in
+    principle on 2026-11-21; not before the watchdog ends, 2026-11-23 12:00). The 1,500-episode
+    patience dates from 2026-09-03, at about 12 episodes per update (123 updates, 1.6 h). At
+    35 episodes per update it is 43 updates, about 5 min. As proposed:
+    - Count patience in PPO updates, about 120 (about 4,200 episodes now).
+    - Backstop about 320 updates; stall 120 and floor alarm 80, also in updates.
+    - `PLATEAU_WINDOW` 500 → 2,000: a 500-game window's noise (about ±0.043) is twice the 0.02
+      improvement step.
+    - The constants live in `python_ai/rl/curriculum.py`. Each change gets a test that fails
+      before and passes after.
 
 ---
 
