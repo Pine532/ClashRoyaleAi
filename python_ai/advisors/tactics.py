@@ -48,6 +48,8 @@ CH_ENEMY_FLYING = CE.CH_FLYING + 1
 _OWN_HALF_RIVER_BUFFER = 0.5   # GameManager.h
 _probe = CE(list(range(8)), list(range(8)), 100)
 RIVER_Y = _probe.get_own_half_max_y() + _OWN_HALF_RIVER_BUFFER
+# The enemy King Tower's full HP: below it, the King has been hit and is awake.
+ENEMY_KING_MAX_HP = float(_probe.get_tower_max_hp(1, 0))
 del _probe
 
 # From ArenaLayout.
@@ -178,6 +180,113 @@ def best_spell_cell(obs, legal=None, radius=FIREBALL_RADIUS,
         flat[~np.asarray(legal, dtype=bool).reshape(-1)] = -1.0
     i = int(np.argmax(flat))
     return float(i % BOARD_W), float(i // BOARD_W), float(flat[i])
+
+
+# --- spells that strike only the highest-HP few (Lightning) ---
+
+MAX_BUILDING_HP = CE.MAX_BUILDING_HP
+# The enemy towers in the team-0 frame, in the order of the observation's tower
+# scalars (King, left Princess, right Princess): (scalar index, x, y).
+_ENEMY_TOWERS = ((EC.EXTRA_SCALARS_START + 6, EC.BOARD_CENTER_X, EC.king_y(1)),
+                 (EC.EXTRA_SCALARS_START + 7, EC.LEFT_LANE_X, EC.princess_y(1)),
+                 (EC.EXTRA_SCALARS_START + 8, EC.RIGHT_LANE_X, EC.princess_y(1)))
+# The cell each tower occupies in the enemy building channel (the encoder
+# truncates positions into cells).
+_ENEMY_TOWER_CELLS = tuple((int(y), int(x)) for _, x, y in _ENEMY_TOWERS)
+
+
+def enemy_bodies(obs):
+    """(ys, xs, hp): one row per enemy troop or building the observation shows,
+    live towers excluded, with its cell and absolute HP. A building on a fallen
+    tower's cell is a body like any other.
+
+    Each enemy troop channel (melee / ranged / building-targeter) holds one
+    body's HP, the last one written, while the unit count accumulates. A cell
+    counting more troops than it has non-empty troop channels holds extra
+    bodies, which copy its smallest troop channel: a crowded cell is usually a
+    swarm.
+    """
+    a = np.asarray(obs, dtype=np.float32)
+    live_towers = {cell for cell, (i, _, _) in zip(_ENEMY_TOWER_CELLS, _ENEMY_TOWERS)
+                   if a[i] > 0.0}
+    sp = spatial(obs)
+    troop = sp[list(CH_ENEMY_TROOP)] * MAX_TROOP_HP
+    building = sp[CH_ENEMY_BUILDING] * MAX_BUILDING_HP
+    count = np.rint(sp[CH_ENEMY_COUNT] * MAX_CELL_UNITS).astype(int)
+    ys, xs, hp = [], [], []
+    for y, x in zip(*np.nonzero((troop > 0).any(axis=0) | (building > 0))):
+        has_building = bool(building[y, x] > 0)
+        if has_building and (y, x) not in live_towers:
+            ys.append(y), xs.append(x), hp.append(float(building[y, x]))
+        bodies = [float(v) for v in troop[:, y, x] if v > 0]
+        extra = int(count[y, x]) - len(bodies) - int(has_building)
+        if bodies and extra > 0:
+            bodies += [min(bodies)] * extra
+        for v in bodies:
+            ys.append(y), xs.append(x), hp.append(v)
+    return (np.asarray(ys, dtype=np.int64), np.asarray(xs, dtype=np.int64),
+            np.asarray(hp, dtype=np.float64))
+
+
+def spell_top_targets_map(obs, radius, damage, max_targets, tower_damage,
+                          tower_reach):
+    """(34, 18) map of the HP a spell that strikes only the `max_targets`
+    highest-HP enemies in its area would remove if aimed at each cell.
+
+    The engine (AreaSpell's top-HP rule: Lightning, Vines) ranks every enemy
+    whose body overlaps the area, towers and buildings included, by HP (ties
+    to the one nearest the centre) and strikes the top `max_targets`. A struck
+    troop or building loses min(hp, damage), a struck tower min(hp,
+    tower_damage). A tower usually has the most HP, so one in the area takes a
+    slot and adds only its chip: aiming beside a tower can beat aiming over it.
+    `spell_catch_map` sums every enemy in the area instead, which is Fireball's
+    rule and overvalues a clump of more than `max_targets`.
+
+    Troops and buildings come from `enemy_bodies`, at their cell centres with
+    `spell_catch_map`'s disc; towers from the HP scalars, at their exact centres
+    with their measured reach (`card_probes.spell_tower_reach`): `tower_reach`
+    is one value per tower (King, left, right) or one for all three. A
+    sleeping King takes a slot but scores 0: the hit wakes it. It is awake once
+    it has lost HP or a Princess Tower is down. Shields count toward the
+    engine's ranking but are not observed.
+    """
+    a = np.asarray(obs, dtype=np.float32)
+    ys, xs, hp = enemy_bodies(obs)
+    aim_y, aim_x = np.divmod(np.arange(BOARD_H * BOARD_W), BOARD_W)
+    dist = np.hypot((xs[None, :] - aim_x[:, None]) + 0.5,
+                    (ys[None, :] - aim_y[:, None]) + 0.5)
+    inside = [dist <= radius]
+    dists, hps, values = [dist], [hp], [np.minimum(hp, damage)]
+
+    tower_hp = [float(a[i]) * MAX_BUILDING_HP for i, _, _ in _ENEMY_TOWERS]
+    reach = np.broadcast_to(np.asarray(tower_reach, dtype=np.float64), (3,))
+    king_awake = (tower_hp[0] < ENEMY_KING_MAX_HP - 0.5
+                  or min(tower_hp[1:]) <= 0.0)
+    for k, (_, tx, ty) in enumerate(_ENEMY_TOWERS):
+        if tower_hp[k] <= 0.0:
+            continue
+        d = np.hypot(float(tx) - aim_x, float(ty) - aim_y)[:, None]
+        chip = min(tower_hp[k], float(tower_damage))
+        if k == 0 and not king_awake:
+            chip = 0.0
+        inside.append(d <= reach[k])
+        dists.append(d)
+        hps.append(np.array([tower_hp[k]]))
+        values.append(np.array([chip]))
+
+    inside = np.concatenate(inside, axis=1)
+    if not inside.any():
+        return np.zeros((BOARD_H, BOARD_W), dtype=np.float32)
+    dists = np.concatenate(dists, axis=1)
+    hps = np.broadcast_to(np.concatenate(hps), inside.shape)
+    values = np.broadcast_to(np.concatenate(values), inside.shape)
+    # Per aim cell: most HP first, nearest the centre on a tie, out of the area
+    # last.
+    rank_hp = np.where(inside, -hps, np.inf)
+    order = np.lexsort((dists, rank_hp), axis=-1)[:, :int(max_targets)]
+    struck = np.take_along_axis(inside, order, axis=1)
+    score = (np.take_along_axis(values, order, axis=1) * struck).sum(axis=1)
+    return score.reshape(BOARD_H, BOARD_W).astype(np.float32)
 
 
 GIANT_ID = 2

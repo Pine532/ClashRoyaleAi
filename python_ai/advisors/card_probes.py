@@ -152,6 +152,77 @@ def spell_tower_damage(card_id):
     return float(before - _settled_damage(e, lambda env: env.get_tower_hp(1, 1)))
 
 
+#: Where `spell_max_targets` stands its enemy P.E.K.K.A.s: a 3 x 2 block a tile
+#: apart, every one well inside the smallest measured radius (Rocket's 2.25).
+_CROWD = tuple((dx, dy) for dy in (-0.5, 0.5) for dx in (-1.0, 0.0, 1.0))
+
+
+def _damage_to_crowd(card_id, n):
+    """Troop damage one cast of `card_id` at the centre deals `n` stationary
+    enemy P.E.K.K.A.s standing in `_CROWD`.
+    """
+    e = _env()
+    for dx, dy in _CROWD[:n]:
+        e.inject(_TANK_ID, _CX + dx, _CY + dy, 1, -1.0, _HOLD_TICKS)
+    e.step_self_play(HAND, 0.0, 0.0, HAND, 0.0, 0.0, 1)
+    before = e.get_troop_damage_dealt(0)
+    e.inject(card_id, _CX, _CY, 0, -1.0, 0)
+    return _settled_damage(e, lambda env: env.get_troop_damage_dealt(0)) - before
+
+
+@functools.lru_cache(maxsize=512)
+def spell_max_targets(card_id):
+    """How many enemies one cast of a damaging area spell strikes when more stand
+    in its area, or None when it strikes all of them (and for a non-spell).
+
+    Lightning and Vines strike only the highest-HP few (AreaSpell's top-HP
+    rule). Measured on 1 to 6 enemy P.E.K.K.A.s, which no spell kills: the cap
+    is the first crowd size whose next tank adds no damage. Not total damage
+    over one target's damage: Void's damage per target falls as the crowd
+    grows. Measured: Lightning 3, Vines 3; every other damaging spell None.
+    """
+    if spell_effect(card_id) is None:
+        return None
+    totals = [_damage_to_crowd(card_id, n) for n in range(1, len(_CROWD) + 1)]
+    for n in range(1, len(totals)):
+        if totals[n] == totals[n - 1]:
+            return n
+    return None
+
+
+#: Enemy tower centres by tower slot (0 King, 1 left Princess, 2 right Princess).
+_TOWER_CENTRES = ((float(EC.BOARD_CENTER_X), float(EC.king_y(1))),
+                  (float(EC.LEFT_LANE_X), float(EC.princess_y(1))),
+                  (float(EC.RIGHT_LANE_X), float(EC.princess_y(1))))
+
+
+@functools.lru_cache(maxsize=512)
+def spell_tower_reach(card_id, slot=1):
+    """The largest distance from the centre of enemy tower `slot` (0 King, 1 left
+    Princess, 2 right Princess) at which a cast of `card_id` still damages it, on
+    a `_RADIUS_STEP` grid, or 0.0 if it cannot damage one from its centre.
+
+    Wider than `spell_radius`: a disc spell hits what it overlaps, and a tower's
+    body is wider than the Knight's, the King's wider still. Stepped from the
+    centre toward the river, up to `_RADIUS_MAX`. Measured: Lightning 5.0 from a
+    Princess Tower and 5.5 from the King (3.75 against a Knight), Fireball 4.0
+    from a Princess Tower.
+    """
+    if not E.get_card_info(card_id)["is_spell"]:
+        return 0.0
+    x, y = _TOWER_CENTRES[slot]
+    reach, d = 0.0, 0.0
+    while d <= _RADIUS_MAX + 1e-9:
+        e = _env()
+        before = e.get_tower_hp(1, slot)
+        e.inject(card_id, x, y - d, 0, -1.0, 0)
+        if before - _settled_damage(e, lambda env: env.get_tower_hp(1, slot)) <= 0:
+            break
+        reach = d
+        d += _RADIUS_STEP
+    return float(reach)
+
+
 @functools.lru_cache(maxsize=64)
 def roller_damage(card_id):
     """Damage a rolling spell (The Log, Barbarian Barrel) deals one body it

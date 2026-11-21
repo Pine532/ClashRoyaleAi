@@ -33,7 +33,9 @@ N_CELLS = BOARD_H * BOARD_W
 # (`card_probes`):
 #
 #   spell     a damaging area spell castable on the enemy half, no bodies;
-#             scored with its own measured radius and damage
+#             scored with its own measured radius and damage, and for one
+#             that strikes only the highest-HP few (Lightning) with its
+#             measured cap, tower reach and tower damage
 #   building  a building that attacks and has no route to a tower
 #   wincon    the deck's win condition, when it walks to the tower (Hog, Giant,
 #             Balloon); a Miner or siege building is not a bridge commit
@@ -132,9 +134,22 @@ def _advisor_logits_for(obs, card_id, legal, T=None):
 
     if kind == "spell":
         # The card's own measured area and damage.
-        radius, damage = card_probes.spell_effect(int(card_id))
-        flat = (tactics.spell_catch_map(obs, radius, 0, damage)
-                .reshape(-1).astype(np.float32).copy())
+        cid = int(card_id)
+        radius, damage = card_probes.spell_effect(cid)
+        cap = card_probes.spell_max_targets(cid)
+        if cap is None:
+            surface = tactics.spell_catch_map(obs, radius, 0, damage)
+        else:
+            # A spell that strikes only the `cap` highest-HP enemies in its area
+            # (Lightning), a tower among them for its chip. The chip is the same
+            # in every quiet state, a constant, so with no enemy troop or
+            # building on the board the rule declines.
+            if tactics.enemy_bodies(obs)[0].size == 0:
+                return None
+            surface = tactics.spell_top_targets_map(
+                obs, radius, damage, cap, card_probes.spell_tower_damage(cid),
+                [card_probes.spell_tower_reach(cid, slot) for slot in range(3)])
+        flat = surface.reshape(-1).astype(np.float32).copy()
         if float(flat[legal].max()) <= 0.0:
             return None                      # nothing worth a spell anywhere
         flat[~legal] = _NEG_INF
