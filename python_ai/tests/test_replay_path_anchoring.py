@@ -67,6 +67,9 @@ def test_a_replay_lands_at_the_anchor_regardless_of_cwd(tmp_path, monkeypatch):
                                                   *name.split("/")))
     monkeypatch.setattr(base_trainer, "HISTORICAL_CHECKPOINT_DIR",
                         str(anchor / "hc"))
+    # Resolved at import (checkpointing.artifact_path), so re-anchored here
+    # too; patching run_path alone would write the real replays/ folder.
+    monkeypatch.setattr(base_trainer, "REPLAY_DIR", str(anchor / "replays"))
     monkeypatch.chdir(cwd)
     monkeypatch.setenv("CLASH_WEIGHTS", str(tmp_path / "w.pth"))
     monkeypatch.setenv("CLASH_LOGDIR", str(tmp_path / "runs"))

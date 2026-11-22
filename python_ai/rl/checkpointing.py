@@ -3,6 +3,10 @@
   the live checkpoint     resumed from; carries optimizer + training state
   historical_checkpoints/ pipeline 2's PFSP opponent pool, ordered by mtime
   stage_checkpoints/      diagnostic only, one per curriculum-stage transition
+  replays/                demo replays
+
+The last three are shared by every run on the machine, at the repository root
+unless CLASH_ARTIFACT_DIR names another folder (`artifact_path`).
 
 Kept separate: the pool is read as a weakest-to-strongest ladder by save order,
 so extra files there would change what self-play samples. Every destination is
@@ -156,6 +160,7 @@ def run_path(name):
 OPERATIONAL_SETTINGS = frozenset({
     "CLASH_WEIGHTS", "CLASH_LOGDIR", "CLASH_SAVE_EVERY", "CLASH_SEED",
     "CLASH_NUM_ENVS", "CLASH_KEEP_CHECKPOINTS", "CLASH_DEVICE",
+    "CLASH_ARTIFACT_DIR",
 })
 #: Compared on its resolved value in BaseTrainer.restore_common: names and ids
 #: spell the same deck differently.
@@ -189,10 +194,26 @@ def settings_drift(saved, current):
     return changed, operational
 
 
+def artifact_path(name, environ=None):
+    """A shared run pool (historical snapshots, stage snapshots, replays).
+
+    At the repository root, unless CLASH_ARTIFACT_DIR names a folder: then
+    under that folder, anchored like `run_path` when relative. An A/B arm sets
+    it to its own runs/ab_*/ folder (the user's rule, 2026-11-22), so the arm
+    never writes into the live run's pools and nothing shared needs cleaning
+    up. Read at import, like every CLASH_* setting.
+    """
+    env = os.environ if environ is None else environ
+    root = env.get("CLASH_ARTIFACT_DIR")
+    if not root:
+        return run_path(name)
+    return os.path.join(run_path(root), *name.split("/"))
+
+
 # Weights-only snapshots of past policies for pipeline 2's PFSP pool, saved
 # throughout a run. Timestamp-prefixed because both pipelines write here on
 # unrelated episode scales, and the pool is ordered by save time.
-HISTORICAL_CHECKPOINT_DIR = run_path("historical_checkpoints")
+HISTORICAL_CHECKPOINT_DIR = artifact_path("historical_checkpoints")
 
 # MIN_OPPONENT_AGE_EPISODES in train_selfplay.py is kept at 3x this value;
 # change them together. Denser snapshots dilute every opponent's PFSP share and
@@ -202,7 +223,10 @@ HISTORICAL_CHECKPOINT_INTERVAL_EPISODES = 2000
 # Diagnostic-only snapshots, one per curriculum-stage transition, captured
 # before the opponent gets harder, so one policy can later be replayed against
 # several stages' opponents. Nothing trains against them.
-STAGE_CHECKPOINT_DIR = run_path("stage_checkpoints")
+STAGE_CHECKPOINT_DIR = artifact_path("stage_checkpoints")
+
+# Demo replays (BaseTrainer.record_replay).
+REPLAY_DIR = artifact_path("replays")
 
 def _teacher_table_size():
     from python_ai.rl.curriculum import CURRICULUM_STAGES

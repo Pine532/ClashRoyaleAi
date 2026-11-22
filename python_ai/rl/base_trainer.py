@@ -47,7 +47,7 @@ from python_ai.rl.buffer import (
 from python_ai.rl.config import aux_warmup_scale
 from python_ai.rl.checkpointing import (
     HISTORICAL_CHECKPOINT_DIR, HISTORICAL_CHECKPOINT_INTERVAL_EPISODES,
-    atomic_save, clash_settings, keep_checkpoints, keep_in_history, run_path,
+    REPLAY_DIR, atomic_save, clash_settings, keep_checkpoints, keep_in_history, run_path,
     save_historical_snapshot, settings_drift, weights_path,
 )
 from python_ai.rl.config import PPOConfig
@@ -211,7 +211,7 @@ class BaseTrainer:
         # Anchored: replays/*.json feed the placement-phase histogram, and a
         # detector aimed at a directory the run did not write to reports a
         # clean board forever.
-        os.makedirs(run_path("replays"), exist_ok=True)
+        os.makedirs(REPLAY_DIR, exist_ok=True)
         os.makedirs(HISTORICAL_CHECKPOINT_DIR, exist_ok=True)
 
         # Before anything stochastic. A no-op when cfg.seed is None; see
@@ -777,7 +777,7 @@ class BaseTrainer:
         print(f"Generating replay video for episode {self.episodes_completed}...")
         record_greedy_replay(
             self.net, env, self.device,
-            os.path.join(run_path("replays"),
+            os.path.join(REPLAY_DIR,
                          f"{self.replay_prefix}_ep"
                          f"{self.episodes_completed}.json"))
         return True
