@@ -283,7 +283,14 @@ size, so the first two items gate any training.
     the advisor target scores a top-HP spell by the engine's rule (`tactics.spell_top_targets_map`;
     docs/DECISIONS.md 2026-11-21). Option B, `CLASH_DECK_COVERAGE_COEF=0.05`, runs as an A/B
     from the post-A checkpoint. The rule was written before it ran: adopt only if B's wins on
-    `bench.py --rung 10` (200 games) >= the control's. Record the result here.
+    `bench.py --rung 10` (200 games) >= the control's.
+    - **Result (2026-11-21 19:24): B not adopted.** Rung 10: control 144/200, B 132/200. Rung 3:
+      181 vs 176. The floor raised Lightning plays from 0.07 to 0.17 per game and Evo Cannon plays
+      from 0.64 to 1.55, without the wins. The live run continues without the floor (DECISIONS
+      2026-11-21).
+    - Open: option A's effect is not yet visible after 600 updates (rung 10 144/200, the same as
+      before; Lightning 0.07 plays per game). Read the watchdog's 6-hourly rung-10 rows
+      (`runs/PROGRESS_MINIGIANT_R10.md`) before deciding anything more about Lightning.
 20. **The plateau window, scaled to throughput: after the weekend** (the user approved it in
     principle on 2026-11-21; not before the watchdog ends, 2026-11-23 12:00). The 1,500-episode
     patience dates from 2026-09-03, at about 12 episodes per update (123 updates, 1.6 h). At

@@ -8467,3 +8467,36 @@ Fireball.
 - Option C (card-entropy target 0.35 → 0.40) is skipped (the user).
 - The plateau window is approved in principle for after the weekend, as proposed, and not changed now
   (docs/TODO.md L20).
+
+**The restart and the A/B's result (2026-11-21 19:24).**
+- Option A went live at a controlled restart at 18:01 from episode 452,651 (read-only backup
+  `runs/checkpoints/minigiant.pth.pre_optionA_20261121-1800_ep452651`). Arm B started from the same
+  checkpoint at the same minute. The only setting difference in arm B's resume warning was
+  `CLASH_DECK_COVERAGE_COEF: unset -> '0.05'`.
+- Frozen copies, each at the first save after its 600th update: control episode 472,735, arm B episode
+  472,243 (604 updates each). Arm B was stopped at 19:15.
+
+| 600 updates after the restart | Control (option A) | B (A + floor 0.05) |
+|---|---|---|
+| **bench.py --rung 10, 200 games (deciding)** | **144/200 = 0.720** (0.654-0.778) | **132/200 = 0.660** (0.592-0.722) |
+| bench.py --rung 3, 200 games | 181/200 = 0.905 | 176/200 = 0.880 |
+| Lightning plays per game (100 rung-10 mirror games) | 0.07 | 0.17 |
+| Evo Cannon plays per game | 0.64 | 1.55 |
+| Hero Ice Wizard plays / ability presses per game | 2.59 / 2.28 | 3.20 / 2.70 |
+| Mirror-game wins (same 100 games) | 66 | 54 |
+
+- **Verdict: B is not adopted** (132 < 144). The live run, which is the control arm, continues without
+  the floor. The 12-win gap is about 1.3 standard errors, so it does not show the floor is harmful. It
+  fails the rule as written ("at least as good").
+- The floor did what it targets: Lightning and Evo Cannon were played about 2.5 times as often as in the
+  control. The wins did not follow. B's largest losses against the control on the rung-10 benchmark:
+  pekka_bridge_spam 3/11 vs 7/11, royal_hogs_furnace 5/11 vs 11/11, the mirror 6/12 vs 10/12.
+- **Option A alone, after 600 updates, is not yet visible.**
+  - The rung-10 benchmark reads 144/200, the same as the pre-A baseline on the 17:30 copy.
+  - Lightning plays are 0.07 per game against 0.09 on the 17:31 copy (the same instrument).
+  - Option A changes what the placement head is pulled toward, not how often the card head picks
+    Lightning, so a slow or absent effect on plays is possible. The 6-hourly rung-10 rows will show
+    whether it moves.
+- Housekeeping: arm B's nine PFSP snapshots in `historical_checkpoints/` were deleted. Only phase 2
+  reads that pool, and the live run is in phase 1, so they never reached it. The arms' frozen copies and
+  per-run output stay in `runs/ab_floor/` (`verdict.json`).
