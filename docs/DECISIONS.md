@@ -8686,3 +8686,40 @@ self-play is working.
 **KL logging.** The KL between the old and new policy gets logged at the next restart, not now
 (TODO L22). The decline above could not be read for policy drift, since only the clip fraction and
 the advisor KL are logged.
+
+## 2026-11-22 (late): the opponent tracker, built now and A/B-tested after Monday (user decisions)
+
+After the read-only audit (`docs/ROADMAP_TOP_PLAYERS.md`).
+
+**Build (approved).**
+- The opponent tracker (roadmap section 5) is built now, in a separate git worktree and branch. The live run and its benchmarks keep using the current code in the main checkout.
+- Two more inputs from the audit's gaps go into the same section:
+  - the bot's own next card (a human sees it on screen);
+  - the elixir spent on Hero abilities, by either side.
+- Tests come with every change, plus the migration script that keeps the optimizer state.
+- **Nothing is launched until Monday's 24-hour decision (2026-11-23 23:41 benchmark) has been applied.**
+
+**Pools (decided).** Both A/B arms read the shared `historical_checkpoints/` pool through read-only links, and write their own snapshots to their own `runs/ab_*/` folder (`CLASH_ARTIFACT_DIR`). Without the links, an arm would start phase 2 with no past copies: `discover_historical_checkpoints` reads the arm's own folder once that setting is on (`league.py:68`, `checkpointing.py:216`).
+
+**The A/B, fixed before it runs (the user's rule).**
+- *Arms:* two arms from the same starting checkpoint, at the same minute, with the same settings.
+  - Control: the tracker section forced to zero.
+  - Tracker arm: the section live.
+- *Budget:* 2,000 PPO updates per arm, not 600. 600 was too short for option B, and a new input takes time to learn. At phase 2's rate tonight (1,378 updates in 3 h 04 min, about 450 an hour, alone on the machine), that is about 4.5 h per arm. It will be slower with the arms and the live run sharing the machine.
+- *Main measure:* the two arms against each other, 400 games, sides swapped, each net with its own observation.
+- *Adopt:* if the tracker arm scores 0.55 or better AND its rung-10 score (`bench.py --rung 10`, 200 games) is no more than 10/200 below the control's.
+- *Inconclusive (0.50 to 0.55):* extend both arms once, by 2,000 updates, and judge again.
+- *Reject:* below 0.50.
+- *A score of 0.55 or better with the rung-10 guard failed:* not adopted.
+- *Noise at 400 games* (binomial, no draws):
+  - two equal arms reach 0.55 or more 2.6% of the time (P(X ≥ 220 | 400, 0.5) = 0.0255);
+  - a tracker arm truly at 0.55 clears the line 52% of the time and falls below 0.50 2.0% of the time;
+  - one truly at 0.60 clears it 98% of the time.
+- *Not yet specified, to confirm before launch:*
+  - what a second inconclusive result means after the one extension (proposed: not adopted);
+  - whether the live run pauses while the two arms train.
+
+**Parked (the user).**
+- *Exploiters:* they need Hero-ability support in the exploiter's rollout first (roadmap 3.3).
+- *Lookahead:* it needs the tracker, so that search samples the opponent's hand instead of reading the true one (roadmap 4.3).
+- *A bigger network.* When size is tested, try a bigger board encoder first: it is 1.3% of the parameters (24,929 of 1,923,155).

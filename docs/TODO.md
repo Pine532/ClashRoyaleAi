@@ -342,6 +342,21 @@ size, so the first two items gate any training.
       outside `decision` do not count; ratios of exactly 1 give 0.
     - When: `python_ai/` is live under the phase-2 run, so the edit waits for its next restart.
       Logging only: no effect on the loss or the checkpoint.
+23. **The opponent tracker: build now, A/B after Monday's decision (the user, 2026-11-22
+    late; DECISIONS 2026-11-22 late; design in `docs/ROADMAP_TOP_PLAYERS.md` section 5).**
+    - Inputs: the opponent's seen cards, hand and next card from the cycle, and an elixir
+      estimate. Plus the bot's own next card, and Hero-ability elixir spent by either side.
+    - Where: a separate worktree and branch. The main checkout stays on the live run's code.
+    - Tests and a migration script that keeps the optimizer state.
+    - A/B: 2,000 updates per arm; 400 head-to-head games. Adopt at 0.55 or better with
+      rung 10 no more than 10/200 below the control; 0.50-0.55 extends once; below 0.50
+      rejects. Arms link the shared pool read-only and write their own snapshots under
+      `runs/ab_*/`.
+    - Not before the 2026-11-23 23:41 decision is applied.
+24. **Parked (the user, 2026-11-22 late).**
+    - Exploiters: they need Hero-ability support in `trainers/exploiter.py` first.
+    - Lookahead: it needs item 23's tracker, so search does not read the opponent's true hand.
+    - A bigger network: test a bigger board encoder first (1.3% of the parameters today).
 
 ---
 
