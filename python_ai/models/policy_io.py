@@ -35,6 +35,16 @@ def _is_width_extension(key, saved, own_state):
             and saved.shape[1] < own.shape[1])
 
 
+def snapshot_has_tracker(net, state_dict) -> bool:
+    """Does `state_dict` carry every tracker_branch tensor of `net`, at exactly
+    its shape? False for a snapshot without the branch or with another tail
+    width (then the branch is not its trained one)."""
+    own = net.state_dict()
+    keys = [k for k in own if k.startswith("tracker_branch.")]
+    return bool(keys) and all(
+        k in state_dict and state_dict[k].shape == own[k].shape for k in keys)
+
+
 def load_state_dict_flexible(net, state_dict, context_label):
     """Load state_dict into net. Returns True on a clean, fully matching load.
 
@@ -59,13 +69,14 @@ def load_state_dict_flexible(net, state_dict, context_label):
         skipped = sorted(set(state_dict.keys()) - set(compatible.keys()))
         own_state.update(compatible)
         net.load_state_dict(own_state)
-        # A checkpoint with no tracker keys, loaded into a net that has the
-        # branch (selfplay_env reuses one opponent net across snapshots):
-        # without this the net keeps the PREVIOUS snapshot's trained branch and
-        # plays with another copy's tracker. Zeroing the last layer makes the
-        # branch add exactly 0 again (roadmap 5.5).
-        if (getattr(net, "expects_tail", False)
-                and not any(k.startswith("tracker_branch.") for k in state_dict)):
+        # A checkpoint whose tracker keys are absent, or present at another
+        # width, loaded into a net that has the branch (selfplay_env reuses one
+        # opponent net across snapshots): without this the net keeps the
+        # PREVIOUS snapshot's trained branch, or a mix of old and new tensors
+        # (a skipped or zero-padded first layer beside a matching bias and last
+        # layer). Zeroing the last layer makes the branch add exactly 0 again
+        # (roadmap 5.5).
+        if getattr(net, "expects_tail", False) and not snapshot_has_tracker(net, state_dict):
             net.reset_tracker_branch_to_init()
         if context_label not in _warned_mismatches:
             _warned_mismatches.add(context_label)

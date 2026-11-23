@@ -28,7 +28,7 @@ from python_ai.envs.gym_wrapper import (
     deck_spell_info,
 )
 from python_ai.models.net import MicroRoyaleNet
-from python_ai.models.policy_io import LSTM_HIDDEN, load_state_dict_flexible
+from python_ai.models.policy_io import LSTM_HIDDEN, load_state_dict_flexible, snapshot_has_tracker
 from python_ai.tracking import config as tracker_config
 
 PFSP_EXPONENT = 2.0
@@ -155,8 +155,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         state_dict = checkpoint["model"] if isinstance(checkpoint, dict) and "model" in checkpoint else checkpoint
         load_state_dict_flexible(self.opponent_net, state_dict, f"historical opponent {checkpoint_path}")
-        self._opp_snapshot_has_tracker = any(
-            k.startswith("tracker_branch.") for k in state_dict)
+        self._opp_snapshot_has_tracker = snapshot_has_tracker(
+            self.opponent_net, state_dict)
         self.opponent_net.eval()
         self.opponent_checkpoint_path = checkpoint_path
         self.opponent_kind = "neural"

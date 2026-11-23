@@ -221,3 +221,19 @@ def test_tracker_size_zero_adds_no_parameters_and_no_keys():
     keys = list(c.state_dict())
     assert keys[:len(list(a.state_dict()))] == list(a.state_dict())
     assert all(k.startswith("tracker_branch.") for k in keys[len(list(a.state_dict())):])
+
+
+def test_a_snapshot_with_a_different_tail_width_resets_the_branch():
+    """Tracker keys of another width: the first layer is skipped but the bias
+    and last layer match in shape. Loading them would mix old and new tracker
+    weights, so the branch must go back to its zero-output init."""
+    other = MicroRoyaleNet(num_ability_slots=2, tracker_size=TRACKER - 4).eval()
+    sd = other.state_dict()
+    with torch.no_grad():
+        for k in sd:
+            if k.startswith("tracker_branch."):
+                sd[k] = torch.randn_like(sd[k])
+    net = MicroRoyaleNet(num_ability_slots=2, tracker_size=TRACKER).eval()
+    load_state_dict_flexible(net, sd, "other width")
+    assert not net.tracker_branch[-1].weight.any()
+    assert not net.tracker_branch[-1].bias.any()
