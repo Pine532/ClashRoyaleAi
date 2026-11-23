@@ -78,14 +78,27 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             from python_ai.tracking.tail import TrackerTail
             self._tail = TrackerTail(self.game, 0, self._tracker_mode,
                                      decks=(self.deck, self._opp_deck))
+        #: Team 1's own tracker (observer 1, watching team 0), only in "on".
+        #: Reset and polled only while a tracker-layout snapshot is the opponent.
+        self._tail1 = None
+        if self._tracker_mode == "on":
+            self._tail1 = TrackerTail(self.game, 1, "on",
+                                      decks=(self.deck, self._opp_deck))
         # The engine's placement bounds.
         self.MAX_X = self.game.get_max_placement_x()
         self.MAX_Y = self.game.get_own_half_max_y()
 
         # Team 1's network runs on CPU: one inference pass per step per worker.
         self.device = torch.device("cpu")
-        self.opponent_net = MicroRoyaleNet(num_ability_slots=DEFAULT_DECK_ABILITY_SLOTS).to(self.device)
+        # Built with the trainee's tracker width (tracker_size 0 when off), so a
+        # new-layout snapshot loads strictly.
+        self.opponent_net = MicroRoyaleNet(num_ability_slots=DEFAULT_DECK_ABILITY_SLOTS,
+                                           **tracker_config.net_kwargs()).to(self.device)
         self.opponent_net.eval()
+        #: True when the loaded snapshot has the tracker branch's keys: then
+        #: team 1 gets its own tail (observer 1). Otherwise it gets a zero tail,
+        #: which is exact (the loader resets the branch to its init).
+        self._opp_snapshot_has_tracker = False
         self.opponent_hx = torch.zeros(1, LSTM_HIDDEN).to(self.device)
         self.opponent_cx = torch.zeros(1, LSTM_HIDDEN).to(self.device)
         self.opponent_checkpoint_path = None
@@ -142,6 +155,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         state_dict = checkpoint["model"] if isinstance(checkpoint, dict) and "model" in checkpoint else checkpoint
         load_state_dict_flexible(self.opponent_net, state_dict, f"historical opponent {checkpoint_path}")
+        self._opp_snapshot_has_tracker = any(
+            k.startswith("tracker_branch.") for k in state_dict)
         self.opponent_net.eval()
         self.opponent_checkpoint_path = checkpoint_path
         self.opponent_kind = "neural"
@@ -150,6 +165,11 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         self._opp_deck = list(self.deck)
         self.game.set_opponent_deck(self.deck)
         self._reset_opponent_elixir()
+
+    def _opponent_tracker_active(self):
+        """Does team 1 act on a REAL tracker tail this episode?"""
+        return (self._tail1 is not None and self.opponent_kind == "neural"
+                and self.opponent_net.expects_tail and self._opp_snapshot_has_tracker)
 
     def set_scripted_opponent(self, name):
         """Team 1 becomes a scripted heuristic bot, with a random deck: the
@@ -274,6 +294,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         if self._tail is not None:
             # Right after game.reset(), before any scenario step.
             self._tail.reset((self.deck, self._opp_deck))
+        if self._opponent_tracker_active():
+            self._tail1.reset((self.deck, self._opp_deck))
         # New match: reset the played-tick baseline so the first poll re-seeds
         # against this episode's clock.
         self._opp_last_tick = {}
@@ -298,6 +320,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
                     self.game.reset()
                     if self._tail is not None:
                         self._tail.reset((self.deck, self._opp_deck))
+                        if self._opponent_tracker_active():
+                            self._tail1.reset((self.deck, self._opp_deck))
 
             # Bank elixir on both sides before the spawns, so injected units do
             # not walk during the warm-up.
@@ -336,6 +360,14 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         obs1 = np.array(self.game.get_observation_for_team(1), dtype=np.float32)
         if self.opponent_kind != "neural":
             return self._scripted_opponent_action(obs1)
+        if self.opponent_net.expects_tail:
+            # Same width as the trainee's. A snapshot without tracker keys gets
+            # an all-zero tail, which the reset-to-init branch maps to exactly 0.
+            if self._opponent_tracker_active():
+                obs1 = self._tail1.append(obs1)
+            else:
+                obs1 = np.concatenate([obs1, np.zeros(self.opponent_net.tracker_size,
+                                                      dtype=np.float32)])
         with torch.no_grad():
             obs1_t = torch.tensor(obs1, dtype=torch.float32).unsqueeze(0).to(self.device)
             # The same affordability mask as the trainee; without it the frozen
@@ -413,6 +445,9 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         if self._tail is not None:
             # Before the step: the trainee's presses (readiness as it decided).
             self._tail.note_flags(0, {1: activate_ability0_slot1, 2: activate_ability0_slot2})
+        if self._opponent_tracker_active():
+            # Team 1's tracker sees team 0's presses as the opponent's.
+            self._tail1.note_flags(0, {1: activate_ability0_slot1, 2: activate_ability0_slot2})
         if self.opponent_kind == "builtin":
             # The C++ heuristic runs inside game.step()'s opponentTurn(): the
             # phase-1 path.
@@ -422,9 +457,11 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             reward = float(result.reward)
         else:
             card_idx1, x1, y1, activate_ability1_slot1, activate_ability1_slot2 = self._opponent_action()
+            flags1 = {1: bool(activate_ability1_slot1), 2: bool(activate_ability1_slot2)}
             if self._tail is not None:
-                self._tail.note_flags(1, {1: bool(activate_ability1_slot1),
-                                          2: bool(activate_ability1_slot2)})
+                self._tail.note_flags(1, flags1)
+            if self._opponent_tracker_active():
+                self._tail1.note_flags(1, flags1)
             result = self.game.step_self_play(card_idx0, x0, y0, card_idx1, x1, y1, skip_frames,
                                                activate_ability0_slot1, activate_ability0_slot2,
                                                activate_ability1_slot1, activate_ability1_slot2)
