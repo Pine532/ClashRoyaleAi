@@ -8728,3 +8728,41 @@ After the read-only audit (`docs/ROADMAP_TOP_PLAYERS.md`).
 - Opponent ability presses reach the tracker only for the opponents that run through the envs' flag paths: the teacher (pipeline 1) and neural snapshots (pipeline 2). The C++ `HeuristicOpponent` (the builtin) never references an ability (`include/core/HeuristicOpponent.h`: no mention), and the scripted bots return no flags, so for those rungs "no presses" is true, not missing.
 - The opponent's press is detected from the engine's readiness call (`is_champion_ability_ready(opp, slot)`) at the time it is requested, not from a drawn effect. That is a read of hidden state in the sense of the VISIBLE-ONLY rule (readiness includes the opponent's elixir >= cost). It is kept because the press itself is visible on screen and the engine's refusal rule is what decides whether it counted. **Open question for the user:** does readiness count as visible, or should the press be inferred from an observable effect?
 - A press requested at the current tick stays pending until the step has executed it (`EngineFeed.poll`), so a neural opponent deciding before the step does not see the trainee's press early.
+
+**Tracker: built and checked, not launched (2026-11-23).** Branch `tracker/opponent-tracker`. Nothing runs until Monday's decision is applied.
+
+*What exists:*
+- `python_ai/tracking/`:
+  - the event-fed core;
+  - the simulator feed: play events, Hero-ability cost measured on paired forks, and the own next card probed on a fork;
+  - `TrackerTail`;
+  - `CLASH_OPP_TRACKER=off|zero|on`. off is the default and bit-identical to the old code.
+- The tail is 776 floats: the opponent's in-hand and next cards, our own next card, and 8 scalars (the opponent's elixir estimate, its corrections, both sides' Hero-ability spend, and others).
+- The net branch: zero-initialised and added to the 40 non-cycle scalar features.
+- The migration script (`tools/migrate_checkpoint_tracker.py`).
+- The perception adapter and encoder hook.
+- `eval/arm_h2h.py`, which gives each net its own layout.
+- `tools/setup_tracker_ab.py`: the arms link the shared pool read-only with absolute symlinks; nothing deletes or overwrites a pool file (audited).
+- `tools/run_tracker_ab.py`: 2,000 updates, freeze, judge by the rule above, and the one extension.
+- `Tracker/*` accuracy logging.
+- `eval/tracker_usage_probe.py`.
+
+*Measured:*
+- **Conformance in the simulator** (40 seeded games per deck, random legal plays):
+  - Hog, Mirror and Collector decks: elixir max error 0.000000 over 6,043-7,599 decisions per deck; 0 hand violations; 0 wrong next-card claims out of 5,363-6,860 per deck.
+  - The Minion Giant mirror with Hero presses: exact, except Hero Ice Wizard's refund on an armed death. That refund is not visible, and leaves the estimate 2.0 low until a correction or the cap (1 correction in 40 games).
+  - A Collector destroyed before its pulse: up to 2.0 high.
+  - The control that must fire, a hidden 1.5x multiplier: max error 8.1, 684 corrections.
+- **The perception adapter**, replaying recorded simulator events: bit-identical features under the engine rules. Under the real-game rules only the elixir scalar differs.
+- **The migration, on a copy of the live phase-2 checkpoint (episode 52,141)**: 48 outputs equal (max difference 0.0), 55 Adam entries bit-equal, strict load. A resumed phase-2 trainer loads clean, with no entropy re-boost.
+- **The side null with the new layout** (the migrated copy on both sides, tail on, 200 games): 0.515 (0.452-0.578). Team 0 won 0.485 of the decided games. For comparison, the old layout's null was 0.535.
+- **The usage probe at init:** exactly 0. The overhead of tail on: about +8-9% per env step.
+- **Suites:** Python 1,259 passed. The only failures are the 3 known arm64 compaction ones, plus `test_placement_hires` once under load, which passes alone and on a rerun. Perception: 454 passed.
+
+*Open before launch (the user):*
+- An opponent's press is detected through `is_champion_ability_ready(opp, slot)`. It stands in for the visible event (the press firing), but it is an engine read; see the note above.
+- What a second inconclusive result means after the extension. The code applies the proposal: not adopted.
+- Whether the live run pauses while the two arms train.
+- *Recorded, not removed:* the arms freeze at their own first save at or after 2,000 updates. They can differ by up to one save interval (250 episodes, about 8 updates); `verdict.json` records each arm's update count.
+
+*Live limitation:* no opponent-placement detector exists yet, so live, only the own-next-card part of the tail carries information.
