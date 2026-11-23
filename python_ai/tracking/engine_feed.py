@@ -237,26 +237,32 @@ class EngineFeed:
         own_press = [p for p in pending if p["team"] == self.observer]
 
         pi = 0
+        play_ticks = {t for t, _ in new}
         for t, c in new:
             while pi < len(opp_press) and opp_press[pi]["tick"] < t:
-                self._emit_opp_press(opp_press[pi]); pi += 1
+                self._emit_opp_press(opp_press[pi], opp_press[pi]["tick"] in play_ticks); pi += 1
             self.tracker.on_play(t, c)
             self.stats["plays"] += 1
         while pi < len(opp_press):
-            self._emit_opp_press(opp_press[pi]); pi += 1
+            self._emit_opp_press(opp_press[pi], opp_press[pi]["tick"] in play_ticks); pi += 1
 
         for p in own_press:
             self._emit_own_press(p)
         if self.track_own_next:
             self._refresh_own_next()
 
-    def _emit_opp_press(self, p: dict) -> None:
+    def _emit_opp_press(self, p: dict, same_tick_play: bool) -> None:
         tr = self.tracker
         tr.advance(p["tick"])
-        # Accepted only if the viewer-side estimate, after this tick's plays,
-        # covers the cost: the engine plays the card first, then refuses an
-        # ability it can no longer afford (GameManager::activateChampionAbility).
-        if tr.elixir_estimate() >= p["cost"] - 1e-6:
+        # The press was queued only if the engine called the ability ready, and
+        # readiness includes the elixir cost. With no card played at that tick
+        # the engine therefore accepted it, whatever the estimate says: it is
+        # counted, and a low estimate is floor-corrected (corrections() shows
+        # it). Only a same-tick card can make the engine refuse (it plays the
+        # card first, then refuses an ability it can no longer pay for:
+        # GameManager::activateChampionAbility), and there the estimate after
+        # the plays is the discriminator.
+        if not same_tick_play or tr.elixir_estimate() >= p["cost"] - 1e-6:
             tr.on_ability(p["tick"], p["cost"])
             self.stats["abilities_counted"] += 1
         else:

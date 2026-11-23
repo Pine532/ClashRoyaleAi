@@ -636,3 +636,20 @@ def test_mirror_registers_a_collector_only_when_the_copied_card_is_one():
     tr.on_play(10, 1)
     tr.on_play(20, 2)
     assert tr._collectors == [10, 20]
+
+
+def test_a_press_with_no_same_tick_card_is_counted_even_when_the_estimate_is_low():
+    """Readiness includes elixir, and nothing else was played that tick, so the
+    engine accepted the press. A drifted estimate must be corrected, not obeyed."""
+    env, tr, feed = _hero_on_board()
+    tr.advance(env.get_current_tick())
+    env.set_elixir_for_team(1, 6.0)
+    tr._elixir = np.float32(1.0)             # test-only poke: an estimate that drifted low
+    feed.note_activation(1, 1, True)
+    env.step_self_play(-1, 0, 0, -1, 0, 0, 10, False, False, True, False)
+    feed.poll()
+    tr.advance(env.get_current_tick())
+    assert feed.stats["abilities_counted"] == 1
+    assert feed.stats["abilities_refused"] == 0
+    assert tr.opp_ability_spend() == 2.0
+    assert tr.corrections() == 1             # the floor correction is visible
