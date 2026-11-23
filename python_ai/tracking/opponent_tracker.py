@@ -248,7 +248,9 @@ class OpponentTracker:
         self._debit(cost)
         if kind != MIRROR:
             self._last_non_mirror = card_id
-        if kind == ELIXIR_COLLECTOR:
+        # A Mirror spawns a real copy of the card it copies, Collector included.
+        copied = self._last_non_mirror if kind == MIRROR else card_id
+        if self.facts.kind(copied) == ELIXIR_COLLECTOR:
             self._collectors.append(int(tick))
         self._plays.append(card_id)
         if card_id not in self._seen:

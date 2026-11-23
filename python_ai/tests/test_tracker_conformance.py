@@ -575,3 +575,64 @@ def test_tracker_code_never_reads_hidden_opponent_state():
     # fork probes (which act on the viewer's own team or a measurement fork).
     assert set(used) <= {"note_activation", "_emit_own_press", "_refresh_own_next",
                          "probe_next_card", "measure_ability_cost"}, used
+
+
+# ------------------------------------------------- review follow-up (F1)
+
+MIRROR_COLLECTOR_DECK = [15, 6, 25, 40, 99, 72, 164, 7]
+
+
+def test_mirror_of_an_elixir_collector_pulses_like_the_engine():
+    """A Mirror copies the Collector's spawn, so the engine pulses for it too.
+    Both bars are zeroed every tick so only the pulses move them."""
+    D = MIRROR_COLLECTOR_DECK
+    env = new_env(D, D, 5)
+    tr = ef.make_engine_tracker()
+    feed = ef.EngineFeed(env, 0, tr, decks=(D, D), track_own_next=False)
+    assert env.set_hand_for_team(1, [99, 164, 15, 6])
+    env.set_elixir_for_team(1, 10.0)
+    tr._elixir = np.float32(10.0)             # test-only poke: the same bar
+    cell = next((x, y) for x in range(18) for y in range(34)
+                if env.is_valid_placement(99, x, y, 1) and y > 24)
+    env.step_self_play(-1, 0, 0, 0, cell[0], 33 - cell[1], 1)
+    feed.poll()
+    for _ in range(25):
+        env.step_self_play(-1, 0, 0, -1, 0, 0, 1)
+    feed.poll()
+    env.set_elixir_for_team(1, 10.0)
+    tr.advance(env.get_current_tick())
+    tr._elixir = np.float32(10.0)
+    i = env.get_hand_for_team(1).index(164)
+    cell2 = next((x, y) for x in range(18) for y in range(34)
+                 if env.is_valid_placement(164, x, y, 1) and y > 24
+                 and 3 <= x <= 14 and abs(x - cell[0]) > 3)
+    env.step_self_play(-1, 0, 0, i, cell2[0], 33 - cell2[1], 1)
+    feed.poll()
+    assert tr.seen_order()[:2] == [99, 164]
+    tr.advance(env.get_current_tick())
+    worst, pulses = 0.0, 0
+    for _ in range(400):
+        env.set_elixir_for_team(1, 0.0)
+        tr._elixir = np.float32(0.0)
+        env.step_self_play(-1, 0, 0, -1, 0, 0, 1)
+        feed.poll()
+        tr.advance(env.get_current_tick())
+        e = tr.elixir_estimate()
+        pulses += e > 0.5
+        worst = max(worst, abs(e - env.get_elixir_for_team(1)))
+    assert pulses >= 2, "both Collectors should have pulsed in the window"
+    assert worst < 1e-3
+
+
+def test_mirror_registers_a_collector_only_when_the_copied_card_is_one():
+    facts = ot.CardFacts({1: 2.0, 2: 3.0, 3: 2.0},
+                         {1: ot.ELIXIR_COLLECTOR, 2: ot.MIRROR})
+    rules = ef.rules_from_engine()
+    plain = ot.OpponentTracker(rules, facts, 8, 280.0)
+    plain.on_play(10, 3)
+    plain.on_play(20, 2)
+    assert plain._collectors == []
+    tr = ot.OpponentTracker(rules, facts, 8, 280.0)
+    tr.on_play(10, 1)
+    tr.on_play(20, 2)
+    assert tr._collectors == [10, 20]
