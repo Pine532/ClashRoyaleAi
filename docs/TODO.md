@@ -291,6 +291,8 @@ size, so the first two items gate any training.
     - Open: option A's effect is not yet visible after 600 updates (rung 10 144/200, the same as
       before; Lightning 0.07 plays per game). Read the watchdog's 6-hourly rung-10 rows
       (`runs/PROGRESS_MINIGIANT_R10.md`) before deciding anything more about Lightning.
+    - 2026-11-22: still not visible. Lightning played 0.03-0.21 per game over the weekend's copies,
+      the same range as before option A. The mirror run ended with phase 2's launch (item 21).
 20. **The plateau window, scaled to throughput: after the weekend** (the user approved it in
     principle on 2026-11-21; not before the watchdog ends, 2026-11-23 12:00). The 1,500-episode
     patience dates from 2026-09-03, at about 12 episodes per update (123 updates, 1.6 h). At
@@ -301,6 +303,20 @@ size, so the first two items gate any training.
       improvement step.
     - The constants live in `python_ai/rl/curriculum.py`. Each change gets a test that fails
       before and passes after.
+    - Note (2026-11-22): it does not cover rung 10, the top rung, which has no gate and no
+      plateau exit. Leaving rung 10 is the phase-2 entry rule (`CLASH_PHASE2_ENTRY_WIN_RATE`).
+21. **Phase 2 from the Saturday 19:15 copy (started 2026-11-22 19:23; DECISIONS 2026-11-22
+    evening).** The mirror run's rung-10 benchmark fell 144 → 118 over Sunday. Phase 2 was
+    started from the 144/200 copy (episode 472,735), through train.py's own path: entry rate 0,
+    the random-opponent phase, then the handoff to train_selfplay.py.
+    - Watch: the 6-hourly rung-3 and rung-10 benchmarks (`runs/PROGRESS_MINIGIANT_P2*.md`). The
+      best rung-10 copy is kept at `runs/checkpoints/minigiant_p2_best_r10.pth`. Two scores in a
+      row below 130/200 are reported, and the run is not stopped (the user).
+    - Open: the decline's cause. It is not established from the logs. Candidates: the phase-1
+      opponent mix, and the placement-entropy step in the cheap defensive cards. Read phase 2's
+      placement entropy (deliberately high at its start) against its rung-10 rows.
+    - Open: `mac_training.sh status` and `row` read only phase 1's log. In phase 2, read
+      `runs/training_selfplay_pfsp.log`; the phase-2 watchdog does.
 
 ---
 

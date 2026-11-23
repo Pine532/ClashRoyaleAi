@@ -8500,3 +8500,139 @@ Fireball.
 - Housekeeping: arm B's nine PFSP snapshots in `historical_checkpoints/` were deleted. Only phase 2
   reads that pool, and the live run is in phase 1, so they never reached it. The arms' frozen copies and
   per-run output stay in `runs/ab_floor/` (`verdict.json`).
+
+## 2026-11-22 (evening): the rung-10 decline, and phase 2 from the Saturday 19:15 copy (user decisions)
+
+**The decline.** The rung-10 benchmark (`bench.py --rung 10`, 200 games, frozen copies) fell five times
+in a row after the A/B:
+
+| Frozen copy (episode) | 443,564 | 472,735 | 547,504 | 653,126 | 757,847 | 862,859 |
+|---|---|---|---|---|---|---|
+| Rung 10 | 144 | 144 | 138 | 135 | 125 | 118 |
+| Rung 3 | 184 | 181 | 180 | 188 | 176 | 182 |
+
+144 → 118 is about 2.8 standard errors. Rung 3 stayed near 0.9.
+
+**What the training logs show** (TensorBoard of the live run, averaged between benchmark copies; no new
+runs). The pre-A column is episodes 400,000-452,651 of the previous process, also at rung 10.
+
+| Mean over the stretch | Pre-A | → 472.7k | → 547.5k | → 653.1k | → 757.8k | → 862.9k |
+|---|---|---|---|---|---|---|
+| Training win rate (100 games, PFSP-weighted) | 0.46 | 0.48 | 0.48 | 0.41 | 0.40 | 0.40 |
+| Per-deck win rate, unweighted mean | 0.70 | 0.71 | 0.72 | 0.67 | 0.65 | 0.64 |
+| Shaping sum per episode (outcome is ±1) | 0.72 | 0.78 | 0.76 | 0.58 | 0.54 | 0.55 |
+| Shaping share of the episode's reward | 40% | 42% | 41% | 35% | 33% | 34% |
+| Card entropy, fraction (target 0.35) | 0.349 | 0.352 | 0.350 | 0.350 | 0.350 | 0.350 |
+| Card entropy coefficient | 0.040 | 0.040 | 0.046 | 0.051 | 0.053 | 0.053 |
+| Placement entropy, fraction (target 0.25) | 0.379 | 0.348 | 0.337 | 0.345 | 0.436 | 0.450 |
+| Placement entropy, unchosen cards | 0.49 | 0.47 | 0.47 | 0.48 | 0.54 | 0.55 |
+| Advisor KL (coefficient 0.10, fixed) | 0.59 | 0.60 | 0.56 | 0.58 | 0.64 | 0.69 |
+| Clip fraction | 0.230 | 0.234 | 0.226 | 0.217 | 0.217 | 0.213 |
+| Value loss | 0.141 | 0.142 | 0.138 | 0.136 | 0.137 | 0.138 |
+| Value explained variance | 0.936 | 0.934 | 0.932 | 0.926 | 0.923 | 0.923 |
+
+- **Reward.** The outcome is ±1 in every game (draws about 0). The shaping share is the mean shaping
+  sum over that plus the flawless bonus implied by the totals (about 0.1). It fell, so bonuses did not
+  crowd out the outcome. The reward did not change in the window: the spell-value weight is 0
+  throughout (annealed by episode 40,000).
+- **Option A is not a reward bonus.** The Lightning rule changes the advisor target, an auxiliary KL
+  on the placement head (coefficient 0.10 / ln 612, about 0.011 at KL 0.69, against an actor loss of
+  about 0.028). Lightning's own placement entropy rose at the restart (0.54 → 0.62) and then held at
+  about 0.59. Its modal share held at 6-7%.
+- **Learning rate:** Adam at 3e-4, constant; there is no schedule.
+- **KL between the old and new policy is not logged.** The clip fraction stands in for it and fell
+  slightly (0.234 → 0.213). The first minibatch's ratio deviation stayed at about 0.0001.
+- **Nothing else changed.** No warning, no non-finite count, no curriculum event, no restart, and no
+  watchdog action in the log.
+
+**The order of events.**
+1. Episode ~540,000 (Sat ~23:00): the training win rates fell on the middle decks, with no move in any
+   optimisation diagnostic.
+   - pekka_bridge_spam 0.41 → 0.30, three_musketeers_bridge 0.41 → 0.31.
+   - royal_hogs_furnace 0.73 → 0.55 and wall_breakers_cycle 0.77 → 0.63, the second steps later.
+2. Episode ~670,000 (Sun ~07:00): placement entropy stepped up for Knight (0.30 → 0.54), Barbarian
+   Barrel (0.37 → 0.55) and Bats (0.32 → 0.49).
+   - These are cheap defensive cards with no advisor target. Minion Giant, the Hero and Lightning held.
+   - Advisor KL and unchosen-card entropy rose at the same time.
+   - The placement coefficient sat at its floor (0.01) the whole time, so the entropy controller did
+     not cause it.
+   - The fixed terms that push it are the coverage entropy bonus (0.02) on those five cards'
+     unchosen placements and the advisor KL. Both were unchanged all weekend, including the stable
+     stretch, so they do not explain a step by themselves.
+3. The two largest benchmark drops (−10, −7) came after the step.
+
+**No cause is established.** The decline begins before the entropy step, with nothing in the
+diagnostics marking it.
+- The opponent mix is the one phase-1-specific suspect. PFSP has put about half of all games on four
+  decks since Friday: giant_double_dragon, about 20-25% of all games at 4-8% wins, plus pekka, three
+  musketeers and mega knight ram at about 10% each. Its shares barely moved in the window, so it does
+  not mark the onset. Phase 2 does not use it: no meta-deck pool, no teacher.
+- The placement-entropy step is a correlate, not an established cause. It does carry into phase 2:
+  the same updater and the same fixed terms.
+- Phase 2 deliberately starts its own placement target at 0.50 (`PHASE2_ENTROPY`), annealing to 0.25
+  over 60,000 episodes and re-boosted when losing. Placement entropy will rise early in phase 2 by
+  design. The 6-hourly rung-10 benchmark is the check.
+- On the user's rule ("If you find a cause that would carry into phase 2, stop and report"), nothing
+  stops the launch.
+
+**The launch (2026-11-22 19:23-19:40).**
+- *The mirror run was stopped.* First an as-is copy of its checkpoint was taken:
+  `runs/checkpoints/minigiant.pth.asis_before_stop_20261122-1923_ep891544`, read-only. Then the stop,
+  whose SIGINT save left episode 891,750 in `runs/checkpoints/minigiant.pth`; nothing writes that file
+  now. The weekend watchdog was stopped first, so it would not read the stop as a fault.
+- *The new run* (`runs/minigiant_p2.env`) is a copy of the 19:15 checkpoint at
+  `runs/checkpoints/minigiant_p2.pth`, with TensorBoard in `runs/minigiant_p2`.
+  - `CLASH_PHASE2_ENTRY_WIN_RATE=0` is the only setting change against the checkpoint; the full pool
+    stays on.
+  - The run takes train.py's own path with no code change:
+    1. The random-opponent phase from episode 472,746, for its 5,000-episode budget.
+    2. A save at episode 477,769.
+    3. The handoff to train_selfplay.py at 19:39.
+  - Phase 2 bootstraps those weights (bare, its own episode count from 0) into
+    `runs/checkpoints/minigiant_p2_selfplay.pth`, with TensorBoard in `runs/minigiant_p2_selfplay` and
+    output in `runs/training_selfplay_pfsp.log`. Its starting entropy coefficients are card 0.049 and
+    placement 0.061 (`PHASE2_ENTROPY`; phase 1 ended at 0.018 / 0.010).
+- *What the league samples* ("PFSP pool initialized with 441 historical + 4 scripted + 2
+  builtin-heuristic"):
+  - *Historical:* the files in `historical_checkpoints/` written since this lineage began
+    (`lineage_started_at` 2026-11-20 13:54, the Minion Giant start). That is 441 of 584. All are
+    pipeline-1 snapshots of this Minion Giant run:
+
+    | Snapshots | Episodes | Written | What |
+    |---|---|---|---|
+    | 15 | 2,000-33,634 | Fri 17:21-19:24 | rungs 0-9 |
+    | 207 | 34,070-452,651 | Fri 19:24 to Sat 18:00 | rung 10, before option A |
+    | 9 | 452,651-472,735 | Sat 18:01-19:15 | option A, up to the 19:15 copy |
+    | 208 | 472,735-890,133 | Sat 19:15 to Sun 19:17 | the mirror run's declining stretch, which phase 2 does not descend from |
+    | 2 | 474,753 and 476,767 | Sun 19:30 and 19:36 | tonight's random-opponent phase |
+
+    - The 143 older files (the Hog run and before) are excluded by the lineage filter. Arm B's nine
+      were deleted on Saturday.
+    - Phase 2's own snapshots join every 2,000 episodes once 6,000 episodes old.
+  - *Decks:* every historical opponent plays the trainee's own deck, the Minion Giant mirror
+    (`set_historical_opponent`).
+    - The four scripted bots (Rusher, Defender, Cycler, Counter) draw a random deck from the engine's
+      sampler each episode. Defender and Counter have a sampling floor of 0.8.
+    - The two C++ heuristic anchors (1.35x and 1.50x elixir) play the Minion Giant deck, with a floor
+      of 0.5.
+    - The 16 meta decks and the UtilityTeacher are not in phase 2.
+- *Watching* (`runs/tools_scratch/phase2_watchdog.py`, replacing the weekend watchdog):
+  - Rung-3 and rung-10 benchmarks every 6 h on the weekend's grid (23:41, 05:41, ...), on frozen copies
+    of the phase-2 checkpoint, into `runs/PROGRESS_MINIGIANT_P2.md` and `_P2_R10.md`.
+  - The best rung-10 copy is kept at `runs/checkpoints/minigiant_p2_best_r10.pth`, with a `.json`.
+  - Two rung-10 scores in a row below 130/200 get a note at the top of `runs/HOURLY_STATUS.md`; the run
+    is not stopped (the user).
+  - The weekend's fault rule stays: a non-finite count, a Traceback, or the trainer gone gets a save,
+    a stop and a note.
+  - The Mac stays awake (caffeinate) while the trainer runs.
+- *Housekeeping (approved):* arm B's 19 demo replays and `replays/replay_ep0.json` (a test's leak
+  before 27362c5's test fix) were deleted.
+- *A benchmark fix found before the first phase-2 benchmark.*
+  - `bench.py` loads a checkpoint through phase 1's loader, which requires a curriculum.
+    `train_selfplay.py` saves none, so the first try on `minigiant_p2_selfplay.pth` failed with
+    `KeyError: 'curriculum_stage'`.
+  - bench.py now stamps the frozen copy (never the source) with the benchmark's rung. That is the
+    stage it plays at anyway, with every curriculum hook disabled.
+  - An 8-game smoke test on the phase-2 checkpoint (phase-2 episode 269) then loaded and played:
+    4/8 at rung 10.
+  - The progress tables show -1 as the training rung for a phase-2 copy.
