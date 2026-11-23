@@ -8723,3 +8723,8 @@ After the read-only audit (`docs/ROADMAP_TOP_PLAYERS.md`).
 - *Exploiters:* they need Hero-ability support in the exploiter's rollout first (roadmap 3.3).
 - *Lookahead:* it needs the tracker, so that search samples the opponent's hand instead of reading the true one (roadmap 4.3).
 - *A bigger network.* When size is tested, try a bigger board encoder first: it is 1.3% of the parameters (24,929 of 1,923,155).
+
+**Tracker: what its ability input covers (review follow-up, 2026-11-22).**
+- Opponent ability presses reach the tracker only for the opponents that run through the envs' flag paths: the teacher (pipeline 1) and neural snapshots (pipeline 2). The C++ `HeuristicOpponent` (the builtin) never references an ability (`include/core/HeuristicOpponent.h`: no mention), and the scripted bots return no flags, so for those rungs "no presses" is true, not missing.
+- The opponent's press is detected from the engine's readiness call (`is_champion_ability_ready(opp, slot)`) at the time it is requested, not from a drawn effect. That is a read of hidden state in the sense of the VISIBLE-ONLY rule (readiness includes the opponent's elixir >= cost). It is kept because the press itself is visible on screen and the engine's refusal rule is what decides whether it counted. **Open question for the user:** does readiness count as visible, or should the press be inferred from an observable effect?
+- A press requested at the current tick stays pending until the step has executed it (`EngineFeed.poll`), so a neural opponent deciding before the step does not see the trainee's press early.
