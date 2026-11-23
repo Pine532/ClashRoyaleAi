@@ -218,7 +218,8 @@ def test_a_new_layout_snapshot_receives_its_own_nonzero_tail(monkeypatch, tmp_pa
     seen = []
     real = env.opponent_net.extract_features_hires
     env.opponent_net.extract_features_hires = lambda obs: (
-        seen.append((obs.clone(), env._tail1.tracker.features(int(env.game.get_current_tick())))),
+        seen.append((obs.clone(), env._tail1.tracker.features(int(env.game.get_current_tick())),
+                     ef.probe_next_card(env.game, 1))),
         real(obs))[1]
     n = env.game.observation_size()
     played = None
@@ -236,10 +237,13 @@ def test_a_new_layout_snapshot_receives_its_own_nonzero_tail(monkeypatch, tmp_pa
                     played = c
                     break
         env.step(a)
-    assert seen and all(o.shape[-1] == n + _width() for o, _ in seen)
+    assert seen and all(o.shape[-1] == n + _width() for o, _, _ in seen)
     tail = seen[-1][0][0, n:].numpy()
     assert tail.any()
     assert np.array_equal(tail, seen[-1][1])      # exactly team 1's tracker features
+    off0 = ot.feature_offsets(int(CE.NUM_CARD_IDS))["own_next"]
+    # independent oracle: team 1's own next card, probed from the engine
+    assert tail[off0 + seen[-1][2]] == 1.0
     # it is team 1's tracker: observer 1, watching TEAM 0's plays
     assert env._tail1.observer == 1
     assert played is not None and played in env._tail1.tracker.seen_order()
