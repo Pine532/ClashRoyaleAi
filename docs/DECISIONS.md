@@ -8723,3 +8723,19 @@ After the read-only audit (`docs/ROADMAP_TOP_PLAYERS.md`).
 - *Exploiters:* they need Hero-ability support in the exploiter's rollout first (roadmap 3.3).
 - *Lookahead:* it needs the tracker, so that search samples the opponent's hand instead of reading the true one (roadmap 4.3).
 - *A bigger network.* When size is tested, try a bigger board encoder first: it is 1.3% of the parameters (24,929 of 1,923,155).
+
+## 2026-11-23: phase 2 paused; the 24-hour rule counts training time (the user)
+
+- *The pause:* the user left with the laptop at 12:29, so everything was stopped cleanly.
+  - The watchdog was stopped first, between ticks. Otherwise its next tick would have read the stopped trainer as a fault and halted for good.
+  - The trainer was stopped with SIGINT (`tools/mac_training.sh stop`) and saved `minigiant_p2_selfplay.pth` at episode 226,659, after 7,514 phase-2 updates.
+- *The rule's clock (the user):* the 24-hour rule (2026-11-22) applies after 24 h of phase-2 training, not at Mon 23:41 by the wall clock.
+  - Phase 2 had trained 16 h 49 min 54 s at the pause (Sun 19:39:51 to Mon 12:29:45). The machine did not sleep in that window (`pmset` log), and the update count agrees: 446 updates an hour.
+  - So the rule applies at the first benchmark after 7 h 10 min 06 s more training.
+  - The watchdog's state holds the training time. `phase2_watchdog.py --resume` sets the decision moment from the new trainer's start time. The 6-hour benchmark grid stays on the wall clock.
+- *Benchmarks before the pause* (rung 3, rung 10, head-to-head against the start copy):
+  - Sun 23:41: 177/200, 117/200, 0.510;
+  - Mon 05:41: 181/200, 132/200, 0.610;
+  - Mon 11:41: 179/200, 116/200, 0.745.
+  The best rung-10 copy is the 05:46 one (132/200). Rung 10 has not been below 130 twice in a row: the streak is 1.
+- *Resume:* the note at the top of `runs/HOURLY_STATUS.md`. The trainer goes first, then the watchdog with `--resume`.

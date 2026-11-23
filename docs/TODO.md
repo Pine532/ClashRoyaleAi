@@ -352,7 +352,8 @@ size, so the first two items gate any training.
       rung 10 no more than 10/200 below the control; 0.50-0.55 extends once; below 0.50
       rejects. Arms link the shared pool read-only and write their own snapshots under
       `runs/ab_*/`.
-    - Not before the 2026-11-23 23:41 decision is applied.
+    - Not before the 24-hour decision is applied. It now comes after 24 h of phase-2 training, not at a
+      wall-clock time (paused 2026-11-23 12:29 with 16 h 50 min trained; DECISIONS 2026-11-23).
 24. **Parked (the user, 2026-11-22 late).**
     - Exploiters: they need Hero-ability support in `trainers/exploiter.py` first.
     - Lookahead: it needs item 23's tracker, so search does not read the opponent's true hand.
