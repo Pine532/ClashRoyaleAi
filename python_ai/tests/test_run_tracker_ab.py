@@ -164,3 +164,141 @@ def test_commands_use_the_arms_env_and_the_worktree(arms):
 def test_extend_refuses_without_an_inconclusive_stage_1(arms):
     with pytest.raises(SystemExit):
         ab.main(["--root", str(arms), "--extend", "--dry-run"])
+
+
+# ---- run_arms / freeze / judge end to end, with a fake trainer and fake benchmarks ----------
+FAKE_TRAINER = '''
+import os, signal, sys, time
+import torch
+from python_ai.rl.checkpointing import atomic_save, keep_in_history
+w = os.environ["CLASH_WEIGHTS"]
+path = os.path.join(os.path.dirname(w), os.path.splitext(os.path.basename(w))[0] + "_selfplay.pth")
+mode = os.environ["CLASH_OPP_TRACKER"]
+ep = [100]
+def save():
+    atomic_save({"model": {}, "episodes_completed": ep[0]}, path)
+    keep_in_history(path, ep[0], 5)
+    print(f">>> Checkpoint saved to {path} (episode {ep[0]})", flush=True)
+def stop(*_):
+    ep[0] += 1
+    save()
+    sys.exit(0)
+signal.signal(signal.SIGINT, stop)
+n = 0
+while True:
+    n += 1
+    ep[0] += 10
+    print(f"  >> Update @ ep {ep[0]} | Actor: 0.1", flush=True)
+    if os.environ.get("FAKE_FAIL_MODE") == mode and n == 2:
+        sys.exit(3)
+    if n % 2 == 0:
+        save()
+    time.sleep(0.05)
+'''
+FAKE_H2H = '''
+import json, os, sys
+a = sys.argv
+work, n = a[a.index("--work") + 1], int(a[a.index("--n") + 1])
+os.makedirs(work, exist_ok=True)
+open(os.path.join(os.path.dirname(work), "h2h_calls"), "a").write("x")
+json.dump({"wins": int(os.environ["FAKE_H2H_WINS"]), "draws": 0, "n": n}, open(os.path.join(work, "result.json"), "w"))
+'''
+FAKE_BENCH = '''
+import json, os, sys
+work, n = sys.argv[5], int(sys.argv[4])
+os.makedirs(work, exist_ok=True)
+wins = int(os.environ["FAKE_BENCH_" + os.environ["CLASH_OPP_TRACKER"].upper()])
+json.dump({"wins": wins, "n": n}, open(os.path.join(work, "result.json"), "w"))
+'''
+
+
+@pytest.fixture
+def fakes(tmp_path, monkeypatch):
+    d = tmp_path / "fakes"
+    d.mkdir()
+    (d / "fake_trainer.py").write_text(FAKE_TRAINER)
+    (d / "fake_h2h.py").write_text(FAKE_H2H)
+    (d / "fake_bench.py").write_text(FAKE_BENCH)
+    monkeypatch.setenv("PYTHONPATH", str(d))
+    for k, v in (("FAKE_H2H_WINS", "240"), ("FAKE_BENCH_ZERO", "100"), ("FAKE_BENCH_ON", "100")):
+        monkeypatch.setenv(k, v)
+    return d
+
+
+def _args(arms, fakes, **kw):
+    return ab.Args(root=str(arms), budget=3, h2h_games=400, bench_games=200, poll=0.1, stop_wait=60,
+                   trainer_module="fake_trainer", h2h_module="fake_h2h",
+                   bench_script=str(fakes / "fake_bench.py"), nice=0, **kw)
+
+
+def _go(arms, args, stage=1):
+    m = json.load(open(arms / "ab_manifest.json"))
+    st = ab.load_state(str(arms))
+    ab.run_arms(args, m, st, stage)
+    return m, st, ab.judge(args, m, st, stage)
+
+
+def test_run_arms_freezes_both_arms_and_the_verdict_is_written(arms, fakes):
+    m, st, v = _go(arms, _args(arms, fakes))
+    assert v["decision"] == "adopt" and v["score"] == 0.6
+    for name in ("C", "T"):
+        rec = st["arms"][name]
+        fz = rec["frozen"]["s1"]
+        assert os.path.exists(fz["path"]) and fz["exact"] and fz["updates_at_save"] >= 3
+        assert rec["pid"] is None
+        assert rec["segments"][0]["rc"] == 0                    # the SIGINT made it save and exit
+        ck = torch.load(fz["path"], map_location="cpu", weights_only=False)
+        assert ck["episodes_completed"] == fz["save_episode"]    # the frozen generation, not the SIGINT save
+    assert os.path.exists(arms / "verdict.json") and os.path.exists(arms / "verdict_s1.json")
+    saved = json.load(open(arms / "verdict.json"))
+    assert saved["updates_at_save"] == {n: st["arms"][n]["frozen"]["s1"]["updates_at_save"] for n in "CT"}
+    assert saved["frozen_episode"]["T"] == st["arms"]["T"]["frozen"]["s1"]["frozen_episode"]
+    assert json.load(open(arms / "ab_state.json"))["stages"]["s1"]["decision"] == "adopt"
+
+
+def test_an_arm_that_dies_does_not_orphan_the_other(arms, fakes, monkeypatch):
+    monkeypatch.setenv("FAKE_FAIL_MODE", "zero")
+    args = _args(arms, fakes)
+    m = json.load(open(arms / "ab_manifest.json"))
+    st = ab.load_state(str(arms))
+    with pytest.raises(SystemExit, match="exited"):
+        ab.run_arms(args, m, st, 1)
+    t_pid = st["arms"]["T"].get("pid")
+    assert t_pid is None or not ab.pid_alive(t_pid)
+    for name in ("C", "T"):
+        assert st["arms"][name]["pid"] is None
+    import subprocess
+    out = subprocess.run(["pgrep", "-f", "fake_trainer"], capture_output=True, text=True).stdout.split()
+    assert not [p for p in out if p != str(os.getpid())]
+
+
+def test_a_skip_bench_incomplete_stage_is_completed_by_a_rerun_without_replaying_h2h(arms, fakes):
+    args = _args(arms, fakes, skip_bench=True)
+    m, st, v = _go(arms, args)
+    assert v["decision"] == "incomplete"
+    assert open(arms / "judge" / "s1" / "h2h_calls").read() == "x"
+    full = _args(arms, fakes)
+    st2 = ab.load_state(str(arms))
+    ab.run_arms(full, m, st2, 1)                              # both frozen: launches nothing
+    v2 = ab.judge(full, m, st2, 1)
+    assert v2["decision"] == "adopt"
+    assert open(arms / "judge" / "s1" / "h2h_calls").read() == "x"       # not replayed
+    assert json.load(open(arms / "verdict.json"))["decision"] == "adopt"
+
+
+def test_the_extension_runs_stage_2_and_totals_the_updates(arms, fakes, monkeypatch):
+    monkeypatch.setenv("FAKE_H2H_WINS", "210")                # 0.525: inconclusive
+    m, st, v1 = _go(arms, _args(arms, fakes))
+    assert v1["decision"] == "inconclusive" and v1["next"] == "extend"
+    monkeypatch.setenv("FAKE_H2H_WINS", "230")
+    args = _args(arms, fakes, extend=True)
+    st = ab.load_state(str(arms))
+    ab.run_arms(args, m, st, 2)
+    v2 = ab.judge(args, m, st, 2)
+    assert v2["stage"] == 2 and v2["decision"] == "adopt"
+    for n in "CT":
+        rec = st["arms"][n]
+        assert set(rec["frozen"]) == {"s1", "s2"} and len(rec["segments"]) == 2
+        assert v2["updates_total"][n] == rec["segments"][0]["updates"] + rec["segments"][1]["updates"]
+        assert v2["updates_at_save"][n] == rec["frozen"]["s2"]["updates_at_save"]
+        assert rec["frozen"]["s2"]["updates_at_save"] <= v2["updates_total"][n]

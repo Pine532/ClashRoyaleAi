@@ -89,6 +89,8 @@ class Args:
     stop_wait: float = 600.0
     extend: bool = False
     dry_run: bool = False
+    trainer_module: str = TRAINER_MODULE
+    h2h_module: str = "python_ai.eval.arm_h2h"
 
 
 # ---- the update counter -------------------------------------------------------
@@ -188,12 +190,12 @@ def _base_env(args, extra=None):
 def arm_launch(args, arm):
     """(command, environment, cwd) of one arm's trainer."""
     env = _base_env(args, read_env_file(arm["env"]))
-    cmd = ["nice", "-n", str(args.nice), args.python, "-c", SHIM, args.python, "-u", "-m", TRAINER_MODULE]
+    cmd = ["nice", "-n", str(args.nice), args.python, "-c", SHIM, args.python, "-u", "-m", args.trainer_module]
     return cmd, env, args.src
 
 
 def h2h_command(args, t_ckpt, c_ckpt, deck, work, out_md=None):
-    cmd = ["nice", "-n", "19", args.python, "-u", "-m", "python_ai.eval.arm_h2h",
+    cmd = ["nice", "-n", "19", args.python, "-u", "-m", args.h2h_module,
            "--a", t_ckpt, "--a-mode", "on", "--b", c_ckpt, "--b-mode", "zero",
            "--deck", deck, "--n", str(args.h2h_games), "--work", work]
     if out_md:
@@ -259,6 +261,28 @@ def freeze(root, arm_name, hit, stage, updates_total):
 
 
 # ---- running the arms ----------------------------------------------------------
+def _stop_live(live, state, root, wait):
+    """SIGINT every arm still running (it saves, then exits) and wait for it, so a failure of one
+    arm, or Ctrl-C of the harness, never leaves a trainer behind (they run in their own session)."""
+    for name, L in live.items():
+        if L["proc"].poll() is None and not L["stopped_at"]:      # not one already told to save and exit
+            print(f"[{name}] stopping pid {L['proc'].pid} (SIGINT)", flush=True)
+            try:
+                L["proc"].send_signal(signal.SIGINT)
+            except OSError:
+                pass
+    deadline = time.time() + wait
+    for name, L in live.items():
+        try:
+            L["proc"].wait(timeout=max(0.0, deadline - time.time()))
+        except subprocess.TimeoutExpired:
+            print(f"!! [{name}] pid {L['proc'].pid} did not exit after SIGINT", flush=True)
+            continue
+        L["out"].close()
+        state["arms"][name]["pid"] = None
+    save_state(root, state)
+
+
 def run_arms(args, manifest, state, stage):
     """Launch every arm that has not frozen this stage, watch the logs, freeze, SIGINT."""
     root = manifest["root"]
@@ -283,6 +307,14 @@ def run_arms(args, manifest, state, stage):
         print(f"[{name}] launched pid {proc.pid} ({arm['mode']}), log {log}", flush=True)
         live[name] = dict(proc=proc, out=out, tail=LogTail(log), counter=UpdateCounter(args.budget),
                           hit=None, stopped_at=None, log=log)
+    try:
+        _watch(args, state, root, stage, key, live)
+    except BaseException:
+        _stop_live(live, state, root, args.stop_wait)
+        raise
+
+
+def _watch(args, state, root, stage, key, live):
     while live:
         time.sleep(args.poll)
         for name in list(live):
@@ -331,6 +363,23 @@ def _run(cmd, env, cwd, log):
         raise SystemExit(f"!! {cmd[4:7]} failed (rc {rc}); see {log}")
 
 
+def _reuse(path, n):
+    """A finished result of the same size from an earlier judge() of this stage, else None.
+
+    Lets a re-run (e.g. rung-10 data arriving after --skip-bench) compute the verdict again
+    without replaying the 400 head-to-head games."""
+    if not os.path.exists(path):
+        return None
+    try:
+        res = json.load(open(path))
+    except ValueError:
+        return None
+    if int(res.get("n", -1)) != int(n):
+        return None
+    print(f"  reusing {path}", flush=True)
+    return res
+
+
 def judge(args, manifest, state, stage):
     root = manifest["root"]
     key = f"s{stage}"
@@ -341,20 +390,28 @@ def judge(args, manifest, state, stage):
     h2h_dir = os.path.join(jd, "h2h")
     cmd, env, cwd = h2h_command(args, frozen["T"], frozen["C"], deck, h2h_dir,
                                 os.path.join(root, "H2H.md"))
-    _run(cmd, env, cwd, os.path.join(jd, "h2h.log"))
-    h2h = json.load(open(os.path.join(h2h_dir, "result.json")))
+    h2h = _reuse(os.path.join(h2h_dir, "result.json"), args.h2h_games)
+    if h2h is None:
+        _run(cmd, env, cwd, os.path.join(jd, "h2h.log"))
+        h2h = json.load(open(os.path.join(h2h_dir, "result.json")))
     r10 = {}
     if not args.skip_bench:
         for name, arm in manifest["arms"].items():
             work = os.path.join(jd, f"bench_{name}")
             cmd, env, cwd = bench_command(args, arm, frozen[name], work, deck, args.bench_games,
                                           args.bench_rung, args.bench_script)
-            _run(cmd, env, cwd, os.path.join(jd, f"bench_{name}.log"))
-            res = json.load(open(os.path.join(work, "result.json")))
+            res = _reuse(os.path.join(work, "result.json"), args.bench_games)
+            if res is None:
+                _run(cmd, env, cwd, os.path.join(jd, f"bench_{name}.log"))
+                res = json.load(open(os.path.join(work, "result.json")))
             r10[name] = {"wins": int(res["wins"]), "n": int(res["n"])}
     verdict = decide(h2h, r10.get("T"), r10.get("C"), stage)
     verdict.update(frozen=frozen, deck=deck, budget=args.budget,
                    updates_total={n: state["arms"][n].get("updates_total") for n in manifest["arms"]},
+                   updates_at_save={n: state["arms"][n]["frozen"][key]["updates_at_save"]
+                                    for n in manifest["arms"]},
+                   frozen_episode={n: state["arms"][n]["frozen"][key]["frozen_episode"]
+                                   for n in manifest["arms"]},
                    h2h_result=os.path.join(h2h_dir, "result.json"), at=time.strftime("%Y-%m-%d %H:%M"))
     for name in (f"verdict_{key}.json", "verdict.json"):
         with open(os.path.join(root, name), "w") as f:
