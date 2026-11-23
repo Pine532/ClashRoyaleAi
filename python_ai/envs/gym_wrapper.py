@@ -457,6 +457,7 @@ class MicroRoyaleEnv(gym.Env):
 
         if self._tail is not None:
             obs = self._tail.append(obs)
+            info.update(self._tail.diagnostics())
         return obs, reward, terminated, truncated, info
 
     def _deck_pool_weights(self):

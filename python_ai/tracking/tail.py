@@ -66,3 +66,22 @@ class TrackerTail:
 
     def append(self, obs: np.ndarray) -> np.ndarray:
         return np.concatenate([obs, self.features()])
+
+    def diagnostics(self) -> Dict[str, float]:
+        """Per-step accuracy read-outs for the trainer's LOGGING, {} unless mode
+        "on". Call after `features()`/`append()` so the estimate is current.
+
+        `tracker_elixir_abs_err` compares the estimate with the engine's true
+        opponent elixir. That is engine truth: it goes only into `info`, never
+        into an observation (the tracker itself reads visible events only).
+        """
+        if self.tracker is None:
+            return {}
+        t = self.tracker
+        truth = float(self.game.get_elixir_for_team(1 - self.observer))
+        return {
+            "tracker_corrections": float(t.corrections()),
+            "tracker_next_known": 0.0 if t.next_card() is None else 1.0,
+            "tracker_hand_known": 1.0 if t.unknown_in_hand() == 0 else 0.0,
+            "tracker_elixir_abs_err": abs(t.elixir_estimate() - truth),
+        }

@@ -56,6 +56,7 @@ from python_ai.rl.coverage import PLACEMENT_COVERAGE_COEF, placement_coverage_sl
 from python_ai.rl.engine_stats import extract_engine_stats, opponent_played_card
 from python_ai.rl.entropy import EntropyController
 from python_ai.rl.episode_metrics import EpisodeMetrics
+from python_ai.tracking.diagnostics import TrackerDiagnostics
 from python_ai.rl.ppo import PPOUpdater, ratio_placement_logprob
 from python_ai.rl.seeding import engine_seeds, seed_everything, worker_seeds
 
@@ -248,6 +249,8 @@ class BaseTrainer:
         # Built before the resume, which refills its outcome window, the
         # curriculum gate's input.
         self.metrics = EpisodeMetrics(cfg.num_envs)
+        #: Tracker/* accuracy scalars (no-op unless the envs report tracker_*).
+        self.tracker_diag = TrackerDiagnostics(cfg.num_envs)
 
         #: When this lineage (a fresh phase 1) began. Restored on resume and
         #: inherited by phase 2; keeps a previous run's snapshots out of the
@@ -478,9 +481,11 @@ class BaseTrainer:
                 infos=infos, stats=stats, prev_stats=self._prev_stats,
                 prev_dones=self._prev_dones)
             self.on_step(ctx)
+            self.tracker_diag.step(infos, valid.cpu().numpy())
             for i, done in enumerate(dones):
                 if done:
                     self.episodes_completed += 1
+                    self._log_tracker_episode(i, infos)
                     self.on_episode_end(i, ctx)
 
             self._obs = next_obs
@@ -489,6 +494,15 @@ class BaseTrainer:
             self._hand_ready = next_hand_ready
             self._prev2_dones = self._prev_dones
             self._prev_dones = dones
+
+    def _log_tracker_episode(self, i, infos):
+        """Tracker/* scalars for env i's finished episode (mode on only)."""
+        scen = infos.get("is_scenario")
+        scores = self.tracker_diag.finish_episode(i)
+        if scores is None or (scen is not None and scen[i] > 0.5):
+            return
+        for tag, value in scores.items():
+            self.writer.add_scalar(tag, value, self.episodes_completed)
 
     def _draw_coverage(self, obs_tensor, card_mask):
         """One affordable hand slot per env, plus the advisor's surface for it.

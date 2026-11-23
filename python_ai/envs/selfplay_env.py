@@ -544,6 +544,7 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         }
         if self._tail is not None:
             obs = self._tail.append(obs)
+            info.update(self._tail.diagnostics())
         return obs, reward, terminated, truncated, info
 
     # Indexed by DEFAULT_DECK, which the trainee (team 0) plays.

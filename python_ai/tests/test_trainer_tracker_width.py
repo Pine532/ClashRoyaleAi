@@ -17,7 +17,7 @@ from python_ai.tracking import config as tcfg
 CE = E.ClashRoyaleEnv
 
 
-def build(tmp_path, monkeypatch, mode, env_factory=None):
+def build(tmp_path, monkeypatch, mode, env_factory=None, update_timestep=4):
     from python_ai.rl.config import PPOConfig
     from python_ai.trainers.train import PHASE1_OPPONENT, Phase1Trainer
     monkeypatch.setenv("CLASH_WEIGHTS", str(tmp_path / "w.pth"))
@@ -27,7 +27,7 @@ def build(tmp_path, monkeypatch, mode, env_factory=None):
         monkeypatch.delenv("CLASH_OPP_TRACKER", raising=False)
     else:
         monkeypatch.setenv("CLASH_OPP_TRACKER", mode)
-    cfg = PPOConfig(num_envs=1, update_timestep=4, bptt_chunk=2, num_minibatches=1,
+    cfg = PPOConfig(num_envs=1, update_timestep=update_timestep, bptt_chunk=2, num_minibatches=1,
                     ppo_epochs=1, save_every_episodes=10 ** 9, replay_every_episodes=10 ** 9)
 
     class Harness(Phase1Trainer):
