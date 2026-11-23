@@ -8636,3 +8636,53 @@ diagnostics marking it.
   - An 8-game smoke test on the phase-2 checkpoint (phase-2 episode 269) then loaded and played:
     4/8 at rung 10.
   - The progress tables show -1 as the training rung for a phase-2 copy.
+
+## 2026-11-22 (night): the phase-2 head-to-head, and the 24-hour decision rule (user decisions)
+
+**A third benchmark: the head-to-head against the starting copy.** The user's main measure of whether
+self-play is working.
+- *What:* every 6 h, after the rung-3 and rung-10 benchmarks and on the same frozen copy, 200 games of
+  the phase-2 checkpoint (A) against the frozen starting copy (B: `runs/ab_floor/control_u600.pth`,
+  episode 472,735, 144/200 at rung 10). Both play Minion Giant. Rows go to
+  `runs/PROGRESS_MINIGIANT_P2_H2H.md`.
+- *How* (`runs/tools_scratch/h2h.py`, run by the phase-2 watchdog):
+  - Both sides act through one function: a batched copy of phase 2's opponent path
+    (`selfplay_env._opponent_action`). That is the same calls as the trainee's rollout: the hand-lock
+    mask, the hi-res placement head, the Hero ability heads under the engine's readiness.
+  - Actions are sampled, as training plays and as `bench.py` measures. No scenarios, and no C++
+    heuristic.
+  - 100 seeded deals, each played twice with the sides swapped.
+  - Scored by the engine's verdict (`eval/match_outcome.score_from_towers`). The score is A's wins
+    plus half its draws, over 200.
+  - The nets load strictly. The watchdog checks the start copy's sha256 before every run.
+- *Checks before the first row* (2026-11-22 20:49):
+  - *The null*, B against itself: 107 / 0 / 93, score 0.535 (95% 0.465-0.605); 0.500 as team 0 and
+    0.570 as team 1.
+  - *A control that must fire*, B against the episode-2,000 snapshot of this lineage (40 games):
+    0.925.
+  - *Game length:* 177 decisions per game, against 175 in phase 2's training log (`AvgTicks` 1754).
+- *A first reading, off the grid* (20:51, phase-2 episode 15,693): 115 / 0 / 85, score 0.575 (95%
+  0.508-0.642).
+- *The noise at 200 games:* two policies of equal strength reach 0.55 or more about 9% of the time
+  (binomial, no draws: P(X ≥ 110 | n = 200, p = 0.5) = 0.0895). Tonight's null scored 0.535.
+
+**The decision rule, at the first benchmark after 24 hours of phase 2.**
+- *When:* `train_selfplay.py` started 2026-11-22 19:39, so 24 h is 2026-11-23 19:39. The first
+  benchmark after it is the **2026-11-23 23:41** one; the 17:41 one is at 22 h.
+- *The rule* (the user's):
+  - Head-to-head 0.55 or better and rung 10 at 130/200 or better: keep going unchanged.
+  - Head-to-head 0.55 or better but rung 10 below 130: it is improving at the mirror but forgetting
+    the other decks. Propose adding back a share of rung-10 teacher games with the meta pool (around
+    20%).
+  - Head-to-head below 0.55: report with the training stats, and change nothing.
+- *Definitions:*
+  - "0.55 or better" is a score of at least 110 points of 200, a draw counting half.
+  - "Rung 10" is the `bench.py --rung 10` win count on the same frozen copy.
+- *Who applies it:* at that benchmark the watchdog puts a note at the top of `runs/HOURLY_STATUS.md`
+  naming the branch, and logs it. It changes nothing in any branch. The proposal and the report are
+  for the user. If either score is missing, the note says so and the watchdog tries again at the
+  next benchmark.
+
+**KL logging.** The KL between the old and new policy gets logged at the next restart, not now
+(TODO L22). The decline above could not be read for policy drift, since only the clip fraction and
+the advisor KL are logged.

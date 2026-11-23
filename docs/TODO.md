@@ -312,6 +312,14 @@ size, so the first two items gate any training.
     - Watch: the 6-hourly rung-3 and rung-10 benchmarks (`runs/PROGRESS_MINIGIANT_P2*.md`). The
       best rung-10 copy is kept at `runs/checkpoints/minigiant_p2_best_r10.pth`. Two scores in a
       row below 130/200 are reported, and the run is not stopped (the user).
+    - Watch: the head-to-head against the starting copy, the main measure of self-play
+      (`runs/PROGRESS_MINIGIANT_P2_H2H.md`, 200 games every 6 h; DECISIONS 2026-11-22 night).
+    - Decide at the 2026-11-23 23:41 benchmark, the first after 24 h of phase 2:
+      - head-to-head ≥ 0.55 and rung 10 ≥ 130/200: keep going;
+      - head-to-head ≥ 0.55 and rung 10 below 130: propose about 20% rung-10 teacher games with the
+        meta pool;
+      - head-to-head below 0.55: report with the training stats and change nothing.
+      The watchdog notes the branch at the top of `runs/HOURLY_STATUS.md` and changes nothing.
     - Open: the decline's cause. It is not established from the logs. Candidates: the phase-1
       opponent mix, and the placement-entropy step in the cheap defensive cards. Read phase 2's
       placement entropy (deliberately high at its start) against its rung-10 rows.
