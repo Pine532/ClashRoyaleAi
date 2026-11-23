@@ -9,6 +9,7 @@ from python_ai.advisors import card_probes
 from python_ai.rl import hand_slots
 from python_ai.envs import scenario_offense, scenarios
 from python_ai.opponents import deck_pool
+from python_ai.tracking import config as tracker_config
 
 # The trainee deck lives in `python_ai.deck` (set CLASH_DECK); re-exported here
 # because many call sites import it from this module.
@@ -208,6 +209,15 @@ class MicroRoyaleEnv(gym.Env):
         })
         
         obs_size = self.game.observation_size()
+        # CLASH_OPP_TRACKER (tracking/config.py): off adds nothing; on or zero
+        # append the tracker tail to every observation the trainee sees.
+        self._tracker_mode = tracker_config.mode()
+        self._tail = None
+        if self._tracker_mode != "off":
+            from python_ai.tracking.tail import TrackerTail
+            self._tail = TrackerTail(self.game, 0, self._tracker_mode,
+                                     decks=(self.ai_deck, self.current_opp_deck))
+            obs_size += self._tail.width
         self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(obs_size,), dtype=np.float32)
 
     def reset(self, seed=None, options=None):
@@ -261,6 +271,10 @@ class MicroRoyaleEnv(gym.Env):
             self.current_opp_deck = list(self.opp_deck)
 
         obs_list = self.game.reset()
+        if self._tail is not None:
+            # Right after game.reset(), before any scenario step: the baseline
+            # is "never played" and the tracker is at tick 0.
+            self._tail.reset((self.ai_deck, self.current_opp_deck))
         # New match: reset the played-tick baseline, or step 1 reports a
         # phantom play.
         self._opp_last_tick = {}
@@ -284,6 +298,10 @@ class MicroRoyaleEnv(gym.Env):
         if self.teacher is not None:
             self.teacher.reset()
         obs = np.array(obs_list, dtype=np.float32)
+        if self._tail is not None:
+            # After the scenario injection and its warm-up, so the tracker's
+            # clock and the own next card match the state the policy sees.
+            obs = self._tail.append(obs)
         return obs, {}
 
     def _apply_defensive_scenario(self):
@@ -346,6 +364,10 @@ class MicroRoyaleEnv(gym.Env):
         activate_ability_slot1 = bool(_to_scalar(action.get("activate_ability_slot1", 0)))
         activate_ability_slot2 = bool(_to_scalar(action.get("activate_ability_slot2", 0)))
 
+        if self._tail is not None:
+            # Before the step: readiness is what the decision used. The C++
+            # heuristic's own presses (builtin opponent) are not visible here.
+            self._tail.note_flags(0, {1: activate_ability_slot1, 2: activate_ability_slot2})
         if self.teacher is None:
             step_result = self.game.step(card_idx, target_x, target_y, skip_frames,
                                           activate_ability_slot1, activate_ability_slot2)
@@ -359,6 +381,8 @@ class MicroRoyaleEnv(gym.Env):
             obs1 = np.asarray(self.game.get_observation_for_team(1), dtype=np.float32)
             slot1, x1, y1 = self.teacher.act(self.game, obs1)
             opp_ab1, opp_ab2 = self.teacher.ability_flags(self.game, obs1)
+            if self._tail is not None:
+                self._tail.note_flags(1, {1: bool(opp_ab1), 2: bool(opp_ab2)})
             step_result = self.game.step_self_play(
                 card_idx, target_x, target_y, slot1, x1, y1, skip_frames,
                 activate_ability_slot1, activate_ability_slot2, opp_ab1, opp_ab2)
@@ -431,6 +455,8 @@ class MicroRoyaleEnv(gym.Env):
             self._record_deck_outcome(
                 self.game.get_towers_alive(0) > self.game.get_towers_alive(1))
 
+        if self._tail is not None:
+            obs = self._tail.append(obs)
         return obs, reward, terminated, truncated, info
 
     def _deck_pool_weights(self):

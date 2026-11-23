@@ -29,6 +29,7 @@ from python_ai.envs.gym_wrapper import (
 )
 from python_ai.models.net import MicroRoyaleNet
 from python_ai.models.policy_io import LSTM_HIDDEN, load_state_dict_flexible
+from python_ai.tracking import config as tracker_config
 
 PFSP_EXPONENT = 2.0
 
@@ -67,6 +68,16 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         ai_tower_troop = env_config.get("ai_tower_troop", clash_royale_env.TowerTroopType.NONE)
         opp_tower_troop = env_config.get("opp_tower_troop", clash_royale_env.TowerTroopType.NONE)
         self.game = clash_royale_env.ClashRoyaleEnv(self.deck, self.deck, max_ticks, ai_tower_troop, opp_tower_troop)
+        #: The deck team 1 plays this episode (the setters below change it);
+        #: the tracker feed keys ability costs by it.
+        self._opp_deck = list(self.deck)
+        # CLASH_OPP_TRACKER (tracking/config.py). Off: no tail object at all.
+        self._tracker_mode = tracker_config.mode()
+        self._tail = None
+        if self._tracker_mode != "off":
+            from python_ai.tracking.tail import TrackerTail
+            self._tail = TrackerTail(self.game, 0, self._tracker_mode,
+                                     decks=(self.deck, self._opp_deck))
         # The engine's placement bounds.
         self.MAX_X = self.game.get_max_placement_x()
         self.MAX_Y = self.game.get_own_half_max_y()
@@ -123,6 +134,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             "activate_ability_slot2": spaces.Discrete(2),
         })
         obs_size = self.game.observation_size()
+        if self._tail is not None:
+            obs_size += self._tail.width
         self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(obs_size,), dtype=np.float32)
 
     def set_historical_opponent(self, checkpoint_path):
@@ -134,6 +147,7 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         self.opponent_kind = "neural"
         # Undo a previous scripted opponent's random deck, which
         # set_opponent_deck does not reset on its own.
+        self._opp_deck = list(self.deck)
         self.game.set_opponent_deck(self.deck)
         self._reset_opponent_elixir()
 
@@ -145,7 +159,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         self.opponent_kind = name
         self.opponent_checkpoint_path = f"scripted:{name}"
         # The engine's sampler respects deck-slot rules.
-        self.game.set_opponent_deck(clash_royale_env.sample_random_deck())
+        self._opp_deck = list(clash_royale_env.sample_random_deck())
+        self.game.set_opponent_deck(self._opp_deck)
         self._reset_opponent_elixir()
         if name in ("Rusher", "Counter"):
             self.opponent_lane = ("left" if self.rng.random() < 0.5 else "right")
@@ -167,6 +182,7 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         """
         self.opponent_kind = "builtin"
         self.opponent_checkpoint_path = descriptor
+        self._opp_deck = list(self.deck)
         self.game.set_opponent_deck(self.deck)
         self.game.set_opponent_elixir_multiplier(float(descriptor.split("@")[1]))
 
@@ -255,6 +271,9 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         super().reset(seed=seed)
         self._sample_pfsp_opponent()
         self.game.reset()
+        if self._tail is not None:
+            # Right after game.reset(), before any scenario step.
+            self._tail.reset((self.deck, self._opp_deck))
         # New match: reset the played-tick baseline so the first poll re-seeds
         # against this episode's clock.
         self._opp_last_tick = {}
@@ -277,6 +296,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
                     if want in self.game.get_hand():
                         break
                     self.game.reset()
+                    if self._tail is not None:
+                        self._tail.reset((self.deck, self._opp_deck))
 
             # Bank elixir on both sides before the spawns, so injected units do
             # not walk during the warm-up.
@@ -301,7 +322,11 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         obs_list = self.game.get_observation_for_team(0)
         self.opponent_hx = torch.zeros(1, LSTM_HIDDEN).to(self.device)
         self.opponent_cx = torch.zeros(1, LSTM_HIDDEN).to(self.device)
-        return np.array(obs_list, dtype=np.float32), {}
+        obs = np.array(obs_list, dtype=np.float32)
+        if self._tail is not None:
+            # After the scenario injection and its warm-up.
+            obs = self._tail.append(obs)
+        return obs, {}
 
     def _opponent_action(self):
         """Team 1's decision from its own mirrored observation, sampled like a
@@ -385,6 +410,9 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
         activate_ability0_slot1 = bool(_to_scalar(action.get("activate_ability_slot1", 0)))
         activate_ability0_slot2 = bool(_to_scalar(action.get("activate_ability_slot2", 0)))
 
+        if self._tail is not None:
+            # Before the step: the trainee's presses (readiness as it decided).
+            self._tail.note_flags(0, {1: activate_ability0_slot1, 2: activate_ability0_slot2})
         if self.opponent_kind == "builtin":
             # The C++ heuristic runs inside game.step()'s opponentTurn(): the
             # phase-1 path.
@@ -394,6 +422,9 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             reward = float(result.reward)
         else:
             card_idx1, x1, y1, activate_ability1_slot1, activate_ability1_slot2 = self._opponent_action()
+            if self._tail is not None:
+                self._tail.note_flags(1, {1: bool(activate_ability1_slot1),
+                                          2: bool(activate_ability1_slot2)})
             result = self.game.step_self_play(card_idx0, x0, y0, card_idx1, x1, y1, skip_frames,
                                                activate_ability0_slot1, activate_ability0_slot2,
                                                activate_ability1_slot1, activate_ability1_slot2)
@@ -474,6 +505,8 @@ class MicroRoyaleSelfPlayEnv(gym.Env):
             "ep_killed_by_card": self._episode_economy(0, terminated or truncated),
             "ep_spent_by_card": self._episode_economy(1, terminated or truncated),
         }
+        if self._tail is not None:
+            obs = self._tail.append(obs)
         return obs, reward, terminated, truncated, info
 
     # Indexed by DEFAULT_DECK, which the trainee (team 0) plays.
