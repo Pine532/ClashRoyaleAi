@@ -30,6 +30,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from python_ai.advisors import advisor_target
 from python_ai.models.net import MicroRoyaleNet
+from python_ai.tracking import config as tracker_config
 from python_ai.models.policy_io import LSTM_HIDDEN, load_state_dict_flexible
 from python_ai.rewards.shaping import (
     compute_shaping, flawless_defense_bonus, spell_value_weight,
@@ -229,8 +230,11 @@ class BaseTrainer:
 
         print(f"Initializing {cfg.num_envs} vectorized environments...")
         self.envs = self.build_envs()
+        # CLASH_OPP_TRACKER: tracker_size is the tail width (0 when off, which
+        # builds exactly today's net); the rollout asserts the envs match it.
         self.net = MicroRoyaleNet(
-            num_ability_slots=self.num_ability_slots()).to(self.device)
+            num_ability_slots=self.num_ability_slots(),
+            **tracker_config.net_kwargs()).to(self.device)
         self.optimizer = optim.Adam(self.net.parameters(), lr=cfg.lr)
         # Champion abilities (rl/abilities.py). A Champion-less deck gets no
         # heads, fields or terms.
@@ -315,6 +319,10 @@ class BaseTrainer:
         cfg, net = self.cfg, self.net
         for step in range(cfg.update_timestep):
             obs_tensor = torch.tensor(self._obs, dtype=torch.float32).to(self.device)
+            if net.expects_tail:
+                # Never a silent zero: a tracker net given engine-width
+                # observations would skip the branch without a word.
+                net.require_tail(obs_tensor)
 
             # Derived from obs_tensor and the engine-reported hand readiness,
             # both of which the buffer stores, so the update recomputes it

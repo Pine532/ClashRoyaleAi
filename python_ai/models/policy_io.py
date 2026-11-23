@@ -97,7 +97,10 @@ def load_net(path, device, verbose=True):
     """
     ckpt = torch.load(path, map_location=device, weights_only=False)
     state = ckpt["model"] if isinstance(ckpt, dict) and "model" in ckpt else ckpt
-    net = MicroRoyaleNet().to(device)
+    # CLASH_OPP_TRACKER: an eval env with the tracker on appends the tail, so the
+    # net needs the branch (a checkpoint without keys gets it at its init).
+    from python_ai.tracking import config as tracker_config
+    net = MicroRoyaleNet(**tracker_config.net_kwargs()).to(device)
     clean = load_state_dict_flexible(net, state, path)
     net.eval()
     if verbose:
