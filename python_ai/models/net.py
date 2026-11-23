@@ -203,6 +203,10 @@ HAND_SLOT_EMBED_DIM = 5      # x hand_size (4) = 20
 EXTRA_BRANCH_DIM = 12
 CYCLE_BRANCH_DIM = 24
 SCALAR_FEATURE_DIM = 64
+# The tracker branch (roadmap 5.4) adds onto every scalar feature except the
+# cycle block, which `_split_cycle` reads as the last CYCLE_BRANCH_DIM columns.
+TRACKER_TARGET_DIM = SCALAR_FEATURE_DIM - CYCLE_BRANCH_DIM
+TRACKER_HIDDEN_DIM = 32
 
 #: Card-identity width inside the cycle branch. `seen` and `recency` share one
 #: projection: they index the same card space, so both read the same notion of
@@ -298,7 +302,7 @@ class MicroRoyaleNet(nn.Module):
     def __init__(self, channels=None, board_width=None, board_height=None, hand_size=None, num_card_ids=None,
                  placement_rows=None, num_ability_slots=0,
                  context_dilations=CONTEXT_DILATIONS,
-                 branched_scalars=True):
+                 branched_scalars=True, tracker_size=0):
         super(MicroRoyaleNet, self).__init__()
 
         # Defaults come from the compiled engine.
@@ -530,6 +534,95 @@ class MicroRoyaleNet(nn.Module):
         self.cycle_id_head = (nn.Linear(CYCLE_BRANCH_DIM, NUM_CARD_IDS_LIVE)
                               if self.cycle_feature_dim else None)
 
+        # 9. The tracker tail (docs/ROADMAP_TOP_PLAYERS.md 5.4). REGISTERED
+        #    LAST, so every parameter above keeps its position in the
+        #    optimizer's list. `tracker_size=0` adds nothing: no parameters, no
+        #    state_dict keys.
+        #
+        #    The tail sits after the engine's observation, read by FORWARD
+        #    offset. Its branch output is ADDED to the first
+        #    TRACKER_TARGET_DIM (40 = econ 8 + hand 20 + extra 12) of the 64
+        #    scalar features; the last 24 (the cycle block `_split_cycle`
+        #    reads) are untouched.
+        #
+        #    Exact at init: the last layer is zero in weight AND bias, so the
+        #    branch adds an exact 0.0 for any finite tail, on any backend. It
+        #    stays learnable because only that layer is zero: its gradient is
+        #    nonzero at once (the hidden layer is not zero), and the first
+        #    layer's follows after one step. All-zero would be dead.
+        #
+        #    An observation of exactly the engine width (spatial + scalar) has
+        #    NO tail and skips the branch. That choice keeps the teacher,
+        #    search and engine-width callers working unchanged, and a
+        #    tracker-less opponent exact. A tracker net being fed a wrong
+        #    width is an error, not a zero-fill; trainers call
+        #    `require_tail` so a training rollout cannot silently miss it.
+        self.tracker_size = int(tracker_size)
+        self.tracker_start = self.spatial_size + self.scalar_size
+        self.obs_size = self.tracker_start + self.tracker_size
+        self.expects_tail = self.tracker_size > 0
+        if self.expects_tail:
+            if not branched_scalars:
+                raise ValueError("the tracker branch needs the branched scalar encoder")
+            self.tracker_branch = nn.Sequential(
+                nn.Linear(self.tracker_size, TRACKER_HIDDEN_DIM),
+                nn.ReLU(),
+                nn.Linear(TRACKER_HIDDEN_DIM, TRACKER_TARGET_DIM),
+            )
+            self.reset_tracker_branch_to_init()
+
+    def reset_tracker_branch_to_init(self):
+        """Zero the branch's last layer, which makes it add exactly 0.
+
+        Used when a checkpoint WITHOUT tracker keys is loaded into a net that
+        has the branch: without it the net would keep the previous snapshot's
+        trained branch (the stale-weight hazard, roadmap 5.5). Exactness needs
+        only the last layer; the first keeps whatever it has. No-op without a
+        branch.
+        """
+        if not self.expects_tail:
+            return
+        last = self.tracker_branch[-1]
+        with torch.no_grad():
+            last.weight.zero_()
+            last.bias.zero_()
+
+    def require_tail(self, obs):
+        """Assert `obs` is a full tracker observation. For trainers.
+
+        `extract_features` also accepts an engine-width observation (no tail);
+        a training rollout with a tracker net must not, or the tracker is
+        silently absent.
+        """
+        if obs.shape[-1] != self.obs_size:
+            raise ValueError(
+                f"tracker net expects observation width {self.obs_size} "
+                f"(engine {self.tracker_start} + tracker tail "
+                f"{self.tracker_size}); got {obs.shape[-1]}, i.e. a missing "
+                "or wrong-size tracker tail")
+
+    def _scalar_features(self, obs):
+        """The 64 scalar features of `obs`, with the tracker branch added."""
+        if not self.expects_tail:
+            # Exactly today's net, whatever the width.
+            return self.scalar_mlp(obs[:, self.spatial_size:])
+        width = obs.shape[-1]
+        if width != self.tracker_start and not (
+                self.expects_tail and width == self.obs_size):
+            raise ValueError(
+                f"observation width {width}: expected {self.tracker_start}"
+                + (f" (no tail) or {self.obs_size} (with tracker tail)"
+                   if self.expects_tail else ""))
+        scalar_obs = obs[:, self.spatial_size:self.tracker_start]
+        features = self.scalar_mlp(scalar_obs)
+        if self.expects_tail and width == self.obs_size:
+            tail = obs[:, self.tracker_start:]
+            add = self.tracker_branch(tail)
+            features = torch.cat(
+                [features[:, :TRACKER_TARGET_DIM] + add,
+                 features[:, TRACKER_TARGET_DIM:]], dim=1)
+        return features
+
     def _split_cycle(self, features):
         """The detached cycle block at the end of `features`, or None without a
         cycle branch.
@@ -585,7 +678,7 @@ class MicroRoyaleNet(nn.Module):
         hires_map = self.cnn_trunk[:2](spatial_obs)
         spatial_map = self.cnn_trunk[2:](hires_map)
         cnn_features = self.cnn_flatten(spatial_map)
-        scalar_features = self.scalar_mlp(scalar_obs)
+        scalar_features = self._scalar_features(obs)
         combined = torch.cat((cnn_features, scalar_features), dim=1)
 
         # scalar_obs: [elixir(1), costs(hand_size),

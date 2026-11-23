@@ -59,6 +59,14 @@ def load_state_dict_flexible(net, state_dict, context_label):
         skipped = sorted(set(state_dict.keys()) - set(compatible.keys()))
         own_state.update(compatible)
         net.load_state_dict(own_state)
+        # A checkpoint with no tracker keys, loaded into a net that has the
+        # branch (selfplay_env reuses one opponent net across snapshots):
+        # without this the net keeps the PREVIOUS snapshot's trained branch and
+        # plays with another copy's tracker. Zeroing the last layer makes the
+        # branch add exactly 0 again (roadmap 5.5).
+        if (getattr(net, "expects_tail", False)
+                and not any(k.startswith("tracker_branch.") for k in state_dict)):
+            net.reset_tracker_branch_to_init()
         if context_label not in _warned_mismatches:
             _warned_mismatches.add(context_label)
             # Only a non-empty `skipped` discards trained weights; otherwise
