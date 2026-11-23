@@ -231,8 +231,13 @@ class EngineFeed:
                 if t >= 0:
                     new.append((int(t), c))
         new.sort()
-        pending = sorted((p for p in self._pending), key=lambda p: p["tick"])
-        self._pending = []
+        # A press noted at the current tick has not executed yet (the env notes
+        # it before the step): an observer that polls mid-step, such as a
+        # neural opponent deciding before team 0's press runs, must not see it.
+        now = int(g.get_current_tick())
+        pending = sorted((p for p in self._pending if p["tick"] < now),
+                         key=lambda p: p["tick"])
+        self._pending = [p for p in self._pending if p["tick"] >= now]
         opp_press = [p for p in pending if p["team"] == self.opponent]
         own_press = [p for p in pending if p["team"] == self.observer]
 

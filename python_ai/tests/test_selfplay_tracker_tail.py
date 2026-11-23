@@ -247,3 +247,55 @@ def test_a_new_layout_snapshot_receives_its_own_nonzero_tail(monkeypatch, tmp_pa
     assert tail[off["own_next"]:off["own_next"] + int(CE.NUM_CARD_IDS)].sum() == 1.0
     # the trainee's own tail still follows team 1 (a separate tracker)
     assert env._tail.observer == 0 and env._tail is not env._tail1
+
+
+def test_team1s_tracker_does_not_see_the_trainees_press_before_it_happens(monkeypatch, tmp_path):
+    """Team 1 decides before the step executes the trainee's ability press, so
+    its tail must not yet show that press (opp_ability_spend 0 at the decision
+    of step N, nonzero at step N+1)."""
+    import torch
+    from python_ai.envs.gym_wrapper import DEFAULT_DECK_ABILITY_SLOTS
+    from python_ai.models.net import MicroRoyaleNet
+    monkeypatch.setenv("CLASH_OPP_TRACKER", "on")
+    net = MicroRoyaleNet(num_ability_slots=DEFAULT_DECK_ABILITY_SLOTS,
+                         tracker_size=tcfg.tail_width("on"))
+    path = str(tmp_path / "snap.pth")
+    torch.save(net.state_dict(), path)
+    env = selfplay_env.MicroRoyaleSelfPlayEnv({"scenarios_enabled": False, "deck": HERO_DECK})
+    env.set_historical_opponent(path)
+    env.reset()
+    assert env._opponent_tracker_active()
+    seen = []
+    real = env._opponent_action
+
+    def wrapped():
+        r = real()  # builds team 1's observation (and polls its tail) inside
+        seen.append(env._tail1.tracker.opp_ability_spend())
+        return r
+    env._opponent_action = wrapped
+    g = env.game
+    pressed_at = None
+    for _ in range(300):
+        hand = list(g.get_hand())
+        a = dict(NOOP)
+        ready = (g.get_last_played_tick(0, HERO_DECK[1]) >= 0
+                 and bool(g.is_champion_ability_ready(0, 1)))
+        if ready:
+            a["activate_ability_slot1"] = 1
+        else:
+            for j, c in enumerate(hand):
+                if g.get_elixir() >= E.get_card_info(c)["cost"] and (c == HERO_DECK[1] or HERO_DECK[1] not in hand):
+                    cell = next(((x, y) for y in range(17) for x in range(18)
+                                 if g.is_valid_placement(c, x, y, 0)), None)
+                    if cell:
+                        a = {"card_index": j, "target_x": float(cell[0]), "target_y": float(cell[1])}
+                        break
+        n = len(seen)
+        env.step(a)
+        if ready:
+            pressed_at = n
+            break
+    assert pressed_at is not None, "the trainee never got its ability ready"
+    assert seen[pressed_at] == 0, "team 1 saw the press before it executed"
+    env.step(dict(NOOP))
+    assert seen[pressed_at + 1] > 0, "team 1 never saw the press afterwards"
