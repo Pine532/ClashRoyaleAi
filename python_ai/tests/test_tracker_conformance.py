@@ -653,3 +653,109 @@ def test_a_press_with_no_same_tick_card_is_counted_even_when_the_estimate_is_low
     assert feed.stats["abilities_refused"] == 0
     assert tr.opp_ability_spend() == 2.0
     assert tr.corrections() == 1             # the floor correction is visible
+
+
+EMPRESS_DECK = [15, 6, 25, 40, 24, 72, 165, 7]
+
+
+def test_conformance_deck_with_spirit_empress():
+    plays = 0
+    for seed in range(8):
+        r = play_match(EMPRESS_DECK, EMPRESS_DECK, seed, p=0.4)
+        assert_exact(r)
+        plays += r["tracker"].seen_order().count(165)
+    assert plays >= 1, "Spirit Empress was never played: the rule was not exercised"
+
+
+@pytest.mark.parametrize("deck", [HOG, MIRROR_DECK], ids=["hog", "mirror"])
+@pytest.mark.parametrize("seed", [0, 1])
+def test_conformance_when_the_observer_is_team_1(deck, seed):
+    """The poll side with team-1 mirroring: the tracker follows team 0."""
+    assert_exact(play_match(deck, deck, seed, observer=1))
+
+
+def test_reset_after_an_autoreset_gives_a_fresh_tracker():
+    r = play_match(MIRROR_COLLECTOR_DECK, MIRROR_COLLECTOR_DECK, 3, p=0.5)
+    tr, feed, env = r["tracker"], r["feed"], r["env"]
+    assert tr.seen_order(), "the first match must leave state to clear"
+    env.seed(9)
+    feed.reset()
+    fresh = ef.make_engine_tracker()
+    assert tr.seen_order() == []
+    assert tr._collectors == []
+    assert tr.elixir_estimate() == fresh.elixir_estimate()
+    assert tr.corrections() == fresh.corrections()
+    assert np.array_equal(tr.features(0), fresh.features(0))
+
+
+def test_a_collector_pulse_on_the_lifetime_tick_still_lands():
+    """Engine behaviour: a pulse at play + lifetime lands (<=), the next one
+    does not. The presets never put a pulse exactly there, so use synthetic
+    rules where one does."""
+    rules = ot.TrackerRules(regen_per_tick=0.0, phase_schedule=((0, 1.0),),
+                            start_elixir=0.0, cap=10.0, hand_size=4,
+                            collector_first_delay=100, collector_period=100,
+                            collector_lifetime=300)
+    facts = ot.CardFacts({1: 0.0}, {1: ot.ELIXIR_COLLECTOR})
+    tr = ot.OpponentTracker(rules, facts, 4, 280.0)
+    tr.on_play(0, 1)
+    tr.advance(299)
+    assert tr.elixir_estimate() == pytest.approx(2.0)      # pulses at 100, 200
+    tr.advance(300)
+    assert tr.elixir_estimate() == pytest.approx(3.0)      # 300 = lifetime: lands
+    tr.advance(1000)
+    assert tr.elixir_estimate() == pytest.approx(3.0)      # then it is gone
+
+
+def test_hidden_state_is_only_read_for_the_observer_or_a_probe_team():
+    """Stronger than the name allowlist: every banned call in the feed must be
+    passed the observer, or the `team` parameter of the two probes."""
+    import ast
+    import inspect
+    banned = {"get_elixir_for_team", "get_hand_for_team", "get_elixir_spent",
+              "get_elixir_spent_on_card"}
+    tree = ast.parse(inspect.getsource(ef))
+    checked = 0
+    for fn in [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]:
+        for node in ast.walk(fn):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and node.func.attr in banned):
+                arg = ast.unparse(node.args[0])
+                if arg == "team":
+                    assert fn.name in {"note_activation", "probe_next_card",
+                                       "measure_ability_cost"}, (fn.name, arg)
+                else:
+                    assert arg == "self.observer", (fn.name, arg)
+                checked += 1
+    assert checked >= 4, "the AST walk found too few calls: the guard went blind"
+
+
+class _SpyGame:
+    """Wraps the live game; raises on a read of the opponent's hidden state.
+    snapshot() forks are real objects (the probes act on them)."""
+    def __init__(self, game, opponent):
+        self._g, self._opp = game, opponent
+
+    def __getattr__(self, name):
+        attr = getattr(self._g, name)
+        if name in ("get_elixir_for_team", "get_hand_for_team", "get_elixir_spent",
+                    "get_elixir_spent_on_card", "get_hand_cooldown_ticks"):
+            def guarded(team, *a, **k):
+                if team == self._opp and name != "get_hand_cooldown_ticks":
+                    raise AssertionError(f"{name}({team}) reads the opponent's hidden state")
+                return attr(team, *a, **k)
+            return guarded
+        return attr
+
+
+def test_the_feed_never_reads_the_opponents_hidden_state_at_runtime():
+    env, tr, feed = _hero_on_board()
+    feed.game = _SpyGame(env, 1)
+    for i in range(30):
+        if i == 3:
+            feed.note_activation(1, 1, True)
+            env.step_self_play(-1, 0, 0, -1, 0, 0, 10, False, False, True, False)
+        else:
+            env.step_self_play(*legal_play(env, 0, random.Random(i), 0.5), -1, 0, 0, 10)
+        feed.poll()
+    assert feed.stats["abilities_counted"] + feed.stats["abilities_refused"] >= 1
