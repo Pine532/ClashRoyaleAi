@@ -8739,3 +8739,14 @@ After the read-only audit (`docs/ROADMAP_TOP_PLAYERS.md`).
   - Mon 11:41: 179/200, 116/200, 0.745.
   The best rung-10 copy is the 05:46 one (132/200). Rung 10 has not been below 130 twice in a row: the streak is 1.
 - *Resume:* the note at the top of `runs/HOURLY_STATUS.md`. The trainer goes first, then the watchdog with `--resume`.
+
+## 2026-11-23: the tracker's three open questions, answered (the user; no action now)
+
+These answer the questions left open in 2026-11-22 (late) and in the tracker branch's own note.
+
+1. *An opponent's Hero press:* keep the engine read.
+   - In the simulator, the tracker learns of a press by asking whether that ability was ready when pressed. That is an engine read, standing in for what a player sees: the ability firing.
+   - Live play must detect the visible effect instead (TODO 25).
+2. *A second inconclusive result* (0.50 to 0.55 after the one extension): not adopted.
+   - `tools/run_tracker_ab.py` on `tracker/opponent-tracker` already judges it this way. Its reason text still says "proposed rule, unconfirmed by the user", to be updated the next time the branch is touched.
+3. *The live run during the A/B:* it pauses while the two arms train, then resumes, the same way as the 2026-11-23 pause.
