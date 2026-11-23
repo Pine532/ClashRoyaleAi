@@ -205,3 +205,47 @@ def test_a_new_snapshot_in_an_arm_pool_leaves_the_shared_files_alone(tmp_path, s
     assert os.path.isfile(path) and not os.path.islink(path)
     assert _snapshot_tree(pool) == before
     assert sorted(os.listdir(pool)) == sorted(before)
+
+
+def _with_settings(tmp_path, start, settings):
+    ck = torch.load(start, map_location="cpu", weights_only=False)
+    ck["clash_settings"] = settings
+    torch.save(ck, start)
+
+
+def test_the_live_runs_extra_settings_reach_both_arms(tmp_path, start, pool, template, capsys):
+    """Keys the live run had (from the checkpoint's clash_settings) but the template lacks."""
+    _with_settings(tmp_path, start, {
+        "CLASH_DECK_POOL": "/live/pools/batch_4.json", "CLASH_DEVICE": "mps", "CLASH_SAVE_EVERY": "250",
+        "CLASH_NUM_ENVS": "99",                       # the template says 16: the template wins
+        "CLASH_WEIGHTS": "/live/run.pth", "CLASH_OPP_TRACKER": "off",   # owned: never carried
+        "CLASH_UNSET": None})
+    root = _run(tmp_path, start, pool, template)
+    for arm, mode in (("C", "zero"), ("T", "on")):
+        env = _env(root / f"{arm}.env")
+        assert env["CLASH_DECK_POOL"] == ["/live/pools/batch_4.json"]
+        assert env["CLASH_DEVICE"] == ["mps"] and env["CLASH_SAVE_EVERY"] == ["250"]
+        assert env["CLASH_NUM_ENVS"] == ["16"]
+        assert env["CLASH_OPP_TRACKER"] == [mode]
+        assert "CLASH_UNSET" not in env
+        assert all(len(v) == 1 for v in env.values())
+    m = json.load(open(root / "ab_manifest.json"))
+    assert m["extra_env"] == {"CLASH_DECK_POOL": "/live/pools/batch_4.json", "CLASH_DEVICE": "mps",
+                              "CLASH_SAVE_EVERY": "250"}
+    out = capsys.readouterr().out
+    assert "CLASH_DECK_POOL=/live/pools/batch_4.json" in out      # the final env is printed
+
+
+def test_the_env_flag_overrides_and_can_choose_meta_decks(tmp_path, start, pool, template):
+    _with_settings(tmp_path, start, {"CLASH_DECK_POOL": "/live/pools/batch_4.json"})
+    root = _run(tmp_path, start, pool, template,
+                extra=("--env", "CLASH_DECK_POOL=/other/meta.json", "--env", "CLASH_SAVE_EVERY=50"))
+    for arm in ("C", "T"):
+        env = _env(root / f"{arm}.env")
+        assert env["CLASH_DECK_POOL"] == ["/other/meta.json"] and env["CLASH_SAVE_EVERY"] == ["50"]
+
+
+def test_the_env_flag_cannot_set_an_owned_key(tmp_path, start, pool, template):
+    with pytest.raises(SystemExit):
+        _run(tmp_path, start, pool, template, extra=("--env", "CLASH_OPP_TRACKER=on"))
+    assert not (tmp_path / "runs" / "ab_x").exists()

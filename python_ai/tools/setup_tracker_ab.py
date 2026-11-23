@@ -6,7 +6,11 @@
 
 Creates, for arm C (CLASH_OPP_TRACKER=zero, the control) and arm T (=on):
 
-  ROOT/<arm>.env                     the template's settings, with CLASH_WEIGHTS,
+  ROOT/<arm>.env                     the template's settings, plus the live run's other
+                                     settings the template lacks (CLASH_DECK_POOL,
+                                     CLASH_DEVICE, CLASH_SAVE_EVERY: from the start
+                                     checkpoint's clash_settings; --env KEY=VAL overrides),
+                                     with CLASH_WEIGHTS,
                                      CLASH_LOGDIR, CLASH_ARTIFACT_DIR and
                                      CLASH_OPP_TRACKER set for the arm
   ROOT/<arm>/checkpoints/<arm>_selfplay.pth
@@ -87,13 +91,51 @@ def link_pool(shared, arm_pool):
     return names
 
 
-def env_text(template_text, arm_dir, arm, mode):
+def template_keys(template_text):
+    return {line.split("=", 1)[0].strip() for line in template_text.splitlines()
+            if "=" in line and not line.lstrip().startswith("#")}
+
+
+def extra_env(template_text, ck_settings, overrides):
+    """The settings both arms get beyond the template: the live run's own, and --env.
+
+    The template (runs/<run>.env) is not the whole configuration: the watchdog adds
+    CLASH_DECK_POOL and the run records CLASH_DEVICE and CLASH_SAVE_EVERY. The start
+    checkpoint's `clash_settings` is what the live run really had, so every key it holds
+    that the template lacks (and the arm does not own, and is not None) is carried. A key
+    in the template keeps the template's value; --env KEY=VAL overrides both.
+    """
+    have = template_keys(template_text)
+    out = {k: str(v) for k, v in sorted((ck_settings or {}).items())
+           if v is not None and k not in have and k not in OWNED}
+    out.update(overrides)
+    return out
+
+
+def parse_overrides(items):
+    out = {}
+    for it in items or ():
+        if "=" not in it:
+            raise SystemExit(f"!! --env wants KEY=VAL, got {it!r}")
+        k, v = it.split("=", 1)
+        k = k.strip()
+        if k in OWNED:
+            raise SystemExit(f"!! --env cannot set {k}: the arm owns it ({', '.join(OWNED)})")
+        out[k] = v.strip()
+    return out
+
+
+def env_text(template_text, arm_dir, arm, mode, extra=None):
+    extra = dict(extra or {})
     kept = []
     for line in template_text.splitlines():
         key = line.split("=", 1)[0].strip()
-        if "=" in line and not line.lstrip().startswith("#") and key in OWNED:
+        if "=" in line and not line.lstrip().startswith("#") and (key in OWNED or key in extra):
             continue
         kept.append(line)
+    if extra:
+        kept += ["", "# the live run's other settings, and --env (setup_tracker_ab.py)"]
+        kept += [f"{k}={v}" for k, v in extra.items()]
     kept += ["",
              f"# arm {arm} of the tracker A/B (python_ai/tools/setup_tracker_ab.py)",
              f"CLASH_WEIGHTS={os.path.join(arm_dir, 'checkpoints', arm + '.pth')}",
@@ -126,8 +168,13 @@ def main(argv=None):
     ap.add_argument("--start", required=True, help="the phase-2 checkpoint both arms start from")
     ap.add_argument("--shared-pool", required=True, help="the shared historical_checkpoints/ folder")
     ap.add_argument("--env-template", required=True, help="an env file whose settings both arms copy")
+    ap.add_argument("--env", action="append", default=[], metavar="KEY=VAL",
+                    help="an extra setting for both arms, overriding the template and the start "
+                         "checkpoint's clash_settings (repeatable); e.g. CLASH_DECK_POOL=<meta_decks.json> "
+                         "to choose the default pool over the live run's")
     ap.add_argument("--seed", type=int, default=0, help="seed of the tracker branch's first layer")
     a = ap.parse_args(argv)
+    overrides = parse_overrides(a.env)
 
     root, start = os.path.abspath(a.root), os.path.abspath(a.start)
     shared, template = os.path.abspath(a.shared_pool), os.path.abspath(a.env_template)
@@ -143,16 +190,29 @@ def main(argv=None):
     lineage = float(ck.get("lineage_started_at", 0.0)) or None
     episode = int(ck.get("episodes_completed", 0))
     template_text = open(template).read()
+    extra = extra_env(template_text, ck.get("clash_settings"), overrides)
+    print("settings added to the template for both arms "
+          "(from the start checkpoint's clash_settings, and --env):")
+    for k, v in extra.items():
+        print(f"  {k}={v}")
+    if not extra:
+        print("  (none)")
+    if "CLASH_DECK_POOL" not in extra and "CLASH_DECK_POOL" not in template_keys(template_text):
+        print("  note: CLASH_DECK_POOL is unset: the arms use the default opponent deck pool "
+              "(meta_decks.json)")
 
     os.makedirs(root)
     manifest = {"root": root, "start": start, "shared_pool": shared, "template": template,
-                "lineage_started_at": lineage, "start_episode": episode, "arms": {}}
+                "lineage_started_at": lineage, "start_episode": episode,
+                "extra_env": extra, "arms": {}}
     for arm, mode in ARMS:
         arm_dir = os.path.join(root, arm)
         os.makedirs(os.path.join(arm_dir, "checkpoints"))
         env_path = os.path.join(root, arm + ".env")
+        text = env_text(template_text, arm_dir, arm, mode, extra)
         with open(env_path, "w") as f:
-            f.write(env_text(template_text, arm_dir, arm, mode))
+            f.write(text)
+        print(f"[{arm}] env file {env_path}:\n" + "\n".join("    " + l for l in text.splitlines() if l))
 
         dst = resume_path(arm_dir, arm)
         print(f"[{arm}] migrating to the {mode} layout -> {dst}")
