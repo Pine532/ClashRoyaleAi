@@ -248,6 +248,21 @@ def test_collector_pulse_lands_before_a_same_tick_play():
     assert tr.elixir_estimate() == pytest.approx(e159 + 0.035 + 1.0, abs=1e-4)
 
 
+def test_destroyed_collector_stops_its_pulses():
+    r = ot.real_game_rules(1200, 1800).replace(start_elixir=10.0)
+    tr = make(r)
+    tr.on_play(0, COLLECTOR)
+    tr.on_collector_destroyed(200)            # after the first pulse at 160
+    pulses = []
+    for t in range(201, 1300):
+        tr._elixir = np.float32(0.0)
+        tr.advance(t)
+        if tr.elixir_estimate() > 0.5:
+            pulses.append(t)
+    assert pulses == []
+    tr.on_collector_destroyed(1300)           # none live: a no-op, not an error
+
+
 def test_real_game_preset_values():
     r = ot.real_game_rules(double_elixir_tick=1200, triple_elixir_tick=1800)
     assert r.regen_per_tick == pytest.approx(1.0 / 28.0)       # 2.8 s per elixir

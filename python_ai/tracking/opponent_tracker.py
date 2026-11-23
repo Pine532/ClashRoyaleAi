@@ -268,6 +268,15 @@ class OpponentTracker:
         self.advance(tick)
         self._elixir = self._f32(min(self._elixir + self._f32(amount), self._cap))
 
+    def on_collector_destroyed(self, tick: int) -> None:
+        """A visible Elixir Collector of the opponent was destroyed before its
+        lifetime ran out: its remaining pulses are cancelled. Which of several
+        is not known to the caller, so the oldest goes (pulses are identical,
+        only their phase differs). A no-op when none is live."""
+        self.advance(tick)
+        if self._collectors:
+            self._collectors.pop(0)
+
     def on_own_ability(self, cost: float) -> None:
         self._own_ability += float(cost)
 
