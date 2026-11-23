@@ -325,6 +325,23 @@ size, so the first two items gate any training.
       placement entropy (deliberately high at its start) against its rung-10 rows.
     - Open: `mac_training.sh status` and `row` read only phase 1's log. In phase 2, read
       `runs/training_selfplay_pfsp.log`; the phase-2 watchdog does.
+22. **Log the KL between the old and new policy, at the next restart, not before (the user,
+    2026-11-22 night; DECISIONS 2026-11-22 night).** The rung-10 decline could not be read for
+    policy drift: an update logs the clip fraction and the advisor KL, but no KL between the
+    rollout policy and the updated one.
+    - Where: `python_ai/rl/ppo.py`. The update already holds each row's log-ratio (`log_ratios`,
+      about line 316, with rows outside `decision` set to 0) and takes the clip fraction from it
+      (about line 495).
+    - What: per minibatch, the mean over decision rows of the approximate KL
+      (ratio - 1) - log(ratio), which is non-negative and exact to second order. Log its mean
+      over the update, and the value after the last epoch, since the drift accumulates over the
+      epochs.
+    - Then: add a field to `UpdateStats`, write it to TensorBoard next to `Loss/Clip_Fraction`
+      (`rl/base_trainer.py`, about line 651) and to the `>> Update` line (about line 722).
+    - Test (fails before, passes after): a minibatch with known ratios gives the known KL; rows
+      outside `decision` do not count; ratios of exactly 1 give 0.
+    - When: `python_ai/` is live under the phase-2 run, so the edit waits for its next restart.
+      Logging only: no effect on the loss or the checkpoint.
 
 ---
 
