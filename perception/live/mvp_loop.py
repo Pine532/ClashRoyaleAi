@@ -289,17 +289,37 @@ class NeuralPolicy:
     """
 
     def __init__(self, checkpoint: Path, deck_ability_slots: int = 0,
-                 tactical: bool = True, reserve: float = 4.0):
+                 tactical: bool = True, reserve: float = 4.0,
+                 tracker_tail: str = "tracker"):
+        """`tracker_tail` applies only to a TRACKER checkpoint (one with
+        `tracker_branch` keys; the tail width is inferred from them):
+
+          "tracker"  the tail comes from a TrackerAdapter (REAL_GAME rules)
+                     fed by this policy's `observe_*` / `note_*` hooks.
+          "zero"     an all-zero tail, EXPLICITLY, for a checkpoint trained
+                     under CLASH_OPP_TRACKER=zero (the A/B control). It is
+                     never a fallback: nothing picks it silently.
+
+        An old checkpoint ignores it: engine-width observations, no adapter.
+        """
         import torch  # noqa: PLC0415
+
+        if tracker_tail not in ("tracker", "zero"):
+            raise ValueError(
+                f"tracker_tail must be 'tracker' or 'zero', got {tracker_tail!r}")
 
         from python_ai.models import perception_encoder  # noqa: PLC0415
         from python_ai.models.net import MicroRoyaleNet  # noqa: PLC0415
 
         self.torch = torch
         self.encoder = perception_encoder
-        self.net = MicroRoyaleNet(num_ability_slots=deck_ability_slots)
         blob = torch.load(checkpoint, map_location="cpu", weights_only=False)
         state = blob["model"] if "model" in blob else blob
+        # The tail width is the checkpoint's: the first Linear of the tracker
+        # branch has (hidden, tail) weights. No such key = an old checkpoint.
+        tail_size = self._tracker_size_from_state(state, perception_encoder)
+        self.net = MicroRoyaleNet(num_ability_slots=deck_ability_slots,
+                                  tracker_size=tail_size)
         # Not strict: a checkpoint predating the high-resolution placement
         # branch (`place_hires`/`place_ctx_hi`) lacks those tensors, and their
         # final conv is zero-initialised, so the net computes exactly the
@@ -322,6 +342,21 @@ class NeuralPolicy:
         self._hx = None
         self._cx = None
         self._was_in_game = False
+        self.tracker_adapter = None
+        self._tail_mode = tracker_tail if self.net.expects_tail else None
+        self._last_tick = 0
+        if self.net.expects_tail and tracker_tail == "tracker":
+            from track.tracker_adapter import REAL, TrackerAdapter  # noqa: PLC0415
+            self.tracker_adapter = TrackerAdapter(REAL)
+            # Loud, not silent: no opponent placement detector exists
+            # (detect/placements.py), so the opponent half of the tail stays at
+            # "nothing seen" and its elixir estimate only regenerates. Own next
+            # card arrives through observe_own_next.
+            print("tracker tail: ON (REAL_GAME rules). No opponent placement "
+                  "detector exists yet, so the opponent cycle/elixir features "
+                  "carry no plays; only the own-next-card part is live.")
+        elif self.net.expects_tail:
+            print("tracker tail: EXPLICIT ZERO (tracker_tail='zero')")
         # Which placement cells the actuator can reach (see
         # actuator.engine_row_is_tappable). A constant of the screen mapping,
         # asserted non-empty so a geometry change masking every cell fails
@@ -395,6 +430,49 @@ class NeuralPolicy:
             self._gate = None
             self._override_ids = set()
 
+    @staticmethod
+    def _tracker_size_from_state(state, perception_encoder) -> int:
+        """0 for a checkpoint without tracker keys, else the tail width its
+        branch was trained at, which must be this encoder's."""
+        firsts = sorted(
+            (int(k.split(".")[1]), k) for k in state
+            if k.startswith("tracker_branch.") and k.endswith(".weight")
+            and k.split(".")[1].isdigit())
+        if not firsts:
+            return 0
+        width = int(state[firsts[0][1]].shape[1])
+        if width != perception_encoder.TRACKER_TAIL_SIZE:
+            raise RuntimeError(
+                f"checkpoint's tracker tail is {width} wide but this encoder "
+                f"builds a {perception_encoder.TRACKER_TAIL_SIZE}-wide tail")
+        return width
+
+    # --- tracker feeds (no-ops for an old or zero-tail policy) ---
+    def observe_own_next(self, card_sim_id) -> None:
+        """The "next" slot reading (UNKNOWN_CARD_SIM_ID / None when unread)."""
+        if self.tracker_adapter is not None:
+            self.tracker_adapter.set_own_next(card_sim_id)
+
+    def note_own_play(self, tick: int, card_sim_id: int) -> None:
+        if self.tracker_adapter is not None:
+            self.tracker_adapter.on_own_play(tick, card_sim_id)
+
+    def note_opponent_play(self, tick: int, card_sim_id: int) -> None:
+        """Hook for the placement detector (not wired: none exists)."""
+        if self.tracker_adapter is not None:
+            self.tracker_adapter.on_opponent_play(tick, card_sim_id)
+
+    def _tail(self, gs):
+        """The tail for this frame, or None for an engine-width observation."""
+        if self._tail_mode is None:
+            return None
+        if self._tail_mode == "zero":
+            return np.zeros(self.encoder.TRACKER_TAIL_SIZE, np.float32)
+        # The clock can be misread backwards; the tracker's cannot go back.
+        tick = int(round(gs.seconds_elapsed * self.encoder.TICKS_PER_SECOND))
+        self._last_tick = max(self._last_tick, tick)
+        return self.tracker_adapter.features(self._last_tick)
+
     def reset_hidden(self) -> None:
         self._hx = self.torch.zeros(1, 256)
         self._cx = self.torch.zeros(1, 256)
@@ -417,7 +495,9 @@ class NeuralPolicy:
         if self._hx is None:
             self.reset_hidden()
 
-        obs = torch.as_tensor(self.encoder.encode(gs)).unsqueeze(0)
+        obs = torch.as_tensor(self.encoder.require_tail(
+            self.encoder.encode(gs, tail=self._tail(gs)),
+            self.net.expects_tail)).unsqueeze(0)
         with torch.no_grad():
             feats, embeds, smap = self.net.extract_features(obs)
             card_mask = self.net.affordability_mask(obs)
@@ -499,6 +579,9 @@ class NeuralPolicy:
         """Reset the recurrent state when a match starts, never mid-match."""
         if in_game and not self._was_in_game:
             self.reset_hidden()
+            if self.tracker_adapter is not None:
+                self.tracker_adapter.reset()
+                self._last_tick = 0
         self._was_in_game = in_game
 
 
@@ -896,6 +979,12 @@ def main() -> int:
             # The policy steps every tick regardless of the gate: it was
             # trained stepping once per second, and skipping steps would change
             # the LSTM's cadence. Only the tap is gated.
+            if in_game and hasattr(policy, "observe_own_next") and state.cards:
+                # The "Next" preview slot (CARD_CONFIG[0]): the tracker tail's
+                # own-next-card feature. Unreadable -> UNKNOWN -> None.
+                from live.unit_to_card import hand_card_id_for  # noqa: PLC0415
+                policy.observe_own_next(
+                    hand_card_id_for(getattr(state.cards[0], "name", "")))
             decision = (policy.decide(gs, state.ready, policy_now) if in_game
                         else Decision(None, DEFAULT_TILE, "not in game"))
             if decision.slot is not None:
@@ -915,6 +1004,11 @@ def main() -> int:
                     # Recorded once the placement is queued; an adb failure
                     # after that is counted by the actuator.
                     gate.record(board_index)
+                    if hasattr(policy, "note_own_play"):
+                        policy.note_own_play(
+                            int(round(gs.seconds_elapsed * 10)),
+                            gs.my_hand[decision.slot]
+                            if decision.slot < len(gs.my_hand) else -1)
                     # The name comes from the hand the policy read
                     # (`gs.my_hand`), not CRBAB's stock icon read of
                     # `state.cards[1:5]`, which disagrees with the tracked hand

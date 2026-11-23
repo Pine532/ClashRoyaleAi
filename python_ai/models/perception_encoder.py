@@ -20,6 +20,7 @@ from dataclasses import dataclass
 import numpy as np
 
 import clash_royale_env as engine
+from python_ai.tracking.opponent_tracker import feature_width as _tracker_feature_width
 
 _E = engine.ClashRoyaleEnv
 
@@ -59,7 +60,12 @@ SPATIAL_SIZE = NUM_CHANNELS * PLANE
 CYCLE_BLOCK_SIZE = _E.CYCLE_BLOCK_SIZE
 SCALAR_SIZE = (1 + HAND_SIZE + HAND_SIZE * NUM_CARD_IDS + NUM_EXTRA_SCALARS
                + CYCLE_BLOCK_SIZE)
+#: The ENGINE observation's width. A tracker net (net.expects_tail) reads
+#: OBSERVATION_SIZE + TRACKER_TAIL_SIZE; `encode(..., tail=...)` appends it.
 OBSERVATION_SIZE = SPATIAL_SIZE + SCALAR_SIZE
+#: The opponent-tracker tail's width, from the tracker's own layout so the live
+#: encoder cannot disagree with the training envs (python_ai/tracking).
+TRACKER_TAIL_SIZE = _tracker_feature_width(NUM_CARD_IDS)
 
 # See the module docstring.
 OPP_SPEND_WHEN_UNMEASURED = 0.0
@@ -240,12 +246,29 @@ _BASE: np.ndarray | None = None
 _TOWERS: dict[str, TowerCells] | None = None
 
 
-def encode(state, *, card_table_=None) -> np.ndarray:
+def require_tail(obs: np.ndarray, expects_tail: bool) -> np.ndarray:
+    """Assert `obs` has the width the net reads: engine width without a tail net,
+    engine + tail with one. Never pads: a tracker net fed an engine-width
+    observation would silently see no tracker, which is a different policy."""
+    want = OBSERVATION_SIZE + (TRACKER_TAIL_SIZE if expects_tail else 0)
+    if obs.shape[-1] != want:
+        raise ValueError(
+            f"observation width {obs.shape[-1]}, expected {want} "
+            f"({'engine + tracker tail' if expects_tail else 'engine'})")
+    return obs
+
+
+def encode(state, *, card_table_=None, tail=None) -> np.ndarray:
     """A GameState -> one observation vector, from our side (team 0).
 
     Mirrors `ClashEnv::extractObservationForTeam(0)`: the HP channels assign,
     CH_COUNT accumulates, every other attribute takes the max over units in a
     cell.
+
+    `tail`, when given, is the opponent tracker's feature vector
+    (perception/track/tracker_adapter.py) and is appended after the engine
+    observation (width TRACKER_TAIL_SIZE, else ValueError). Without it the
+    result is exactly the engine-width observation.
 
     The opponent card-cycle blocks are left zero ("nothing shown yet"):
     GameState carries no play history. The live mirror should instead call
@@ -341,4 +364,10 @@ def encode(state, *, card_table_=None) -> np.ndarray:
     obs[e + 9] = (engine.elixir_multiplier_at_tick(
                       int(state.seconds_elapsed * TICKS_PER_SECOND))
                   / MAX_ELIXIR_MULTIPLIER)
+    if tail is not None:
+        tail = np.asarray(tail, np.float32)
+        if tail.shape != (TRACKER_TAIL_SIZE,):
+            raise ValueError(
+                f"tracker tail has shape {tail.shape}, expected ({TRACKER_TAIL_SIZE},)")
+        obs = np.concatenate([obs, tail])
     return obs
